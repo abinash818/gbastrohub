@@ -1,0 +1,54 @@
+# Prevent directory listing
+Options -Indexes
+
+# Block access to .env files
+<Files ".env">
+ Order allow,deny
+ Deny from all
+</Files>
+
+# Block access to hidden files/folders
+<FilesMatch "^\.">
+ Order allow,deny
+ Deny from all
+</FilesMatch>
+
+# Block access to config/helper files directly
+<Files "config.php">
+ Order allow,deny
+ Deny from all
+</Files>
+<Files "phonepe_helper.php">
+ Order allow,deny
+ Deny from all
+</Files>
+<Files "webhook.php">
+ Order allow,deny
+ Deny from all
+</Files>
+<Files "payment_init.php">
+ Order allow,deny
+ Deny from all
+</Files>
+<Files "payment_response.php">
+ Order allow,deny
+ Deny from all
+</Files>
+<Files "process.php">
+ Order allow,deny
+ Deny from all
+</Files>
+<Files "success.php">
+ Order allow,deny
+ Deny from all
+</Files>
+<Files "failure.php">
+ Order allow,deny
+ Deny from all
+</Files>
+
+# Pretty URLs
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ $1.php [L]

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aadhiguru - Subscription Plans Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #f57c00;
+            --primary-dark: #e65100;
+            --secondary: #475569;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 30px 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h1 { font-size: 22px; color: var(--text); font-weight: 700; }
+        .btn { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn:hover { background: var(--primary-dark); }
+        .btn-danger { background: var(--danger); }
+        .btn-success { background: var(--success); }
+        .table-container { background: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f1f5f9; text-align: left; padding: 15px; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 15px; border-bottom: 1px solid var(--border); }
+        .input-field { padding: 8px; border: 1px solid var(--border); border-radius: 6px; width: 100%; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; }
+        .modal-content h2 { margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>💎 Subscription Plans Admin</h1>
+        <div>
+            <a href="admin_panel.html" style="text-decoration:none; margin-right: 15px; color: var(--primary); font-weight: 600;">← Back to Users</a>
+            <button class="btn" onclick="openModal()">+ Add New Plan</button>
+        </div>
+    </header>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Name</th>
+                    <th>Price (₹)</th>
+                    <th>Duration (Days)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="plans-table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal" id="planModal">
+    <div class="modal-content">
+        <h2 id="modalTitle">Add Plan</h2>
+        <input type="hidden" id="planId">
+        <div class="form-group">
+            <label>Plan Name</label>
+            <input type="text" id="planName" class="input-field" placeholder="e.g. Premium Plan">
+        </div>
+        <div class="form-group">
+            <label>Price (₹)</label>
+            <input type="number" id="planPrice" class="input-field" placeholder="e.g. 1000">
+        </div>
+        <div class="form-group">
+            <label>Duration</label>
+            <div style="display:flex; gap: 10px;">
+                <input type="number" id="planDurationValue" class="input-field" placeholder="e.g. 1" style="flex: 1;">
+                <select id="planDurationType" class="input-field" style="flex: 1;">
+                    <option value="Days">Days</option>
+                    <option value="Months">Months</option>
+                    <option value="Years">Years</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label style="display:flex; justify-content:space-between; align-items:center;">
+                Features
+                <button type="button" class="btn" style="padding:4px 8px; font-size:11px; background:#475569" onclick="selectAllFeatures()">Select All</button>
+            </label>
+            <div id="featuresList" style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                <label><input type="checkbox" value="ஜாதகம்" class="feature-checkbox"> ஜாதகம்</label>
+                <label><input type="checkbox" value="பொருத்தம்" class="feature-checkbox"> பொருத்தம்</label>
+                <label><input type="checkbox" value="KP" class="feature-checkbox"> KP</label>
+                <label><input type="checkbox" value="எண் கணிதம்" class="feature-checkbox"> எண் கணிதம்</label>
+                <label><input type="checkbox" value="ஜாமக்கோள்" class="feature-checkbox"> ஜாமக்கோள்</label>
+                <label><input type="checkbox" value="நாடி" class="feature-checkbox"> நாடி</label>
+                <label><input type="checkbox" value="சுபநேரம்" class="feature-checkbox"> சுபநேரம்</label>
+                <label><input type="checkbox" value="பஞ்சாங்கம்" class="feature-checkbox"> பஞ்சாங்கம்</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Display Order</label>
+            <input type="number" id="planOrder" class="input-field" value="1">
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="planActive" checked> Is Active?
+            </label>
+        </div>
+        <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button class="btn" style="background:#94a3b8" onclick="closeModal()">Cancel</button>
+            <button class="btn" onclick="savePlan()">Save Plan</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'subscription_api.php';
+    let currentPlans = [];
+
+    async function fetchPlans() {
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ action: 'get_all_plans' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                currentPlans = data.plans;
+                renderTable();
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    function selectAllFeatures() {
+        document.querySelectorAll('.feature-checkbox').forEach(cb => cb.checked = true);
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('plans-table-body');
+        tbody.innerHTML = '';
+        currentPlans.forEach(plan => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${plan.plan_order}</td>
+                <td><strong>${plan.name}</strong></td>
+                <td>₹${plan.price}</td>
+                <td>${plan.duration_days} Days</td>
+                <td>
+                    <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: ${plan.is_active == 1 ? '#dcfce7' : '#fee2e2'}; color: ${plan.is_active == 1 ? '#166534' : '#991b1b'}">
+                        ${plan.is_active == 1 ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-success" style="padding: 6px 10px; font-size: 12px;" onclick="editPlan(${plan.id})">Edit</button>
+                    <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deletePlan(${plan.id})">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openModal(isEdit = false) {
+        document.getElementById('modalTitle').innerText = isEdit ? 'Edit Plan' : 'Add New Plan';
+        if(!isEdit) {
+            document.getElementById('planId').value = '';
+            document.getElementById('planName').value = '';
+            document.getElementById('planPrice').value = '';
+            document.getElementById('planDurationValue').value = '';
+            document.getElementById('planDurationType').value = 'Days';
+            
+            document.querySelectorAll('.feature-checkbox').forEach(cb => cb.checked = false);
+            document.querySelector('.feature-checkbox[value="ஜாதகம்"]').checked = true;
+            document.querySelector('.feature-checkbox[value="பஞ்சாங்கம்"]').checked = true;
+
+            document.getElementById('planOrder').value = '1';
+            document.getElementById('planActive').checked = true;
+        }
+        document.getElementById('planModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('planModal').style.display = 'none';
+    }
+
+    function editPlan(id) {
+        const plan = currentPlans.find(p => p.id == id);
+        if(plan) {
+            document.getElementById('planId').value = plan.id;
+            document.getElementById('planName').value = plan.name;
+            document.getElementById('planPrice').value = plan.price;
+            
+            let days = parseInt(plan.duration_days);
+            if (days >= 365 && days % 365 === 0) {
+                document.getElementById('planDurationValue').value = days / 365;
+                document.getElementById('planDurationType').value = 'Years';
+            } else if (days >= 30 && days % 30 === 0) {
+                document.getElementById('planDurationValue').value = days / 30;
+                document.getElementById('planDurationType').value = 'Months';
+            } else {
+                document.getElementById('planDurationValue').value = days;
+                document.getElementById('planDurationType').value = 'Days';
+            }
+
+            const selectedFeatures = plan.features ? plan.features.split(',').map(f => f.trim()) : [];
+            document.querySelectorAll('.feature-checkbox').forEach(cb => {
+                cb.checked = selectedFeatures.includes(cb.value);
+            });
+
+            document.getElementById('planOrder').value = plan.plan_order;
+            document.getElementById('planActive').checked = plan.is_active == 1;
+            openModal(true);
+        }
+    }
+
+    async function savePlan() {
+        const id = document.getElementById('planId').value;
+        const name = document.getElementById('planName').value;
+        const price = document.getElementById('planPrice').value;
+        
+        const durVal = document.getElementById('planDurationValue').value;
+        const durType = document.getElementById('planDurationType').value;
+        let duration_days = parseInt(durVal || 0);
+        if(durType === 'Months') duration_days *= 30;
+        if(durType === 'Years') duration_days *= 365;
+
+        const featuresArr = [];
+        document.querySelectorAll('.feature-checkbox:checked').forEach(cb => featuresArr.push(cb.value));
+        const features = featuresArr.join(', ');
+
+        const plan_order = document.getElementById('planOrder').value;
+        const is_active = document.getElementById('planActive').checked ? 1 : 0;
+
+        if(!name || !price || !duration_days) {
+            alert("Please fill required fields (Name, Price, Duration)");
+            return;
+        }
+
+        const body = {
+            action: id ? 'update_plan' : 'create_plan',
+            id: id,
+            name: name,
+            price: price,
+            duration_days: duration_days,
+            features: features,
+            plan_order: plan_order,
+            is_active: is_active
+        };
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if(data.success) {
+                closeModal();
+                fetchPlans();
+            } else {
+                alert(data.message);
+            }
+        } catch(e) { alert(e); }
+    }
+
+    async function deletePlan(id) {
+        if(confirm("Are you sure you want to delete this plan?")) {
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ action: 'delete_plan', id: id })
+                });
+                const data = await res.json();
+                if(data.success) fetchPlans();
+                else alert(data.message);
+            } catch(e) { alert(e); }
+        }
+    }
+
+    fetchPlans();
+</script>
+</body>
+</html>

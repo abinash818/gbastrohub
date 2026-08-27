@@ -1,0 +1,230 @@
+.software-page {
+  animation: fadeIn 0.8s ease-out;
+}
+
+.software-hero {
+  background: linear-gradient(135deg, #090e1a 0%, #1e293b 100%);
+  padding: 8rem 0 6rem;
+  color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.software-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 100%;
+  height: 150%;
+  background: radial-gradient(circle, rgba(31, 138, 112, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.software-hero-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.badge-exclusive {
+  display: inline-block;
+  padding: 0.4rem 1.2rem;
+  background: linear-gradient(90deg, rgba(31, 138, 112, 0.3), rgba(6, 182, 212, 0.3));
+  color: #5eead4;
+  border: 1px solid rgba(94, 234, 212, 0.3);
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.software-title {
+  font-size: 3.5rem;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #ffffff, #94a3b8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.software-subtitle {
+  font-size: 1.2rem;
+  color: #94a3b8;
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+
+.not-for-sale-box {
+  display: flex;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  margin-bottom: 2.5rem;
+  max-width: 500px;
+}
+
+.info-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.not-for-sale-box strong {
+  display: block;
+  font-size: 1.1rem;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.not-for-sale-box p {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.btn-glow {
+  box-shadow: 0 0 20px rgba(31, 138, 112, 0.5);
+  font-weight: 600;
+  padding: 1rem 2rem;
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 30px rgba(31, 138, 112, 0.7);
+  transform: translateY(-2px);
+}
+
+.btn-outline-white {
+  padding: 1rem 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  background: transparent;
+  font-weight: 600;
+}
+
+.license-info {
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* Poster Styling */
+.poster-frame {
+  position: relative;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.poster-frame:hover {
+  transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+  box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.8);
+}
+
+.software-poster-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.poster-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(31, 138, 112, 0.2) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.feature-card {
+  background: white;
+  padding: 2.5rem 2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+  transform: translateY(-5px);
+}
+
+.f-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  background: var(--color-bg);
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+}
+
+.feature-card p {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 960px) {
+  .software-hero { padding: 4.5rem 0 3.5rem; }
+  .software-hero-container {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  
+  .software-title { font-size: 2.5rem; }
+  
+  .hero-actions {
+    flex-direction: column;
+    padding: 0 1rem;
+    gap: 1rem;
+  }
+
+  .not-for-sale-box {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .poster-frame {
+    transform: none;
+    margin-top: 3rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .poster-frame:hover {
+    transform: translateY(-10px);
+  }
+}
+
+@media (max-width: 480px) {
+  .software-title { font-size: 1.8rem; }
+  .feature-card { padding: 1.5rem; }
+}
+

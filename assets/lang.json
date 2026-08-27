@@ -1,0 +1,190 @@
+{
+  "root_title": {
+    "en": "Tamil Vakya Rasi Chart",
+    "ta": "தமிழ் வாக்கிய ராசிக்கட்டம்"
+  },
+  "language": {
+    "en": "Language",
+    "ta": "மொழி"
+  },
+  "english": {
+    "en": "English",
+    "ta": "ஆங்கிலம்"
+  },
+  "tamil": {
+    "en": "Tamil",
+    "ta": "தமிழ்"
+  },
+  "refresh": {
+    "en": "Refresh",
+    "ta": "புதுப்பி"
+  },
+  "calendar": {
+    "en": "Calendar",
+    "ta": "நாட்காட்டி"
+  },
+  "year": {
+    "en": "Year",
+    "ta": "ஆண்டு"
+  },
+  "month": {
+    "en": "Month",
+    "ta": "மாதம்"
+  },
+  "day": {
+    "en": "Day",
+    "ta": "நாள்"
+  },
+  "hour": {
+    "en": "Hour",
+    "ta": "மணி"
+  },
+  "minute": {
+    "en": "Minute",
+    "ta": "நிமிடம்"
+  },
+  "pick_a_date": {
+    "en": "Pick a Date",
+    "ta": "தேதியெடு"
+  },
+  "date_picker_dialog_title": {
+    "en": "Select Date",
+    "ta": "தேதியை தேர்வு செய்"
+  },
+  "no_date_selected_label": {
+    "en": "No date selected",
+    "ta": "தேதி எதுவும் தேர்ந்தெடுக்கப்படவில்லை"
+  },
+  "date_selected_label": {
+    "en": "Selected",
+    "ta": "தேர்ந்தெடுக்கப்பட்டது"
+  },
+  "confirm_and_exit": {
+    "en": "Confirm & Exit",
+    "ta": "உறுதி செய்"
+  },
+  "mon": {
+    "en": "Mon",
+    "ta": "தி"
+  },
+  "tue": {
+    "en": "Tue",
+    "ta": "செ"
+  },
+  "wed": {
+    "en": "Wed",
+    "ta": "பு"
+  },
+  "thu": {
+    "en": "Thu",
+    "ta": "வி"
+  },
+  "fri": {
+    "en": "Fri",
+    "ta": "வெ"
+  },
+  "sat": {
+    "en": "Sat",
+    "ta": "ச"
+  },
+  "sun": {
+    "en": "Sun",
+    "ta": "ஞா"
+  },
+  "jan": {
+    "en": "Jan",
+    "ta": "ஜனவரி"
+  },
+  "feb": {
+    "en": "Feb",
+    "ta": "பிப்ரவரி"
+  },
+  "mar": {
+    "en": "Mar",
+    "ta": "மார்ச்"
+  },
+  "apr": {
+    "en": "Apr",
+    "ta": "ஏப்ரல்"
+  },
+  "may": {
+    "en": "May",
+    "ta": "மே"
+  },
+  "jun": {
+    "en": "Jun",
+    "ta": "ஜூன்"
+  },
+  "jul": {
+    "en": "Jul",
+    "ta": "ஜூலை"
+  },
+  "aug": {
+    "en": "Aug",
+    "ta": "ஆகஸ்ட்"
+  },
+  "sep": {
+    "en": "Sep",
+    "ta": "செப்டம்பர்"
+  },
+  "oct": {
+    "en": "Oct",
+    "ta": "அக்டோபர்"
+  },
+  "nov": {
+    "en": "Nov",
+    "ta": "நவம்பர்"
+  },
+  "dec": {
+    "en": "Dec",
+    "ta": "டிசம்பர்"
+  },
+  "chithirai": {
+    "en": "Chithirai",
+    "ta": "சித்திரை"
+  },
+  "vaikasi": {
+    "en": "Vaikasi",
+    "ta": "வைகாசி"
+  },
+  "aani": {
+    "en": "Aani",
+    "ta": "ஆனி"
+  },
+  "aadi": {
+    "en": "Aadi",
+    "ta": "ஆடி"
+  },
+  "aavani": {
+    "en": "Aavani",
+    "ta": "ஆவணி"
+  },
+  "purattasi": {
+    "en": "Purattasi",
+    "ta": "புரட்டாசி"
+  },
+  "aippasi": {
+    "en": "Aippasi",
+    "ta": "ஐப்பசி"
+  },
+  "karthigai": {
+    "en": "Karthigai",
+    "ta": "கார்த்திகை"
+  },
+  "margazhi": {
+    "en": "Margazhi",
+    "ta": "மார்கழி"
+  },
+  "thai": {
+    "en": "Thai",
+    "ta": "தை"
+  },
+  "maasi": {
+    "en": "Maasi",
+    "ta": "மாசி"
+  },
+  "panguni": {
+    "en": "Panguni",
+    "ta": "பங்குனி"
+  }
+}

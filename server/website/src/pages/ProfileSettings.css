@@ -1,0 +1,325 @@
+/* ══════════════════════════════════════════════════════
+   Profile Settings Page — Sri AadhiGuru Education
+══════════════════════════════════════════════════════ */
+
+.ps-page {
+  min-height: 80vh;
+  background: var(--color-bg);
+  padding-bottom: 4rem;
+}
+
+/* ── Header ── */
+.ps-header {
+  background: linear-gradient(135deg, rgba(31, 138, 112, 0.08), rgba(243, 141, 62, 0.04));
+  padding: 3rem 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.ps-header h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.ps-header p {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+}
+
+/* ── Container & Grid ── */
+.ps-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* ── Card ── */
+.ps-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.ps-icon {
+  font-size: 1.5rem;
+  background: rgba(31, 138, 112, 0.1);
+  padding: 0.5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+.ps-card-header h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.ps-help-text {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.ps-help-text.mt {
+  margin-top: 1rem;
+}
+
+/* ── Form ── */
+.ps-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  flex: 1;
+}
+
+.ps-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ps-form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.ps-form-group input {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.ps-form-group input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(31, 138, 112, 0.15);
+}
+
+.ps-form-group input.disabled-input {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.ps-form-group small {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.ps-save-btn {
+  margin-top: auto;
+  padding: 0.9rem;
+  background: linear-gradient(135deg, var(--color-primary), #166854);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(31, 138, 112, 0.3);
+}
+
+.ps-save-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(31, 138, 112, 0.4);
+}
+
+.ps-save-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ── Biodata Section ── */
+.ps-biodata-card {
+  border-color: rgba(243, 141, 62, 0.3);
+  background: linear-gradient(to bottom right, #ffffff, #fffdfa);
+}
+
+.ps-status-badge {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ps-status-badge.success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+.ps-status-badge.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
+.ps-biodata-summary {
+  margin-top: 1.5rem;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--color-border);
+  padding: 1.25rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ps-biodata-summary p {
+  font-size: 0.9rem;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.ps-biodata-summary p strong {
+  display: inline-block;
+  width: 120px;
+  color: var(--color-text-muted);
+}
+
+.ps-outline-btn {
+  margin-top: auto;
+  padding: 0.85rem;
+  background: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.ps-outline-btn:hover {
+  background: rgba(31, 138, 112, 0.1);
+}
+
+/* ── Promo ── */
+.ps-maker-promo {
+  margin-top: auto;
+  background: linear-gradient(135deg, rgba(243, 141, 62, 0.1), rgba(255, 230, 210, 0.3));
+  border: 1px solid rgba(243, 141, 62, 0.3);
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.ps-maker-promo h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.ps-maker-promo p {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.ps-price-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-bottom: 1.25rem;
+}
+
+.ps-original-price {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.ps-offer-price {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--color-secondary);
+  background: var(--color-surface);
+  padding: 0.2rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid rgba(243, 141, 62, 0.5);
+  box-shadow: 0 2px 8px rgba(243, 141, 62, 0.2);
+}
+
+.ps-primary-btn {
+  width: 100%;
+  padding: 0.85rem;
+  background: linear-gradient(135deg, var(--color-secondary), #e07223);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(243, 141, 62, 0.3);
+}
+
+.ps-primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(243, 141, 62, 0.4);
+}
+
+/* ── Container Loader ── */
+.ps-container.loading {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.ps-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(31, 138, 112, 0.2);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  .ps-content {
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
+  }
+}

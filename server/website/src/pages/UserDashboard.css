@@ -1,0 +1,348 @@
+.dashboard-container {
+  padding: 4rem 1rem;
+  background-color: var(--color-bg);
+  min-height: 80vh;
+}
+
+.dashboard-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.dashboard-header h1 {
+  font-size: 2.5rem;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.welcome-text {
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+}
+
+.empty-dashboard {
+  background-color: var(--color-surface);
+  padding: 4rem;
+  border-radius: 24px;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  margin: 2rem auto;
+  max-width: 600px;
+}
+
+.empty-icon {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+}
+
+.empty-dashboard h3 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.empty-dashboard p {
+  color: var(--color-text-muted);
+  margin-bottom: 2rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2.5rem;
+}
+
+.bookings-section .section-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.bookings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.booking-card {
+  background-color: var(--color-surface);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.booking-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 1rem;
+}
+
+.service-type {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.badge-pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.badge-accepted {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.badge-rejected {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef6c6c;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.info-row .label {
+  color: var(--color-text-muted);
+}
+
+.info-row .value {
+  font-weight: 600;
+}
+
+.card-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+.btn-pay {
+  background: var(--gradient-primary);
+  color: white !important;
+  width: 100%;
+  display: inline-block;
+  text-align: center;
+  padding: 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(31, 138, 112, 0.3);
+}
+
+.pending-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #f59e0b;
+}
+
+.confirmed-notice {
+  font-weight: 700;
+  color: #10b981;
+  text-align: center;
+}
+
+/* Promo Cards */
+.explore-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.explore-card {
+  background: var(--color-surface);
+  padding: 2rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.promo-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.explore-card h3 {
+  margin-bottom: 0.75rem;
+}
+
+.explore-card p {
+  color: var(--color-text-muted);
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.explore-card .btn-outline {
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  background: transparent;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  display: block;
+}
+
+.explore-card .btn-outline:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f59e0b;
+  border-top-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 992px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 2.5rem 1rem;
+  }
+  .dashboard-header h1 {
+    font-size: 1.8rem;
+  }
+  .welcome-text {
+    font-size: 0.95rem;
+  }
+  .empty-dashboard {
+    padding: 2.5rem 1.5rem;
+  }
+  .booking-card {
+    padding: 1.5rem;
+  }
+  .service-type {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .info-row {
+    font-size: 0.85rem;
+  }
+  .btn-pay {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+}
+/* Welcome Notification & Badge Styles */
+.welcome-notification-success {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  animation: slideInDown 0.5s ease-out forwards;
+}
+
+.welcome-notif-content {
+  background: white;
+  padding: 1rem 2rem;
+  border-radius: 100px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border-left: 5px solid #10b981;
+}
+
+.notif-check {
+  font-size: 1.5rem;
+}
+
+.notif-text-group strong {
+  display: block;
+  font-size: 1.1rem;
+  color: #10b981;
+}
+
+.notif-text-group p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.header-top-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.verified-status-badge {
+  background: rgba(31, 138, 112, 0.1);
+  color: var(--color-primary);
+  padding: 0.4rem 1rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(31, 138, 112, 0.2);
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translate(-50%, -20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (max-width: 768px) {
+  .header-top-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

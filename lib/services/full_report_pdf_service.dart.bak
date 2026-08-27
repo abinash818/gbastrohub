@@ -1,0 +1,534 @@
+import 'dart:typed_data';
+import 'palangal_service.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:tamil_pdf_shaper/tamil_pdf_shaper.dart';
+import '../utils/constants.dart';
+import 'kp_service.dart';
+import 'package:intl/intl.dart';
+
+class FullReportPdfService {
+  static Future<Uint8List> generateFullHoroscopePdf({
+    required String name,
+    required String gender,
+    required Map<dynamic, dynamic> results,
+    Uint8List? leftLogoBytes,
+    Uint8List? rightLogoBytes,
+  }) async {
+    final pdf = pw.Document();
+    final headingFont = await TamilPdfFont.loadCustomFont('assets/fonts/Uni_Ila.Sundaram-02_shaped.ttf');
+    final bodyFont = await TamilPdfFont.loadCustomFont('assets/fonts/Uni_Ila.Sundaram-05_shaped.ttf');
+
+    final primaryColor = PdfColor.fromHex('#5D1204');
+    final secondaryColor = PdfColor.fromHex('#B58D3D');
+    final bgColor = PdfColor.fromHex('#FAF6EE');
+    final borderColor = PdfColor.fromHex('#E0D4BE');
+
+    final Map<String, List<String>> rasiData = _castToChartMap(results['rasi']);
+    final Map<String, List<String>> amsamData = _castToChartMap(results['navamsa']);
+    final Map<String, List<String>> pavagamData = _castToChartMap(results['pavagam']);
+    final Map<String, dynamic> vargas = results['divisional_charts'] ?? {};
+    final ashtakavarga = results['ashtakavarga'] as Map<dynamic, dynamic>? ?? {};
+    
+    final details = results['planet_details'] as Map<dynamic, dynamic>? ?? {};
+    final panchangam = results['panchangam'] as Map<dynamic, dynamic>? ?? {};
+    final dasaList = results['dasa'] as List<dynamic>? ?? [];
+    final birthDt = results['birth_dt'] as DateTime?;
+    final place = results['place'] ?? "-";
+    final lat = results['lat']?.toString() ?? "-";
+    final lon = results['lon']?.toString() ?? "-";
+    final timezone = results['timezone']?.toString() ?? "-";
+
+    final now = DateTime.now();
+
+    pw.Widget sectionTitle(String title) {
+      return pw.Container(
+        margin: const pw.EdgeInsets.only(top: 15, bottom: 8),
+        decoration: pw.BoxDecoration(
+          border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey300, width: 1)),
+        ),
+        padding: const pw.EdgeInsets.only(bottom: 4),
+        child: pw.Row(
+          children: [
+            pw.Container(width: 8, height: 8, decoration: pw.BoxDecoration(color: primaryColor, shape: pw.BoxShape.circle)),
+            pw.SizedBox(width: 6),
+            pw.Text(title.toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 14)),
+          ]
+        )
+      );
+    }
+
+    pw.Widget infoItem(String label, String value, {PdfColor? valueColor}) {
+      return pw.Padding(
+        padding: const pw.EdgeInsets.only(bottom: 4),
+        child: pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Container(width: 80, child: pw.Text(label.toTamilPdf, style: pw.TextStyle(font: bodyFont, color: PdfColors.grey700, fontSize: 10))),
+            pw.Text(": ", style: pw.TextStyle(font: bodyFont, color: PdfColors.grey700, fontSize: 10)),
+            pw.Expanded(child: pw.Text(value.toTamilPdf, style: pw.TextStyle(font: headingFont, color: valueColor ?? primaryColor, fontSize: 10))),
+          ]
+        )
+      );
+    }
+
+    pw.Widget chartBox(Map<String, List<String>> chartData, String title) {
+      Map<int, List<String>> rasiMap = {};
+      final List<String> SIGNS = [
+        "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+        "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+      ];
+      chartData.forEach((sign, planets) {
+        int rasiIdx = SIGNS.indexOf(sign) + 1;
+        if (rasiIdx > 0) rasiMap[rasiIdx] = planets;
+      });
+
+      pw.Widget cell(int? idx) {
+        if (idx == null) return pw.Container();
+        final planets = rasiMap[idx] ?? [];
+        return pw.Container(
+          padding: const pw.EdgeInsets.all(2),
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: borderColor, width: 0.5),
+            color: bgColor,
+          ),
+          child: pw.Center(
+            child: pw.Text(planets.join("\n").toTamilPdf, style: pw.TextStyle(font: bodyFont, color: primaryColor, fontSize: 9), textAlign: pw.TextAlign.center)
+          )
+        );
+      }
+
+      return pw.Column(
+        children: [
+          pw.Text(title.toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 12)),
+          pw.SizedBox(height: 6),
+          pw.Container(
+            width: 170, height: 170,
+            decoration: pw.BoxDecoration(border: pw.Border.all(color: primaryColor, width: 1.5)),
+            child: pw.Column(
+              children: [
+                pw.Expanded(child: pw.Row(children: [pw.Expanded(child: cell(12)), pw.Expanded(child: cell(1)), pw.Expanded(child: cell(2)), pw.Expanded(child: cell(3))])),
+                pw.Expanded(flex: 2, child: pw.Row(children: [
+                  pw.Expanded(child: pw.Column(children: [pw.Expanded(child: cell(11)), pw.Expanded(child: cell(10))])), 
+                  pw.Expanded(flex: 2, child: pw.Container(
+                    child: pw.Center(
+                      child: pw.Padding(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.FittedBox(
+                          fit: pw.BoxFit.scaleDown,
+                          child: pw.Text(title.toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 14), textAlign: pw.TextAlign.center)
+                        ),
+                      )
+                    )
+                  )), 
+                  pw.Expanded(child: pw.Column(children: [pw.Expanded(child: cell(4)), pw.Expanded(child: cell(5))]))
+                ])),
+                pw.Expanded(child: pw.Row(children: [pw.Expanded(child: cell(9)), pw.Expanded(child: cell(8)), pw.Expanded(child: cell(7)), pw.Expanded(child: cell(6))])),
+              ]
+            )
+          )
+        ]
+      );
+    }
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageTheme: pw.PageTheme(
+          pageFormat: PdfPageFormat.a5.landscape,
+          margin: const pw.EdgeInsets.all(24),
+          theme: pw.ThemeData.withFont(base: bodyFont),
+          buildBackground: (context) {
+            return pw.FullPage(
+              ignoreMargins: true,
+              child: pw.Container(
+                margin: const pw.EdgeInsets.all(12), // Adjusted for landscape
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: primaryColor, width: 2.5),
+                ),
+                child: pw.Container(
+                  margin: const pw.EdgeInsets.all(2), // Gap for inner border
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: primaryColor, width: 0.5),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        build: (context) {
+          return [
+            // Cover Page
+            pw.Center(
+              child: pw.Column(
+                mainAxisAlignment: pw.MainAxisAlignment.center,
+                children: [
+                  pw.SizedBox(height: 40),
+                  if (leftLogoBytes != null) pw.Image(pw.MemoryImage(leftLogoBytes!), width: 80, height: 80),
+                  pw.SizedBox(height: 20),
+                  pw.Text("வாழ்க வளமுடன்".toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 16)),
+                  pw.SizedBox(height: 20),
+                  pw.Container(
+                    padding: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: primaryColor, width: 2),
+                      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8))
+                    ),
+                    child: pw.Column(
+                      children: [
+                        pw.Text(name.toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 20)),
+                        pw.SizedBox(height: 5),
+                        pw.Text("ஜாதகம்".toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 16)),
+                      ]
+                    )
+                  ),
+                  pw.SizedBox(height: 20),
+                  pw.Text("சுத்த திருக்கணிதத்தின்படி".toTamilPdf, style: pw.TextStyle(font: bodyFont, color: PdfColors.grey800, fontSize: 12)),
+                  pw.Text("இந்த ஜாதகத்தை துல்லியமாக கணித்தவர்".toTamilPdf, style: pw.TextStyle(font: bodyFont, color: PdfColors.grey800, fontSize: 12)),
+                  pw.SizedBox(height: 10),
+                  pw.Container(
+                    padding: const pw.EdgeInsets.all(10),
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: primaryColor, width: 1.5),
+                    ),
+                    child: pw.Column(
+                      children: [
+                        pw.Text("ஆதிகுரு ஜோதிட மென்பொருள்".toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 14)),
+                      ]
+                    )
+                  ),
+                  pw.SizedBox(height: 10),
+                ]
+              )
+            ),
+
+            // Page Break after cover
+            pw.NewPage(),
+
+            sectionTitle("ஜாதகர் விவரங்கள்"),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                color: bgColor,
+                border: pw.Border.all(color: borderColor),
+                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(5)),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  infoItem("பெயர்", name),
+                  infoItem("பாலினம்", gender),
+                  infoItem("பிறந்த தேதி", birthDt != null ? DateFormat('dd/MM/yyyy').format(birthDt) : "-"),
+                  infoItem("நேரம்", birthDt != null ? DateFormat('hh:mm a').format(birthDt) : "-"),
+                  infoItem("இடம்", place),
+                  infoItem("அட்சரேகை", lat),
+                  infoItem("தீர்க்கரேகை", lon),
+                ]
+              )
+            ),
+
+            sectionTitle("பஞ்சாங்க விவரங்கள்"),
+            pw.Table(
+              border: pw.TableBorder.all(color: borderColor),
+              children: [
+                pw.TableRow(
+                  decoration: pw.BoxDecoration(color: PdfColor.fromHex('#F4EFE3')),
+                  children: ["தமிழ் வருடம்", "மாதம் / தேதி", "வாரம்", "பட்சம்"]
+                    .map((t) => pw.Padding(padding: const pw.EdgeInsets.all(4), child: pw.Text(t.toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 10), textAlign: pw.TextAlign.center)))
+                    .toList()
+                ),
+                pw.TableRow(
+                  children: [
+                    panchangam['tamil_year'] ?? "-",
+                    "${panchangam['tamil_month'] ?? "-"} / ${panchangam['tamil_date'] ?? "-"}",
+                    panchangam['vara'] ?? "-",
+                    panchangam['paksham'] ?? "-",
+                  ].map((t) => pw.Padding(padding: const pw.EdgeInsets.all(4), child: pw.Text(t.toString().toTamilPdf, style: pw.TextStyle(font: bodyFont, color: primaryColor, fontSize: 10), textAlign: pw.TextAlign.center))).toList()
+                ),
+              ]
+            ),
+            pw.SizedBox(height: 10),
+            pw.Table(
+              border: pw.TableBorder.all(color: borderColor),
+              children: [
+                pw.TableRow(
+                  decoration: pw.BoxDecoration(color: PdfColor.fromHex('#F4EFE3')),
+                  children: ["திதி", "நட்சத்திரம்", "யோகம்", "கரணம்"]
+                    .map((t) => pw.Padding(padding: const pw.EdgeInsets.all(4), child: pw.Text(t.toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 10), textAlign: pw.TextAlign.center)))
+                    .toList()
+                ),
+                pw.TableRow(
+                  children: [
+                    panchangam['tithi'] ?? "-",
+                    panchangam['nakshatra'] ?? "-",
+                    panchangam['yoga'] ?? "-",
+                    panchangam['karana'] ?? "-",
+                  ].map((t) => pw.Padding(padding: const pw.EdgeInsets.all(4), child: pw.Text(t.toString().toTamilPdf, style: pw.TextStyle(font: bodyFont, color: primaryColor, fontSize: 10), textAlign: pw.TextAlign.center))).toList()
+                ),
+              ]
+            ),
+
+            pw.NewPage(),
+
+            sectionTitle("ராசி மற்றும் நவாம்ச சக்கரம்"),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                chartBox(rasiData, "ராசி சக்கரம்"),
+                chartBox(amsamData, "நவாம்ச சக்கரம்"),
+              ]
+            ),
+            
+            pw.SizedBox(height: 20),
+            pw.Wrap(
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    sectionTitle("பாவக சக்கரம்"),
+                    pw.Center(child: chartBox(pavagamData, "பாவக சக்கரம்")),
+                  ]
+                )
+              ]
+            ),
+
+            pw.NewPage(),
+
+            sectionTitle("கிரக பாதசாரம்"),
+            pw.Table(
+              border: pw.TableBorder.all(color: borderColor),
+              children: [
+                pw.TableRow(
+                  decoration: pw.BoxDecoration(color: PdfColor.fromHex('#F4EFE3')),
+                  children: ["கிரகம்", "ராசி", "நட்சத்திரம்", "பாதம்", "பாகை"]
+                    .map((t) => pw.Padding(padding: const pw.EdgeInsets.all(4), child: pw.Text(t.toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 10), textAlign: pw.TextAlign.center)))
+                    .toList()
+                ),
+                ...['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu', 'Maanthi', 'Lagna'].map((pKey) {
+                  final p = details[pKey.toLowerCase()] ?? details[pKey] ?? {};
+                  String pName = KPService.TAMIL_PLANETS[pKey] ?? (pKey == 'Lagna' ? 'லக்னம்' : pKey);
+                  String rasi = SIGNS_TAMIL[p['rasi']] ?? p['rasi'] ?? "-";
+                  String nak = p['nakshatra'] ?? "-";
+                  String pada = p['pada']?.toString() ?? "-";
+                  String deg = p['longitude'] != null ? KPService.formatAbsoluteDegrees(p['longitude']) : "-";
+                  return pw.TableRow(
+                    children: [pName, rasi, nak, pada, deg]
+                      .map((t) => pw.Padding(padding: const pw.EdgeInsets.all(4), child: pw.Text(t.toTamilPdf, style: pw.TextStyle(font: bodyFont, color: primaryColor, fontSize: 10), textAlign: pw.TextAlign.center)))
+                      .toList()
+                  );
+                }).toList()
+              ]
+            ),
+
+            // Vargas loop
+            if (vargas.isNotEmpty) ...[
+               for (int i = 0; i < vargas.keys.length; i += 2) ...[
+                 pw.NewPage(),
+                 sectionTitle("வர்க்க சக்கரங்கள்"),
+                 pw.Row(
+                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                   children: [
+                     chartBox(_castToChartMap(vargas[vargas.keys.elementAt(i)]), vargas.keys.elementAt(i)),
+                     if (i + 1 < vargas.length) 
+                        chartBox(_castToChartMap(vargas[vargas.keys.elementAt(i+1)]), vargas.keys.elementAt(i+1))
+                     else
+                        pw.SizedBox(width: 170)
+                   ]
+                 ),
+                 pw.SizedBox(height: 20),
+               ]
+            ],
+
+            pw.NewPage(),
+
+            // Dasa Bhukti
+            sectionTitle("உடுமகா திசை விபரம் (தசா புக்தி)"),
+            ...dasaList.map((d) {
+              String lord = d['lord'] ?? "-";
+              final start = d['start'] as DateTime?;
+              final end = d['end'] as DateTime?;
+              String startStr = start != null ? DateFormat('dd-MM-yyyy').format(start) : "-";
+              String endStr = end != null ? DateFormat('dd-MM-yyyy').format(end) : "-";
+              final subPeriods = d['subPeriods'] as List<dynamic>? ?? [];
+
+              return pw.Wrap(
+                children: [
+                  pw.Container(
+                    margin: const pw.EdgeInsets.only(bottom: 20),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text("$lord திசை விபரம் ($startStr முதல் $endStr வரை)".toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 12)),
+                    pw.SizedBox(height: 6),
+                    pw.Table(
+                      border: pw.TableBorder.all(color: borderColor),
+                      children: [
+                        pw.TableRow(
+                          decoration: pw.BoxDecoration(color: PdfColor.fromHex('#F4EFE3')),
+                          children: ["புக்தி", "ஆரம்பம்", "முடிவு"]
+                            .map((t) => pw.Padding(padding: const pw.EdgeInsets.all(4), child: pw.Text(t.toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 10), textAlign: pw.TextAlign.center)))
+                            .toList()
+                        ),
+                        ...subPeriods.map((b) {
+                           String bLord = b['lord'] ?? "-";
+                           final bStart = b['start'] as DateTime?;
+                           final bEnd = b['end'] as DateTime?;
+                           return pw.TableRow(
+                             children: [
+                               bLord,
+                               bStart != null ? DateFormat('dd-MM-yyyy').format(bStart) : "-",
+                               bEnd != null ? DateFormat('dd-MM-yyyy').format(bEnd) : "-"
+                             ].map((t) => pw.Padding(padding: const pw.EdgeInsets.all(4), child: pw.Text(t.toTamilPdf, style: pw.TextStyle(font: bodyFont, color: primaryColor, fontSize: 10), textAlign: pw.TextAlign.center))).toList()
+                           );
+                        }).toList()
+                      ]
+                    )
+                  ]
+                )
+              )
+            ]);
+            }).toList(),
+            
+            // Ashtakavarga Output (Basic table)
+            if (ashtakavarga.isNotEmpty && ashtakavarga['individual'] != null) ...[
+               pw.NewPage(),
+               sectionTitle("அஷ்டவர்க்கம் (Ashtakavarga)"),
+               ...((ashtakavarga['individual'] as Map<dynamic, dynamic>).entries.map((entry) {
+                  final pName = KPService.TAMIL_PLANETS[entry.key] ?? entry.key.toString();
+                  final points = entry.value as List<int>;
+                  return pw.Container(
+                    margin: const pw.EdgeInsets.only(bottom: 10),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text("$pName பரல்கள்".toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 12)),
+                        pw.SizedBox(height: 5),
+                        pw.Text(points.join(" | ").toTamilPdf, style: pw.TextStyle(font: bodyFont, color: primaryColor, fontSize: 10))
+                      ]
+                    )
+                  );
+               }).toList()),
+               
+               if (ashtakavarga['total'] != null) ...[
+                 pw.SizedBox(height: 20),
+                 sectionTitle("சர்வ அஷ்டவர்க்கம்"),
+                 (() {
+                   Map<String, List<String>> sarvaMap = {};
+                   List<dynamic> totalPoints = ashtakavarga['total'];
+                   for (int i = 0; i < 12; i++) {
+                     if (i < totalPoints.length) sarvaMap[KPService.SIGNS[i]] = [totalPoints[i].toString()];
+                   }
+                   return chartBox(sarvaMap, "சர்வ\nஅஷ்டவர்க்கம்");
+                 })(),
+               ],
+
+               if (ashtakavarga['pindas'] != null) ...[
+                 pw.SizedBox(height: 20),
+                 sectionTitle("பிண்டங்கள்"),
+                 (() {
+                   final pindas = (ashtakavarga['pindas'] as Map).cast<String, dynamic>();
+                   final planets = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
+                   return pw.Table(
+                     border: pw.TableBorder.all(color: borderColor),
+                     children: [
+                       pw.TableRow(
+                         decoration: pw.BoxDecoration(color: PdfColor.fromHex('#F4EFE3')),
+                         children: ["கிரகம்", "ராசி பிண்டம்", "கிரக பிண்டம்", "சேர்த்திய பிண்டம்"].map((t) => pw.Padding(padding: const pw.EdgeInsets.all(4), child: pw.Text(t.toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 10), textAlign: pw.TextAlign.center))).toList()
+                       ),
+                       ...planets.map((p) {
+                         final pPinda = (pindas[p] as Map? ?? {}).cast<String, dynamic>();
+                         final pName = KPService.TAMIL_PLANETS[p] ?? p;
+                         return pw.TableRow(
+                           children: [
+                             pName,
+                             pPinda['rasi']?.toString() ?? "0",
+                             pPinda['graha']?.toString() ?? "0",
+                             pPinda['total']?.toString() ?? "0",
+                           ].map((t) => pw.Padding(padding: const pw.EdgeInsets.all(4), child: pw.Text(t.toTamilPdf, style: pw.TextStyle(font: bodyFont, color: primaryColor, fontSize: 10), textAlign: pw.TextAlign.center))).toList()
+                         );
+                       }).toList()
+                     ]
+                   );
+                 })(),
+               ],
+            ],
+
+            pw.NewPage(),
+            sectionTitle("பொது பலன்கள் (Predictions)"),
+            (() {
+              final pancha = results['panchangam'] ?? {};
+              final basics = results['planet_details'] ?? {};
+              final moon = basics['moon'] ?? {};
+              final lagna = basics['lagna'] ?? {};
+              
+              Map<String, dynamic>? activeDasa;
+              Map<String, dynamic>? activeBukthi;
+              final now = DateTime.now();
+              for (var d in dasaList) {
+                if (now.isAfter(d['start']) && now.isBefore(d['end'])) {
+                  activeDasa = d;
+                  for (var b in (d['subPeriods'] as List? ?? [])) {
+                    if (now.isAfter(b['start']) && now.isBefore(b['end'])) {
+                      activeBukthi = b;
+                      break;
+                    }
+                  }
+                  break;
+                }
+              }
+
+              final String dasaPalanText = activeDasa != null 
+                ? "நடப்பு தசை: ${activeDasa['lord']} (${DateFormat('dd-MM-yyyy').format(activeDasa['end'])} வரை)\n${PalangalService.getDetailedDasaPalan(activeDasa['lord'])}\n\nநடப்பு புத்தி: ${activeBukthi?['lord'] ?? '-'} (${activeBukthi != null ? DateFormat('dd-MM-yyyy').format(activeBukthi['end']) : '-'} வரை)\n${PalangalService.getDetailedBhuktiPalan(activeBukthi?['lord'])}" 
+                : "தசா புத்தி விபரங்கள் இல்லை";
+
+              final palangalListItems = [
+                {"title": "லக்ன பலன்", "content": PalangalService.getDetailedLagnaPalan(lagna['rasi'])},
+                {"title": "ராசி பலன்", "content": PalangalService.getDetailedRasiPalan(moon['rasi'])},
+                {"title": "நட்சத்திர பலன்", "content": PalangalService.getDetailedNakshatraPalan(moon['nakshatra'], moon['pada'])},
+                {"title": "யோகம்", "content": PalangalService.getDetailedYogaPalan(pancha['yoga'])},
+                {"title": "கர்ணம்", "content": PalangalService.getDetailedKaranaPalan(pancha['karana']?.toString())},
+                {"title": "கிழமை", "content": PalangalService.getDetailedWeekdayPalan(pancha['vara'])},
+                {"title": "திதி", "content": PalangalService.getDetailedThithiPalan(pancha['tithi'])},
+                {"title": "தசா புத்தி பலன்", "content": dasaPalanText},
+              ];
+
+              return pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: palangalListItems.map((item) {
+                  return pw.Container(
+                    margin: const pw.EdgeInsets.only(bottom: 15),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(item['title']!.toTamilPdf, style: pw.TextStyle(font: headingFont, color: primaryColor, fontSize: 13, decoration: pw.TextDecoration.underline)),
+                        pw.SizedBox(height: 6),
+                        pw.Text(item['content']!.toTamilPdf, style: pw.TextStyle(font: bodyFont, color: PdfColors.black, fontSize: 11)),
+                      ]
+                    )
+                  );
+                }).toList()
+              );
+            })(),
+
+          ];
+        }
+      )
+    );
+    return pdf.save();
+  }
+
+  static Map<String, String> SIGNS_TAMIL = {
+    'Aries': 'மேஷம்', 'Taurus': 'ரிஷபம்', 'Gemini': 'மிதுனம்', 'Cancer': 'கடகம்',
+    'Leo': 'சிம்மம்', 'Virgo': 'கன்னி', 'Libra': 'துலாம்', 'Scorpio': 'விருச்சிகம்',
+    'Sagittarius': 'தனுசு', 'Capricorn': 'மகரம்', 'Aquarius': 'கும்பம்', 'Pisces': 'மீனம்'
+  };
+
+  static Map<String, List<String>> _castToChartMap(dynamic data) {
+    if (data == null || data is! Map) return {};
+    return data.map((key, value) {
+      if (value is List) {
+        return MapEntry(key.toString(), List<String>.from(value.map((e) => e.toString())));
+      }
+      return MapEntry(key.toString(), <String>[]);
+    });
+  }
+}

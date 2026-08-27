@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "955705451742",
+    "project_id": "gbastro-e8efb",
+    "storage_bucket": "gbastro-e8efb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:955705451742:android:0119d474a10bd111c94e4f",
+        "android_client_info": {
+          "package_name": "com.gbastro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "955705451742-jdldh1mjjb18p6fi9ghcpmnonorrvn25.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gbastro",
+            "certificate_hash": "fd22cd16b9a9b1354202381cb4ed9b0a5f860fe4"
+          }
+        },
+        {
+          "client_id": "955705451742-qf5vffpfaiknupjd30oivfpo1kocd6ot.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gbastro",
+            "certificate_hash": "f81dcf96544371a540b8024c4d27e1bde09eee05"
+          }
+        },
+        {
+          "client_id": "955705451742-8k83cke1kiqqhqp22gtqau6l3gb1ll5v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRI0w-Slr7D7fc_aN-eSWmYPI8N4z4oK0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "955705451742-8k83cke1kiqqhqp22gtqau6l3gb1ll5v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

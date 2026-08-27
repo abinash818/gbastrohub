@@ -1,0 +1,301 @@
+class NakshatraData {
+  static const List<Map<String, String>> nakshatraDetails = [
+  {
+    "nakshatram": "அசுவனி",
+    "nama_ezhuthu": "சு-சே-சோ-ல",
+    "thodar_ezhuthu": "செ-சை-சொ-சோ",
+    "ganam": "தேவ",
+    "mirugam": "ஆண்குதிரை",
+    "pakshi": "ராசாளி",
+    "maram": "எட்டி",
+    "naadi": "தஷிண பார்சுவ நாடி",
+    "angam": "ஏறுபாதம்"
+  },
+  {
+    "nakshatram": "பரணி",
+    "nama_ezhuthu": "லி-லு-லே-வோ",
+    "thodar_ezhuthu": "",
+    "ganam": "மனுஷ",
+    "mirugam": "ஆண்யானை",
+    "pakshi": "காகம்",
+    "maram": "நெல்லி",
+    "naadi": "மத்திய பார்சுவ நாடி",
+    "angam": "ஏறுதொடை"
+  },
+  {
+    "nakshatram": "கிருத்திகை",
+    "nama_ezhuthu": "அ-இ-உ-எ",
+    "thodar_ezhuthu": "",
+    "ganam": "ராக்ஷஸ",
+    "mirugam": "பெண் ஆடு",
+    "pakshi": "மயில்",
+    "maram": "அத்தி(பா)",
+    "naadi": "வாம பார்சுவ நாடி",
+    "angam": "ஏறுவயிறு"
+  },
+  {
+    "nakshatram": "ரோகிணி",
+    "nama_ezhuthu": "ஓ-வா-வீ-வு",
+    "thodar_ezhuthu": "வா-லீ",
+    "ganam": "மனுஷ",
+    "mirugam": "ஆண்நாகம்",
+    "pakshi": "ஆந்தை",
+    "maram": "நாவல்(பா)",
+    "naadi": "வாம பார்சுவ நாடி",
+    "angam": "ஏறுகழுத்து"
+  },
+  {
+    "nakshatram": "மிருகசீர்ஷம்",
+    "nama_ezhuthu": "வே-வோ-கா-கி",
+    "thodar_ezhuthu": "வை-வொ",
+    "ganam": "தேவ",
+    "mirugam": "பெண்சாரை",
+    "pakshi": "கோழி",
+    "maram": "கருங்காலி",
+    "naadi": "மத்திய பார்சுவ நாடி",
+    "angam": "சிரசு(தலை)"
+  },
+  {
+    "nakshatram": "திருவாதிரை",
+    "nama_ezhuthu": "கு-க-ரு-ச",
+    "thodar_ezhuthu": "கூ-கா",
+    "ganam": "மனுஷ",
+    "mirugam": "ஆண்நாய்",
+    "pakshi": "அன்றில்",
+    "maram": "செங்கரு",
+    "naadi": "தஷிண பார்சுவ நாடி",
+    "angam": "இறங்குகழுத்து"
+  },
+  {
+    "nakshatram": "புனர்பூசம்",
+    "nama_ezhuthu": "கே-கோ-ஹ-ஹி",
+    "thodar_ezhuthu": "கெ-கை",
+    "ganam": "தேவ",
+    "mirugam": "பெண்பூனை",
+    "pakshi": "அன்னம்",
+    "maram": "மூங்கில்",
+    "naadi": "தஷிண பார்சுவ நாடி",
+    "angam": "இறங்குவயிறு"
+  },
+  {
+    "nakshatram": "பூசம்",
+    "nama_ezhuthu": "ஹு-ஹே-ஹோ-ட",
+    "thodar_ezhuthu": "கொ-கௌ",
+    "ganam": "தேவ",
+    "mirugam": "ஆண்ஆடு",
+    "pakshi": "நீர்காகம்",
+    "maram": "அரசு(பா)",
+    "naadi": "மத்திய பார்சுவ நாடி",
+    "angam": "இறங்குதொடை"
+  },
+  {
+    "nakshatram": "ஆயில்யம்",
+    "nama_ezhuthu": "டி-டு-டே-டோ",
+    "thodar_ezhuthu": "மெ-மை",
+    "ganam": "ராக்ஷஸ",
+    "mirugam": "ஆண்பூனை",
+    "pakshi": "கிச்சிலி",
+    "maram": "புன்னை(பா)",
+    "naadi": "வாம பார்சுவ நாடி",
+    "angam": "இறங்குபாதம்"
+  },
+  {
+    "nakshatram": "மகம்",
+    "nama_ezhuthu": "ம-மி-மு-மெ",
+    "thodar_ezhuthu": "மா-மீ-மு",
+    "ganam": "ராக்ஷஸ",
+    "mirugam": "ஆண்எலி",
+    "pakshi": "ஆண்கழுகு",
+    "maram": "ஆல்(பா)",
+    "naadi": "வாம பார்சுவ நாடி",
+    "angam": "ஏறுபாதம்"
+  },
+  {
+    "nakshatram": "பூரம்",
+    "nama_ezhuthu": "மோ-ட-டி-டு",
+    "thodar_ezhuthu": "மொ-மௌ",
+    "ganam": "மனுஷ",
+    "mirugam": "பெண்எலி",
+    "pakshi": "பெண்கழுகு",
+    "maram": "பலா(பா)",
+    "naadi": "மத்திய பார்சுவ நாடி",
+    "angam": "ஏறுதொடை"
+  },
+  {
+    "nakshatram": "உத்திரம்",
+    "nama_ezhuthu": "டே-டோ-ப-பி",
+    "thodar_ezhuthu": "பா-பீ",
+    "ganam": "மனுஷ",
+    "mirugam": "ஆண்பசு",
+    "pakshi": "கௌதாரி",
+    "maram": "அலரி(பா)",
+    "naadi": "தஷிண பார்சுவ நாடி",
+    "angam": "ஏறுவயிறு"
+  },
+  {
+    "nakshatram": "ஹஸ்தம்",
+    "nama_ezhuthu": "பு-ஷ-ண-ட",
+    "thodar_ezhuthu": "பூ-மே",
+    "ganam": "தேவ",
+    "mirugam": "பெண்எருமை",
+    "pakshi": "பருந்து",
+    "maram": "அத்தி(பா)",
+    "naadi": "தஷிண பார்சுவ நாடி",
+    "angam": "ஏறுகழுத்து"
+  },
+  {
+    "nakshatram": "சித்திரை",
+    "nama_ezhuthu": "பே-போ-ரா-ரி",
+    "thodar_ezhuthu": "பை-பௌ",
+    "ganam": "ராக்ஷஸ",
+    "mirugam": "ஆண்புலி",
+    "pakshi": "மரங்கொத்தி",
+    "maram": "வில்வம்",
+    "naadi": "மத்திய பார்சுவ நாடி",
+    "angam": "சிரசு(தலை)"
+  },
+  {
+    "nakshatram": "சுவாதி",
+    "nama_ezhuthu": "ரு-ரே-ரோ-த",
+    "thodar_ezhuthu": "தா",
+    "ganam": "தேவ",
+    "mirugam": "ஆண்எருமை",
+    "pakshi": "தேனீ",
+    "maram": "மருதம்",
+    "naadi": "வாம பார்சுவ நாடி",
+    "angam": "இறங்குகழுத்து"
+  },
+  {
+    "nakshatram": "விசாகம்",
+    "nama_ezhuthu": "தி-து-தே-தோ",
+    "thodar_ezhuthu": "தூ-தை",
+    "ganam": "ராக்ஷஸ",
+    "mirugam": "பெண்புலி",
+    "pakshi": "குருவி",
+    "maram": "விளா",
+    "naadi": "வாம பார்சுவ நாடி",
+    "angam": "இறங்குவயிறு"
+  },
+  {
+    "nakshatram": "அனுஷம்",
+    "nama_ezhuthu": "நா-நி-நு-நே",
+    "thodar_ezhuthu": "நா-நீ-நூ",
+    "ganam": "தேவ",
+    "mirugam": "பெண்மான்",
+    "pakshi": "வானம்பாடி",
+    "maram": "மகிழம்",
+    "naadi": "மத்திய பார்சுவ நாடி",
+    "angam": "இறங்குதொடை"
+  },
+  {
+    "nakshatram": "கேட்டை",
+    "nama_ezhuthu": "நோ-ய-இ-ய",
+    "thodar_ezhuthu": "நே-நை",
+    "ganam": "ராக்ஷஸ",
+    "mirugam": "ஆண்மான்",
+    "pakshi": "சக்கரவாளம்",
+    "maram": "பராய்(பா)",
+    "naadi": "தஷிண பார்சுவ நாடி",
+    "angam": "இறங்குபாதம்"
+  },
+  {
+    "nakshatram": "மூலம்",
+    "nama_ezhuthu": "யே-யோ-ப-பி",
+    "thodar_ezhuthu": "பா-பீ",
+    "ganam": "ராக்ஷஸ",
+    "mirugam": "பெண்நாய்",
+    "pakshi": "செம்பருந்து",
+    "maram": "மராமரம்",
+    "naadi": "தஷிண பார்சுவ நாடி",
+    "angam": "ஏறுபாதம்"
+  },
+  {
+    "nakshatram": "பூராடம்",
+    "nama_ezhuthu": "பு-த-ப-டா",
+    "thodar_ezhuthu": "பூ-பே-போ",
+    "ganam": "மனுஷ",
+    "mirugam": "ஆண்குரங்கு",
+    "pakshi": "கௌதாரி",
+    "maram": "வஞ்சி(பா)",
+    "naadi": "மத்திய பார்சுவ நாடி",
+    "angam": "ஏறுதொடை"
+  },
+  {
+    "nakshatram": "உத்திராடம்",
+    "nama_ezhuthu": "பே-போ-ஜ-ஜி",
+    "thodar_ezhuthu": "ஜூ-ஜே-ஜோ-கா",
+    "ganam": "மனுஷ",
+    "mirugam": "ஆண்கீரி/பசு",
+    "pakshi": "வலியான்",
+    "maram": "பலா(பா)",
+    "naadi": "வாம பார்சுவ நாடி",
+    "angam": "ஏறுவயிறு"
+  },
+  {
+    "nakshatram": "திருவோணம்",
+    "nama_ezhuthu": "கூ-கா-கே-கோ",
+    "thodar_ezhuthu": "கி-கு-கூ",
+    "ganam": "தேவ",
+    "mirugam": "பெண்குரங்கு",
+    "pakshi": "நாரை",
+    "maram": "எருக்கு(பா)",
+    "naadi": "வாம பார்சுவ நாடி",
+    "angam": "ஏறுகழுத்து"
+  },
+  {
+    "nakshatram": "அவிட்டம்",
+    "nama_ezhuthu": "க-கீ-கு-கூ",
+    "thodar_ezhuthu": "ஞ-ஞா-கே",
+    "ganam": "ராக்ஷஸ",
+    "mirugam": "பெண்சிங்கம்",
+    "pakshi": "பொன்வண்டு",
+    "maram": "வன்னி",
+    "naadi": "மத்திய பார்சுவ நாடி",
+    "angam": "சிரசு(தலை)"
+  },
+  {
+    "nakshatram": "சதயம்",
+    "nama_ezhuthu": "கோ-ஸ-ஸீ-ஸு",
+    "thodar_ezhuthu": "தோ-தௌ",
+    "ganam": "ராக்ஷஸ",
+    "mirugam": "பெண்குதிரை",
+    "pakshi": "அண்டங்காக்கை",
+    "maram": "கடம்பு",
+    "naadi": "தஷிண பார்சுவ நாடி",
+    "angam": "இறங்குகழுத்து"
+  },
+  {
+    "nakshatram": "பூரட்டாதி",
+    "nama_ezhuthu": "ஸே-ஸோ-தா-தி",
+    "thodar_ezhuthu": "நோ-நௌ",
+    "ganam": "மனுஷ",
+    "mirugam": "ஆண்சிங்கம்",
+    "pakshi": "உள்ளான்",
+    "maram": "தேமா(பா)",
+    "naadi": "தஷிண பார்சுவ நாடி",
+    "angam": "இறங்குவயிறு"
+  },
+  {
+    "nakshatram": "உத்திரட்டாதி",
+    "nama_ezhuthu": "து-ஞ்-ச-ஸ்ரீ",
+    "thodar_ezhuthu": "யா-ஞா-சா-சீ",
+    "ganam": "மனுஷ",
+    "mirugam": "பெண்பசு",
+    "pakshi": "கோட்டான்",
+    "maram": "வேம்பு",
+    "naadi": "மத்திய பார்சுவ நாடி",
+    "angam": "இறங்குதொடை"
+  },
+  {
+    "nakshatram": "ரேவதி",
+    "nama_ezhuthu": "தே-தோ-ச-சி",
+    "thodar_ezhuthu": "",
+    "ganam": "தேவ",
+    "mirugam": "பெண்யானை",
+    "pakshi": "வல்லூறு",
+    "maram": "இலுப்பை",
+    "naadi": "வாம பார்சுவ நாடி",
+    "angam": "இறங்குபாதம்"
+  }
+];
+}

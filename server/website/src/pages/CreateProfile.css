@@ -1,0 +1,383 @@
+.cp-page {
+  background-color: var(--color-bg);
+  min-height: calc(100vh - 80px);
+  padding-bottom: 4rem;
+}
+
+.cp-header {
+  background: linear-gradient(135deg, var(--color-primary), #115e45);
+  color: white;
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.cp-header h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.cp-header p {
+  opacity: 0.9;
+  font-size: 1.1rem;
+}
+
+.cp-container {
+  margin-top: -3rem;
+  max-width: 800px;
+}
+
+/* Stepper */
+.cp-stepper {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  background: var(--color-surface);
+  padding: 1.5rem 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  overflow-x: auto;
+}
+
+.cp-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  text-align: center;
+  z-index: 1;
+}
+
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--color-bg);
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.step-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.step-line {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-border);
+  z-index: -1;
+  transform: translateY(-50%);
+}
+
+.cp-step.active .step-circle {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: #e6fcf5;
+}
+
+.cp-step.active .step-label {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.cp-step.completed .step-circle {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.cp-step.completed .step-line {
+  background-color: var(--color-primary);
+}
+
+/* Card */
+.cp-form-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  padding: 3.5rem;
+  border: 1px solid var(--color-border);
+}
+
+.cp-section h2 {
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e6fcf5;
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.2rem 2rem; /* increased gap for precise separation */
+}
+
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.f-full {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  margin-bottom: 0.35rem; /* added extra spacing under label */
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 1.05rem 1.25rem; /* thicker elegant padding */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  font-family: inherit;
+  font-size: 1.05rem; /* slightly larger text */
+  color: var(--color-text);
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(31, 138, 112, 0.1);
+  background: var(--color-surface);
+}
+
+.gender-toggle {
+  display: flex;
+  gap: 1rem;
+}
+
+.g-btn {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+  cursor: pointer;
+  background: var(--color-bg);
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.g-btn input {
+  display: none;
+}
+
+.g-btn.active {
+  border-color: var(--color-primary);
+  background: #e6fcf5;
+  color: var(--color-primary);
+}
+
+.cp-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.cp-actions .btn-prev,
+.cp-actions .btn-next,
+.cp-actions .btn-submit {
+  padding: 0.8rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn-prev {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.btn-prev:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.btn-next {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(31, 138, 112, 0.2);
+}
+
+.btn-next:hover {
+  background: linear-gradient(135deg, #166854 0%, #0f4d3e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(31, 138, 112, 0.3);
+}
+
+.btn-submit {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  font-size: 1.1rem;
+  padding: 1rem 2rem;
+  border-radius: var(--radius-full);
+  box-shadow: 0 4px 15px rgba(31, 138, 112, 0.3);
+}
+
+.btn-submit:hover {
+  background: linear-gradient(135deg, #166854 0%, #0f4d3e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(31, 138, 112, 0.4);
+}
+
+/* ── Marital Status Pill Selector (Tamil Matrimony Style) ── */
+.marital-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.25rem;
+}
+
+.marital-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.52rem 1rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 50px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #4b5563;
+  background: var(--color-bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.marital-pill input {
+  display: none;
+}
+
+.marital-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(31, 138, 112, 0.05);
+}
+
+.marital-pill-active {
+  border-color: var(--color-primary) !important;
+  background: rgba(31, 138, 112, 0.10) !important;
+  color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(31, 138, 112, 0.12);
+}
+
+/* Special active colors per status */
+.marital-pill-active[data-status="Divorced"] {
+  border-color: #dc2626 !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  color: #991b1b !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.10);
+}
+.marital-pill-active[data-status="Widow"],
+.marital-pill-active[data-status="Widower"] {
+  border-color: #475569 !important;
+  background: rgba(100, 116, 139, 0.10) !important;
+  color: #334155 !important;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.12);
+}
+.marital-pill-active[data-status="Second Marriage"] {
+  border-color: #d97706 !important;
+  background: rgba(245, 158, 11, 0.09) !important;
+  color: #92400e !important;
+}
+
+/* Conditional children note box */
+.children-info-box {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, rgba(245,158,11,0.07), rgba(239,68,68,0.05));
+  border: 1.5px solid rgba(245,158,11,0.25);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.children-info-box .children-note {
+  font-size: 0.8rem;
+  color: #92400e;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.5rem;
+}
+
+/* Error Toast */
+.error-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #dc2626;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 10000;
+  min-width: 300px;
+  justify-content: space-between;
+}
+
+.error-toast button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.error-toast button:hover {
+  opacity: 1;
+}
+
+@media (max-width: 480px) {
+  .error-toast {
+    width: 90%;
+    bottom: 1rem;
+    min-width: unset;
+  }
+}

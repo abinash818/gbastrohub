@@ -209,6 +209,148 @@ class JamakkolOnePagePdfService {
     final ayanamsa = inner['ayanamsa'] ?? "24° 12' 51\" (KP-Newcomb)";
     final prasannaNo = results['prasannam_no'] ?? "-";
 
+    final isTa = l10n.localeName == 'ta';
+    final isHi = l10n.localeName == 'hi';
+
+    // Helper: Translate planet name
+    String getPName(String name) {
+      return KPService.TAMIL_PLANETS[name] ?? name;
+    }
+    
+    // Helper: Translate rasi name
+    String getRName(String name) {
+      return KPService.TAMIL_SIGNS[name] ?? name;
+    }
+
+    // 1. Planet contacting Udayam
+    final uContacts = notes['udayam_contact'] as List? ?? [];
+    String uContactStr = "-";
+    if (uContacts.isNotEmpty) {
+      uContactStr = uContacts.map((c) {
+        String p = getPName(c['planet']);
+        double deg = c['deg'] % 30;
+        int d = deg.floor();
+        int m = ((deg - d) * 60).floor();
+        String degStr = "${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
+        return isTa 
+            ? "$p\_$degStr / பாவம் ${c['house']} / ${c['lordship']}"
+            : (isHi ? "$p\_$degStr / भाव ${c['house']} / ${c['lordship']}" : "$p\_$degStr / House ${c['house']} / ${c['lordship']}");
+      }).join(", ");
+    }
+
+    // 2. Udayam star pada
+    final uStar = notes['udayam_star'] as Map? ?? {};
+    String uStarStr = "-";
+    if (uStar.isNotEmpty) {
+      double uDeg = uStar['deg'] % 30;
+      int ud = uDeg.floor();
+      int um = ((uDeg - ud) * 60).floor();
+      uStarStr = "${ud.toString().padLeft(2, '0')}:${um.toString().padLeft(2, '0')} ${getRName(uStar['nakshatra'])} ${uStar['pada']} ${getPName(uStar['lord'])} ${uStar['lordship']}";
+    }
+
+    // 3. Crossed planet
+    final crossed = notes['crossed_planet'] as Map?;
+    String crossedStr = "-";
+    if (crossed != null) {
+      double cDeg = crossed['deg'] % 30;
+      int cd = cDeg.floor();
+      int cm = ((cDeg - cd) * 60).floor();
+      String cDegStr = "${cd.toString().padLeft(2, '0')}:${cm.toString().padLeft(2, '0')}";
+      crossedStr = "${getPName(crossed['planet'])} ${crossed['lordship']} = $cDegStr";
+    }
+
+    // 4. Arudam House
+    final aHouse = notes['arudam_house_details'] as Map? ?? {};
+    String aHouseStr = "-";
+    if (aHouse.isNotEmpty) {
+      double aDeg = aHouse['deg'] % 30;
+      int ad = aDeg.floor();
+      int am = ((aDeg - ad) * 60).floor();
+      String aDegStr = "${ad.toString().padLeft(2, '0')}:${am.toString().padLeft(2, '0')}";
+      aHouseStr = "${aHouse['house']} ${getPName(aHouse['lord'])} ${aHouse['lordship']} $aDegStr ${getRName(aHouse['nakshatra'])} ${aHouse['pada']}";
+    }
+
+    // 5. Planet contacting Arudam
+    final aContact = notes['arudam_contact'] as Map?;
+    String aContactStr = "-";
+    if (aContact != null) {
+      double acDeg = aContact['deg'] % 30;
+      int acd = acDeg.floor();
+      int acm = ((acDeg - acd) * 60).floor();
+      String acDegStr = "${acd.toString().padLeft(2, '0')}:${acm.toString().padLeft(2, '0')}";
+      aContactStr = "${getPName(aContact['planet'])}\_$acDegStr ${getRName(aContact['nakshatra'])} ${aContact['pada']}";
+    }
+
+    // 6. Kavippu House
+    final kHouse = notes['kavi_house_details'] as Map? ?? {};
+    String kHouseStr = "-";
+    if (kHouse.isNotEmpty) {
+      double kDeg = kHouse['deg'] % 30;
+      int kd = kDeg.floor();
+      int km = ((kDeg - kd) * 60).floor();
+      String kDegStr = "${kd.toString().padLeft(2, '0')}:${km.toString().padLeft(2, '0')}";
+      kHouseStr = "${kHouse['house']} $kDegStr ${getRName(kHouse['nakshatra'])} ${kHouse['pada']}";
+    }
+
+    // 7. Planet covered by Kavippu
+    final kPlanet = notes['kavi_planet_details'] as Map?;
+    String kPlanetStr = "-";
+    if (kPlanet != null) {
+      double kpDeg = kPlanet['deg'] % 30;
+      int kpd = kpDeg.floor();
+      int kpm = ((kpDeg - kpd) * 60).floor();
+      String kpDegStr = "${kpd.toString().padLeft(2, '0')}:${kpm.toString().padLeft(2, '0')}";
+      kPlanetStr = "${getPName(kPlanet['planet'])} - ${kPlanet['lordship']} = $kpDegStr ${getRName(kPlanet['nakshatra'])} ${kPlanet['pada']}";
+    }
+
+    // 8. Arudam Lord House
+    String aLordHouseStr = (notes['arudam_lord_house'] ?? "-").toString();
+
+    // 9. Arudam vs Udayam
+    String aVsUStr = (notes['arudam_vs_udayam'] ?? "-").toString();
+
+    // 10. Arudam vs Kavippu
+    String aVsKStr = (notes['arudam_vs_kavi'] ?? "-").toString();
+
+    // 11. 8th Lord
+    final eLord = notes['eighth_lord_details'] as Map? ?? {};
+    String eLordStr = "-";
+    if (eLord.isNotEmpty) {
+      eLordStr = isTa 
+          ? "${getPName(eLord['lord'])} \_ ${eLord['house']}-ல்"
+          : (isHi ? "${getPName(eLord['lord'])} \_ ${eLord['house']} वें भाव में" : "${getPName(eLord['lord'])} in House ${eLord['house']}");
+    }
+
+    // 12. Badhakadhipathi
+    final bLord = notes['badhaka_lord_details'] as Map? ?? {};
+    String bLordStr = "-";
+    if (bLord.isNotEmpty) {
+      String bTypeLabel = isTa
+          ? (bLord['type_offset'] == 11 ? "சர ராசி 11" : (bLord['type_offset'] == 9 ? "ஸ்திர ராசி 9" : "உபய ராசி 7"))
+          : (isHi ? (bLord['type_offset'] == 11 ? "चर राशि 11" : (bLord['type_offset'] == 9 ? "स्थिर राशि 9" : "द्विस्वभाव राशि 7")) : "Badhaka House ${bLord['type_offset']}");
+      bLordStr = isTa
+          ? "${getPName(bLord['lord'])} ($bTypeLabel) ${bLord['house']} \_ல்"
+          : (isHi ? "${getPName(bLord['lord'])} ($bTypeLabel) ${bLord['house']} वें भाव में" : "${getPName(bLord['lord'])} ($bTypeLabel) in House ${bLord['house']}");
+    }
+
+    // 13. Parivarthanai
+    final parivarthanas = notes['parivarthana'] as List? ?? [];
+    String parivarthanaiStr = parivarthanas.isEmpty 
+        ? (isTa ? "இல்லை" : (isHi ? "नहीं है" : "None"))
+        : parivarthanas.map((p) {
+            final parts = p.toString().split('-');
+            return "${getPName(parts[0])} - ${getPName(parts[1])}";
+          }).join(", ");
+
+    // 14. Sootchuma Rasi
+    final sootchuma = notes['sootchuma_details'] as Map? ?? {};
+    String sootchumaStr = "-";
+    if (sootchuma.isNotEmpty) {
+      sootchumaStr = isTa
+          ? "${getRName(sootchuma['rasi'])} (துல்லியமாக: ${getRName(sootchuma['pada_rasi'])} - ${getRName(sootchuma['pada_nakshatra'])} ${sootchuma['pada_num']})"
+          : "${getRName(sootchuma['rasi'])} (Precise: ${getRName(sootchuma['pada_rasi'])} - ${getRName(sootchuma['pada_nakshatra'])} ${sootchuma['pada_num']})";
+    }
+
     // Chart Gen
     Map<String, List<String>> rasiMap = {};
     for (var sign in KPService.SIGNS) rasiMap[sign] = [];
@@ -472,26 +614,21 @@ class JamakkolOnePagePdfService {
                 </div>
                 
                 <table style="width: 100%; font-size: 2.2mm; line-height: 1.4; margin-bottom: 1mm;">
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">${l10n.localeName == 'ta' ? "உதயத்தில் உள்ள கோள்" : (l10n.localeName == 'hi' ? "उदयम में ग्रह" : "Planet in Udayam")}</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">${notes['in_udhayam'] ?? '-'}</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">${l10n.planetTowardsUdayam}</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">${notes['towards_planet'] ?? '-'}</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">உதயத்தை கடந்த கோள்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">${notes['passed_planet'] ?? '-'}</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">ஆரூடம் உள்ள பாவகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">${notes['arudam_house'] ?? '-'}</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">கவிப்பு உள்ள பாவகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">${notes['kavi_house'] ?? '-'}</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">கவிக்கப்படும் கோள்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">${notes['kavi_planet'] ?? '-'}</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">உதயாதிபதி உள்ள பாவகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">${notes['udayathipathi_house'] ?? '-'}</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">1. உதயம் தொடர்பு கொள்ளும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uContactStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">2. உதயம் நின்ற நட்சத்திர பாதம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uStarStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">3. உதயத்தை கடந்த கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$crossedStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">4. ஆருடம் உள்ள பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aHouseStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">5. ஆருடம் தொடர்பு கொள்ளும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aContactStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">6. கவிப்புள்ள பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$kHouseStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">7. கவிக்கப்படும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$kPlanetStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">8. ஆருடாதிபதி நின்ற பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aLordHouseStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">9. ஆருடம் vs உதயம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aVsUStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">10. ஆருடம் vs கவிப்பு</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aVsKStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">11. அஷ்டமாதிபதி</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$eLordStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">12. பாதகாதிபதி</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$bLordStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">13. இராசிப் பரிவர்த்தனை</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$parivarthanaiStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">14. சூட்சும ராசி</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$sootchumaStr</td></tr>
                 </table>
-                
-                <div style="border-top: 0.3mm dashed #ccc; padding-top: 0.5mm; margin-bottom: 0.5mm;">
-                   <div style="color: var(--header-blue); font-weight: bold; font-size: 2.2mm;">பரிவர்த்தனை யோகங்கள்:</div>
-                   <div style="color: #E65100; font-weight: bold; font-size: 2.2mm;">${(notes['parivarthana'] as List? ?? []).isEmpty ? "இல்லை." : (notes['parivarthana'] as List).join(', ')}</div>
-                </div>
-                
-                <div style="border-top: 0.3mm dashed #ccc; padding-top: 0.5mm; margin-bottom: 1.5mm;">
-                   <div style="color: var(--header-blue); font-weight: bold; font-size: 2.2mm;">கிரக நிலை:</div>
-                   <div style="color: #E65100; font-weight: bold; font-size: 2.2mm;">
-                      ${(notes['planet_status'] as List? ?? []).map((e) => "${e['planet']} &rarr; ${e['status']}").join(', ')}
-                   </div>
-                </div>
 
                 <div style="background: var(--header-blue); color: white; padding: 1mm; font-size: 2.2mm; font-weight: bold; text-align: center; border-radius: 0.5mm; margin-bottom: 1.5mm;">
                    ⚡ கதிர் பலம் (Strength)

@@ -248,112 +248,219 @@ class JamakkolService {
       });
     }
 
-    // 1. Arudam and Kavi House (Relative to Udayam)
-    int arudamHouse = ((arudamIdx - udayamIdx + 12) % 12) + 1;
-    int kaviHouse = ((kaviIdx - udayamIdx + 12) % 12) + 1;
+    // Helper: Nakshatra and Pada Info
+    Map<String, dynamic> getNakshatraInfo(double lon) {
+      lon = lon % 360;
+      if (lon < 0) lon += 360;
+      int absolutePada = (lon / (360.0 / 108.0)).floor();
+      int nakIdx = (absolutePada / 4).floor() % 27;
+      int padaNum = (absolutePada % 4) + 1;
+      return {
+        'nakshatra': KPService.NAKSHATRAS[nakIdx],
+        'pada': padaNum,
+        'lord': KPService.VIMSHOTTARI_LORDS[nakIdx % 9],
+        'absolute_pada': absolutePada,
+      };
+    }
 
-    // 2. Planet covered by Kavi (Degree based proximity)
-    double arudamAbsDegVal = (results['outer']?['arudam_abs_deg'] ?? 0.0).toDouble();
-    // In Jamakkol, Kavippu degree is relative to Arudam. 
-    // Usually: DegOfKavippu = 30.0 - (ArudamDegree % 30.0) + (KaviSignIdx * 30.0)
-    double kaviAbsDeg = (30.0 - (arudamAbsDegVal % 30.0)) + (kaviIdx * 30.0);
-    kaviAbsDeg = (kaviAbsDeg % 360.0 + 360.0) % 360.0;
+    // Helper: Lordship string relative to Udayam
+    String getLordshipString(String planet, int refSignIdx) {
+      if (planet == "Rahu" || planet == "Ketu" || planet == "Maanthi") return "-";
+      List<int> ruledSigns = [];
+      SIGN_LORDS.forEach((sign, lord) {
+        if (lord.toLowerCase() == planet.toLowerCase()) {
+          ruledSigns.add(KPService.SIGNS.indexOf(sign));
+        }
+      });
+      if (ruledSigns.isEmpty) return "-";
+      List<int> houses = ruledSigns.map((sIdx) => ((sIdx - refSignIdx + 12) % 12) + 1).toList();
+      houses.sort();
+      return houses.join("/");
+    }
 
-    String kaviPlanet = "-";
-    double minDiffKavi = 360.0;
-    final namingMap = langCode == 'en' ? JAMAKKOL_ENGLISH_SHORT : (langCode == 'hi' ? JAMAKKOL_HINDI_SHORT : JAMAKKOL_TAMIL_SHORT);
+    // 1. Planet contacting Udayam (உதயம் தொடர்பு கொள்ளும் கிரகம்)
+    List<Map<String, dynamic>> udayamContacts = [];
     planetDegrees.forEach((p, deg) {
-      double diff = (deg - kaviAbsDeg).abs();
-      if (diff > 180) diff = 360 - diff;
-      if (diff < minDiffKavi) {
-        minDiffKavi = diff;
-        kaviPlanet = namingMap[p] ?? p;
+      int pSign = (deg / 30.0).floor() % 12;
+      if (pSign == udayamIdx % 12) {
+        udayamContacts.add({
+          'planet': p,
+          'deg': deg,
+          'house': ((pSign - udayamIdx + 12) % 12) + 1,
+          'lordship': getLordshipString(p, udayamIdx),
+        });
       }
     });
 
-    // 3. Udayam Lord House
-    String udayamSign = KPService.SIGNS[udayamIdx % 12];
-    String udayamLord = SIGN_LORDS[udayamSign] ?? "Sun";
-    int udayamLordIdx = 0;
-    if (results['inner']?['planet_details'] != null) {
-      (results['inner']['planet_details'] as Map).forEach((pKey, pVal) {
-        if (pKey.toString().toLowerCase() == udayamLord.toLowerCase()) {
-          udayamLordIdx = KPService.SIGNS.indexOf(pVal['rasi'] ?? "Aries");
+    // 2. Udayam star pada (உதயம் நின்ற நட்சத்திர பாதம்)
+    final udayamStar = getNakshatraInfo(udayamAbsDeg);
+    final udayamStarMap = {
+      'deg': udayamAbsDeg,
+      'nakshatra': udayamStar['nakshatra'],
+      'pada': udayamStar['pada'],
+      'lord': udayamStar['lord'],
+      'lordship': getLordshipString(udayamStar['lord'], udayamIdx),
+    };
+
+    // 3. Planet that crossed Udayam (உதயத்தை கடந்த கிரகம்)
+    String? crossedPlanet;
+    double crossedMinDiff = 360.0;
+    double crossedDeg = 0.0;
+    planetDegrees.forEach((p, pDeg) {
+      double relDeg = pDeg - udayamAbsDeg;
+      if (relDeg < -180) relDeg += 360;
+      if (relDeg > 180) relDeg -= 360;
+      if (relDeg < 0) {
+        double absRel = relDeg.abs();
+        if (absRel < crossedMinDiff) {
+          crossedMinDiff = absRel;
+          crossedPlanet = p;
+          crossedDeg = pDeg;
+        }
+      }
+    });
+    final crossedPlanetMap = crossedPlanet != null ? {
+      'planet': crossedPlanet,
+      'deg': crossedDeg,
+      'lordship': getLordshipString(crossedPlanet!, udayamIdx),
+    } : null;
+
+    // 4. Arudam House (ஆருடம் உள்ள பாவம்)
+    double arudamAbsDegVal = (results['outer']?['arudam_abs_deg'] ?? 0.0).toDouble();
+    String arudamLord = SIGN_LORDS[KPService.SIGNS[arudamIdx % 12]] ?? "Sun";
+    final arudamStar = getNakshatraInfo(arudamAbsDegVal);
+    final arudamHouseMap = {
+      'house': ((arudamIdx - udayamIdx + 12) % 12) + 1,
+      'lord': arudamLord,
+      'lordship': getLordshipString(arudamLord, udayamIdx),
+      'deg': arudamAbsDegVal,
+      'nakshatra': arudamStar['nakshatra'],
+      'pada': arudamStar['pada'],
+    };
+
+    // 5. Planet contacting Arudam (ஆருடம் தொடர்பு கொள்ளும் கிரகம்)
+    String? approachingArudamPlanet;
+    double approachingArudamMinDiff = 360.0;
+    double approachingArudamDeg = 0.0;
+    planetDegrees.forEach((p, pDeg) {
+      double relDeg = pDeg - arudamAbsDegVal;
+      if (relDeg < -180) relDeg += 360;
+      if (relDeg > 180) relDeg -= 360;
+      if (relDeg > 0) {
+        if (relDeg < approachingArudamMinDiff) {
+          approachingArudamMinDiff = relDeg;
+          approachingArudamPlanet = p;
+          approachingArudamDeg = pDeg;
+        }
+      }
+    });
+    final approachingArudamStar = approachingArudamPlanet != null ? getNakshatraInfo(approachingArudamDeg) : null;
+    final arudamContactMap = approachingArudamPlanet != null ? {
+      'planet': approachingArudamPlanet,
+      'deg': approachingArudamDeg,
+      'nakshatra': approachingArudamStar!['nakshatra'],
+      'pada': approachingArudamStar['pada'],
+    } : null;
+
+    // 6. Kavippu House (கவிப்புள்ள பாவம்)
+    double kaviAbsDeg = (30.0 - (arudamAbsDegVal % 30.0)) + (kaviIdx * 30.0);
+    kaviAbsDeg = (kaviAbsDeg % 360.0 + 360.0) % 360.0;
+    final kaviStar = getNakshatraInfo(kaviAbsDeg);
+    final kaviHouseMap = {
+      'house': ((kaviIdx - udayamIdx + 12) % 12) + 1,
+      'deg': kaviAbsDeg,
+      'nakshatra': kaviStar['nakshatra'],
+      'pada': kaviStar['pada'],
+    };
+
+    // 7. Planet covered by Kavippu (கவிக்கப்படும் கிரகம்)
+    String? kaviPlanet;
+    double kaviPlanetDeg = 0.0;
+    planetDegrees.forEach((p, pDeg) {
+      int pSign = (pDeg / 30.0).floor() % 12;
+      if (pSign == kaviIdx % 12) {
+        kaviPlanet = p;
+        kaviPlanetDeg = pDeg;
+      }
+    });
+    if (kaviPlanet == null) {
+      double minDiff = 360.0;
+      planetDegrees.forEach((p, pDeg) {
+        double diff = (pDeg - kaviAbsDeg).abs();
+        if (diff > 180) diff = 360 - diff;
+        if (diff < minDiff) {
+          minDiff = diff;
+          kaviPlanet = p;
+          kaviPlanetDeg = pDeg;
         }
       });
     }
-    int udayamLordHouse = ((udayamLordIdx - udayamIdx + 12) % 12) + 1;
+    final kaviPlanetStar = kaviPlanet != null ? getNakshatraInfo(kaviPlanetDeg) : null;
+    final kaviPlanetMap = kaviPlanet != null ? {
+      'planet': kaviPlanet,
+      'deg': kaviPlanetDeg,
+      'lordship': getLordshipString(kaviPlanet!, udayamIdx),
+      'nakshatra': kaviPlanetStar!['nakshatra'],
+      'pada': kaviPlanetStar['pada'],
+    } : null;
 
-    // 4. Planets relative to Udayam (In Udhayam, Passed, Approaching)
-    // Jamakkol planets move backwards (360 -> 0)
-    String? inUdhayamPlanet;
-    double inUdhayamMinDiff = 360.0;
-    
-    String? passedPlanet;
-    double passedMinDiff = 360.0;
-    
-    String? approachingPlanet;
-    double approachingMinDiff = 360.0;
+    // 8. Arudam Lord's House (ஆருடாதிபதி நின்ற பாவம்)
+    double arudamLordDeg = planetDegrees[arudamLord] ?? 0.0;
+    int arudamLordHouse = (((arudamLordDeg / 30.0).floor() - udayamIdx + 12) % 12) + 1;
 
-    planetDegrees.forEach((p, pDeg) {
-      String pName = namingMap[p] ?? p;
-      int pSignIdx = (pDeg / 30).floor();
-      
-      double diff = (pDeg - udayamAbsDeg).abs();
-      if (diff > 180) diff = 360 - diff;
+    // 9. Arudam vs Udayam (ஆருடம் vs உதயம்)
+    int arudamVsUdayam = ((udayamIdx - arudamIdx + 12) % 12) + 1;
 
-      if (diff <= 10.0 || pSignIdx == (udayamIdx % 12)) {
-        if (diff < inUdhayamMinDiff) {
-          inUdhayamMinDiff = diff;
-          inUdhayamPlanet = pName;
+    // 10. Arudam vs Kavippu (ஆருடம் vs கவிப்பு)
+    int arudamVsKavi = ((kaviIdx - arudamIdx + 12) % 12) + 1;
+
+    // 11. 8th Lord (அஷ்டமாதிபதி)
+    int eighthSignIdx = (udayamIdx + 7) % 12;
+    String eighthLord = SIGN_LORDS[KPService.SIGNS[eighthSignIdx]] ?? "Sun";
+    int eighthLordRasiIdx = 0;
+    if (results['inner']?['planet_details'] != null) {
+      (results['inner']['planet_details'] as Map).forEach((pKey, pVal) {
+        if (pKey.toString().toLowerCase() == eighthLord.toLowerCase()) {
+          eighthLordRasiIdx = KPService.SIGNS.indexOf(pVal['rasi'] ?? "Aries");
         }
-      } else {
-        // Since planets move backwards, higher degree means approaching, lower means passed
-        // A simple way to check approaching vs passed considering wrap-around:
-        double relDeg = pDeg - udayamAbsDeg;
-        if (relDeg < -180) relDeg += 360;
-        if (relDeg > 180) relDeg -= 360;
+      });
+    }
+    int eighthLordHouse = ((eighthLordRasiIdx - udayamIdx + 12) % 12) + 1;
+    final eighthLordMap = {
+      'lord': eighthLord,
+      'house': eighthLordHouse,
+    };
 
-        if (relDeg > 0) {
-          if (relDeg < approachingMinDiff) {
-            approachingMinDiff = relDeg;
-            approachingPlanet = pName;
-          }
-        } else {
-          double absRelDeg = relDeg.abs();
-          if (absRelDeg < passedMinDiff) {
-            passedMinDiff = absRelDeg;
-            passedPlanet = pName;
-          }
-        }
-      }
-    });
-
-    String inUdhayamStr = inUdhayamPlanet ?? "-";
-    String towards = approachingPlanet ?? "-";
-    String passed = passedPlanet ?? "-";
-
-    // 5. Planet Status (Aatchi, Ucham, Neecham)
-    List<Map<String, String>> planetStatus = [];
-    Map<String, String> planetInSign = {};
+    // 12. Badhakadhipathi (பாதகாதிபதி)
+    int badhakaOffset = 10; // default movable (11th house is offset 10)
+    int uType = udayamIdx % 3;
+    if (uType == 0) badhakaOffset = 10; // Movable: 11th
+    else if (uType == 1) badhakaOffset = 8; // Fixed: 9th
+    else badhakaOffset = 6; // Dual: 7th
     
-    planetDegrees.forEach((p, deg) {
-      int signIdx = (deg / 30).floor();
-      String sign = KPService.SIGNS[signIdx];
-      planetInSign[p] = sign;
-      
-      String status = "";
-      if (AATCHI[p]?.contains(sign) ?? false) status = langCode == 'en' ? "Own" : (langCode == 'hi' ? "स्वग्रही" : "ஆட்சி");
-      else if (UCHAM[p] == sign) status = langCode == 'en' ? "Exalted" : (langCode == 'hi' ? "उच्च" : "உச்சம்");
-      else if (NEECHAM[p] == sign) status = langCode == 'en' ? "Debilitated" : (langCode == 'hi' ? "नीच" : "நீச்சம்");
-      
-      if (status.isNotEmpty) {
-        planetStatus.add({'planet': namingMap[p] ?? p, 'status': status});
-      }
-    });
+    int badhakaSignIdx = (udayamIdx + badhakaOffset) % 12;
+    String badhakaLord = SIGN_LORDS[KPService.SIGNS[badhakaSignIdx]] ?? "Sun";
+    int badhakaLordRasiIdx = 0;
+    if (results['inner']?['planet_details'] != null) {
+      (results['inner']['planet_details'] as Map).forEach((pKey, pVal) {
+        if (pKey.toString().toLowerCase() == badhakaLord.toLowerCase()) {
+          badhakaLordRasiIdx = KPService.SIGNS.indexOf(pVal['rasi'] ?? "Aries");
+        }
+      });
+    }
+    int badhakaLordHouse = ((badhakaLordRasiIdx - udayamIdx + 12) % 12) + 1;
+    final badhakaLordMap = {
+      'lord': badhakaLord,
+      'house': badhakaLordHouse,
+      'type_offset': badhakaOffset + 1,
+    };
 
-    // 6. Parivarthana Yoga
+    // 13. Rasi Parivarthanai (இராசிப் பரிவர்த்தனை)
     List<String> parivarthana = [];
+    Map<String, String> planetInSign = {};
+    planetDegrees.forEach((p, deg) {
+      planetInSign[p] = KPService.SIGNS[(deg / 30.0).floor() % 12];
+    });
     List<String> keys = planetInSign.keys.toList();
     for (int i = 0; i < keys.length; i++) {
       for (int j = i + 1; j < keys.length; j++) {
@@ -362,21 +469,49 @@ class JamakkolService {
         String s1 = planetInSign[p1]!;
         String s2 = planetInSign[p2]!;
         if (SIGN_LORDS[s1] == p2 && SIGN_LORDS[s2] == p1) {
-          parivarthana.add("${namingMap[p1]!} - ${namingMap[p2]!}");
+          parivarthana.add("$p1-$p2");
         }
       }
     }
 
+    // 14. Sootchuma Rasi (சூட்சும ராசி)
+    int arudamLordSignIdx = (arudamLordDeg / 30.0).floor() % 12;
+    int countSigns = ((arudamLordSignIdx - udayamIdx + 12) % 12) + 1;
+    int sootchumaRasiIdx = (arudamLordSignIdx + countSigns - 1) % 12;
+    
+    // Pada-based Sootchuma Rasi
+    int udayamAbsolutePada = udayamStar['absolute_pada'];
+    int arudamAbsolutePada = arudamStar['absolute_pada'];
+    int countPadas = (arudamAbsolutePada - udayamAbsolutePada + 108) % 108 + 1;
+    
+    int arudamLordAbsolutePada = (arudamLordDeg / (360.0 / 108.0)).floor() % 108;
+    int targetAbsolutePada = (arudamLordAbsolutePada + countPadas - 1) % 108;
+    int targetRasiIdx = (targetAbsolutePada / 9).floor() % 12;
+    int targetNakIdx = (targetAbsolutePada / 4).floor() % 27;
+    int targetPadaNum = (targetAbsolutePada % 4) + 1;
+    
+    final sootchumaMap = {
+      'rasi': KPService.SIGNS[sootchumaRasiIdx],
+      'pada_rasi': KPService.SIGNS[targetRasiIdx],
+      'pada_nakshatra': KPService.NAKSHATRAS[targetNakIdx],
+      'pada_num': targetPadaNum,
+    };
+
     return {
-      'arudam_house': arudamHouse,
-      'kavi_house': kaviHouse,
-      'kavi_planet': kaviPlanet,
-      'udayathipathi_house': udayamLordHouse,
-      'in_udhayam': inUdhayamStr,
-      'towards_planet': towards,
-      'passed_planet': passed,
-      'planet_status': planetStatus,
+      'udayam_contact': udayamContacts,
+      'udayam_star': udayamStarMap,
+      'crossed_planet': crossedPlanetMap,
+      'arudam_house_details': arudamHouseMap,
+      'arudam_contact': arudamContactMap,
+      'kavi_house_details': kaviHouseMap,
+      'kavi_planet_details': kaviPlanetMap,
+      'arudam_lord_house': arudamLordHouse,
+      'arudam_vs_udayam': arudamVsUdayam,
+      'arudam_vs_kavi': arudamVsKavi,
+      'eighth_lord_details': eighthLordMap,
+      'badhaka_lord_details': badhakaLordMap,
       'parivarthana': parivarthana,
+      'sootchuma_details': sootchumaMap,
     };
   }
   static const Map<String, List<String>> GOWRI_TYPES = {

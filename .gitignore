@@ -51,3 +51,5 @@ app.*.map.json
 *.zip
 *.tar.gz
 *.dll
+
+server/firebase_credentials.json.json

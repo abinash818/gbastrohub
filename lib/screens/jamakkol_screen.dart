@@ -961,6 +961,129 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
 
   Widget _buildJamakkolNotes() {
     final notes = _results!['notes'] as Map<String, dynamic>;
+    final isTa = AppLocalizations.of(context)!.localeName == 'ta';
+    final isHi = AppLocalizations.of(context)!.localeName == 'hi';
+
+    // Helper: Translate planet name
+    String getPName(String name) {
+      return AstroTranslationService.translate(context, name, isPlanet: true);
+    }
+    
+    // Helper: Translate rasi name
+    String getRName(String name) {
+      return AstroTranslationService.translate(context, name);
+    }
+
+    // 1. Planet contacting Udayam
+    final uContacts = notes['udayam_contact'] as List;
+    String uContactStr = "-";
+    if (uContacts.isNotEmpty) {
+      uContactStr = uContacts.map((c) {
+        String p = getPName(c['planet']);
+        double deg = c['deg'] % 30;
+        int d = deg.floor();
+        int m = ((deg - d) * 60).floor();
+        String degStr = "${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
+        return isTa 
+            ? "$p\_$degStr / பாவம் ${c['house']} / ${c['lordship']}"
+            : (isHi ? "$p\_$degStr / भाव ${c['house']} / ${c['lordship']}" : "$p\_$degStr / House ${c['house']} / ${c['lordship']}");
+      }).join(", ");
+    }
+
+    // 2. Udayam star pada
+    final uStar = notes['udayam_star'] as Map;
+    double uDeg = uStar['deg'] % 30;
+    int ud = uDeg.floor();
+    int um = ((uDeg - ud) * 60).floor();
+    String uStarStr = "${ud.toString().padLeft(2, '0')}:${um.toString().padLeft(2, '0')} ${getRName(uStar['nakshatra'])} ${uStar['pada']} ${getPName(uStar['lord'])} ${uStar['lordship']}";
+
+    // 3. Crossed planet
+    final crossed = notes['crossed_planet'] as Map?;
+    String crossedStr = "-";
+    if (crossed != null) {
+      double cDeg = crossed['deg'] % 30;
+      int cd = cDeg.floor();
+      int cm = ((cDeg - cd) * 60).floor();
+      String cDegStr = "${cd.toString().padLeft(2, '0')}:${cm.toString().padLeft(2, '0')}";
+      crossedStr = "${getPName(crossed['planet'])} ${crossed['lordship']} = $cDegStr";
+    }
+
+    // 4. Arudam House
+    final aHouse = notes['arudam_house_details'] as Map;
+    double aDeg = aHouse['deg'] % 30;
+    int ad = aDeg.floor();
+    int am = ((aDeg - ad) * 60).floor();
+    String aDegStr = "${ad.toString().padLeft(2, '0')}:${am.toString().padLeft(2, '0')}";
+    String aHouseStr = "${aHouse['house']} ${getPName(aHouse['lord'])} ${aHouse['lordship']} $aDegStr ${getRName(aHouse['nakshatra'])} ${aHouse['pada']}";
+
+    // 5. Planet contacting Arudam
+    final aContact = notes['arudam_contact'] as Map?;
+    String aContactStr = "-";
+    if (aContact != null) {
+      double acDeg = aContact['deg'] % 30;
+      int acd = acDeg.floor();
+      int acm = ((acDeg - acd) * 60).floor();
+      String acDegStr = "${acd.toString().padLeft(2, '0')}:${acm.toString().padLeft(2, '0')}";
+      aContactStr = "${getPName(aContact['planet'])}\_$acDegStr ${getRName(aContact['nakshatra'])} ${aContact['pada']}";
+    }
+
+    // 6. Kavippu House
+    final kHouse = notes['kavi_house_details'] as Map;
+    double kDeg = kHouse['deg'] % 30;
+    int kd = kDeg.floor();
+    int km = ((kDeg - kd) * 60).floor();
+    String kDegStr = "${kd.toString().padLeft(2, '0')}:${km.toString().padLeft(2, '0')}";
+    String kHouseStr = "${kHouse['house']} $kDegStr ${getRName(kHouse['nakshatra'])} ${kHouse['pada']}";
+
+    // 7. Planet covered by Kavippu
+    final kPlanet = notes['kavi_planet_details'] as Map?;
+    String kPlanetStr = "-";
+    if (kPlanet != null) {
+      double kpDeg = kPlanet['deg'] % 30;
+      int kpd = kpDeg.floor();
+      int kpm = ((kpDeg - kpd) * 60).floor();
+      String kpDegStr = "${kpd.toString().padLeft(2, '0')}:${kpm.toString().padLeft(2, '0')}";
+      kPlanetStr = "${getPName(kPlanet['planet'])} - ${kPlanet['lordship']} = $kpDegStr ${getRName(kPlanet['nakshatra'])} ${kPlanet['pada']}";
+    }
+
+    // 8. Arudam Lord House
+    String aLordHouseStr = notes['arudam_lord_house'].toString();
+
+    // 9. Arudam vs Udayam
+    String aVsUStr = notes['arudam_vs_udayam'].toString();
+
+    // 10. Arudam vs Kavippu
+    String aVsKStr = notes['arudam_vs_kavi'].toString();
+
+    // 11. 8th Lord
+    final eLord = notes['eighth_lord_details'] as Map;
+    String eLordStr = isTa 
+        ? "${getPName(eLord['lord'])} \_ ${eLord['house']}-ல்"
+        : (isHi ? "${getPName(eLord['lord'])} \_ ${eLord['house']} वें भाव में" : "${getPName(eLord['lord'])} in House ${eLord['house']}");
+
+    // 12. Badhakadhipathi
+    final bLord = notes['badhaka_lord_details'] as Map;
+    String bTypeLabel = isTa
+        ? (bLord['type_offset'] == 11 ? "சர ராசி 11" : (bLord['type_offset'] == 9 ? "ஸ்திர ராசி 9" : "உபய ராசி 7"))
+        : (isHi ? (bLord['type_offset'] == 11 ? "चर राशि 11" : (bLord['type_offset'] == 9 ? "स्थिर राशि 9" : "द्विस्वभाव राशि 7")) : "Badhaka House ${bLord['type_offset']}");
+    String bLordStr = isTa
+        ? "${getPName(bLord['lord'])} ($bTypeLabel) ${bLord['house']} \_ல்"
+        : (isHi ? "${getPName(bLord['lord'])} ($bTypeLabel) ${bLord['house']} वें भाव में" : "${getPName(bLord['lord'])} ($bTypeLabel) in House ${bLord['house']}");
+
+    // 13. Parivarthanai
+    final parivarthanas = notes['parivarthana'] as List;
+    String parivarthanaiStr = parivarthanas.isEmpty 
+        ? (isTa ? "இராசி பரிவர்த்தனை இல்லை" : (isHi ? "राशि परिवर्तन नहीं है" : "No Rasi exchange"))
+        : parivarthanas.map((p) {
+            final parts = p.toString().split('-');
+            return "${getPName(parts[0])} - ${getPName(parts[1])}";
+          }).join(", ");
+
+    // 14. Sootchuma Rasi
+    final sootchuma = notes['sootchuma_details'] as Map;
+    String sootchumaStr = isTa
+        ? "${getRName(sootchuma['rasi'])} (துல்லியமாக: ${getRName(sootchuma['pada_rasi'])} - ${getRName(sootchuma['pada_nakshatra'])} ${sootchuma['pada_num']})"
+        : "${getRName(sootchuma['rasi'])} (Precise: ${getRName(sootchuma['pada_rasi'])} - ${getRName(sootchuma['pada_nakshatra'])} ${sootchuma['pada_num']})";
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -990,46 +1113,20 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildNoteRow(
-            AppLocalizations.of(context)!.localeName == 'ta' 
-              ? "உதயத்தில் உள்ள கோள்" 
-              : (AppLocalizations.of(context)!.localeName == 'hi' ? "उदयम में ग्रह" : "Planet in Udayam"), 
-            notes['in_udhayam'] ?? "-"
-          ),
-          _buildNoteRow(AppLocalizations.of(context)!.planetTowardsUdayam, notes['towards_planet']),
-          _buildNoteRow(AppLocalizations.of(context)!.planetPassedUdayam, notes['passed_planet']),
-          _buildNoteRow(AppLocalizations.of(context)!.arudamHouse, notes['arudam_house'].toString()),
-          _buildNoteRow(AppLocalizations.of(context)!.kavippuHouse, notes['kavi_house'].toString()),
-          _buildNoteRow(AppLocalizations.of(context)!.kavippuPlanet, notes['kavi_planet']),
-          _buildNoteRow(AppLocalizations.of(context)!.udayathipathiHouse, notes['udayathipathi_house'].toString()),
-          
-          const Divider(height: 32, color: Color(0xFFB58D3D)),
-          Text(
-            AppLocalizations.of(context)!.parivarthanaYogas, 
-            style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 14, color: const Color(0xFF5D1204))
-          ),
-          const SizedBox(height: 8),
-          Text(
-            (notes['parivarthana'] as List).isEmpty ? AppLocalizations.of(context)!.none : (notes['parivarthana'] as List).join(", "), 
-            style: const TextStyle(color: Color(0xFFE65100), fontWeight: FontWeight.bold)
-          ),
-          
-          const SizedBox(height: 20),
-          Text(
-            AppLocalizations.of(context)!.planetStatus, 
-            style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 14, color: const Color(0xFF5D1204))
-          ),
-          const SizedBox(height: 8),
-          ...(notes['planet_status'] as List).map((s) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Text("${s['planet']} ", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
-                const Icon(Icons.arrow_forward, size: 12, color: Colors.grey),
-                Text(" ${s['status']}", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFE65100))),
-              ],
-            ),
-          )).toList(),
+          _buildNoteRow(isTa ? "1. உதயம் தொடர்பு கொள்ளும் கிரகம்" : "1. Planet Contacting Udayam", uContactStr),
+          _buildNoteRow(isTa ? "2. உதயம் நின்ற நட்சத்திர பாதம்" : "2. Udayam Star Pada", uStarStr),
+          _buildNoteRow(isTa ? "3. உதயத்தை கடந்த கிரகம்" : "3. Planet Passed Udayam", crossedStr),
+          _buildNoteRow(isTa ? "4. ஆருடம் உள்ள பாவம்" : "4. Arudam House Details", aHouseStr),
+          _buildNoteRow(isTa ? "5. ஆருடம் தொடர்பு கொள்ளும் கிரகம்" : "5. Planet Contacting Arudam", aContactStr),
+          _buildNoteRow(isTa ? "6. கவிப்புள்ள பாவம்" : "6. Kavippu House Details", kHouseStr),
+          _buildNoteRow(isTa ? "7. கவிக்கப்படும் கிரகம்" : "7. Planet Covered by Kavippu", kPlanetStr),
+          _buildNoteRow(isTa ? "8. ஆருடாதிபதி நின்ற பாவம்" : "8. Arudam Lord's House", aLordHouseStr),
+          _buildNoteRow(isTa ? "9. ஆருடம் vs உதயம்" : "9. Arudam vs Udayam", aVsUStr),
+          _buildNoteRow(isTa ? "10. ஆருடம் vs கவிப்பு" : "10. Arudam vs Kavippu", aVsKStr),
+          _buildNoteRow(isTa ? "11. அஷ்டமாதிபதி" : "11. 8th Lord", eLordStr),
+          _buildNoteRow(isTa ? "12. பாதகாதிபதி" : "12. Badhakadhipathi", bLordStr),
+          _buildNoteRow(isTa ? "13. இராசிப் பரிவர்த்தனை" : "13. Rasi Parivarthanai", parivarthanaiStr),
+          _buildNoteRow(isTa ? "14. சூட்சும ராசி" : "14. Sootchuma Rasi", sootchumaStr),
         ],
       ),
     );

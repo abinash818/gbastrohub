@@ -281,12 +281,23 @@ class _ChartCellState extends State<_ChartCell> {
                 bool isLagna = it.startsWith("லக்") || it.startsWith("உத") || it.startsWith("Asc") || it.startsWith("Lagna") || it.startsWith("Uda") || it.startsWith("लग्न") || it.startsWith("उदय");
                 bool isArudam = it.startsWith("ஆரூ") || it.startsWith("Aru") || it.startsWith("आरू");
                 bool isKavi = it.startsWith("கவி") || it.startsWith("Kav") || it.startsWith("कवि");
-                bool isSpecial = isLagna || isArudam || isKavi;
+                
+                bool isYama = it.startsWith("எம") || it.startsWith("Yama") || it.startsWith("यम");
+                bool isMrityu = it.startsWith("மிரு") || it.startsWith("Mri") || it.startsWith("मृ");
+                bool isRahuClockwise = (it.startsWith("ரா") && !it.startsWith("ராகு")) ||
+                                       (it.startsWith("रा") && !it.startsWith("राहु")) ||
+                                       (it.startsWith("Rah") && !it.startsWith("Rahu"));
+                bool isSubPlanet = isYama || isMrityu || isRahuClockwise;
+                
+                bool isSpecial = isLagna || isArudam || isKavi || isSubPlanet;
                 
                 Color highlightColor = Colors.transparent;
                 if (isLagna) highlightColor = Colors.green.shade700;
                 else if (isArudam) highlightColor = Colors.blue.shade800;
                 else if (isKavi) highlightColor = Colors.red.shade800;
+                else if (isRahuClockwise) highlightColor = Colors.purple.shade700;
+                else if (isYama) highlightColor = Colors.orange.shade900;
+                else if (isMrityu) highlightColor = Colors.brown.shade700;
 
                 // Replace space with newline to save horizontal space, e.g., "சனி 17:39" -> "சனி\n17:39"
                 

@@ -155,6 +155,16 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
       int sooryaVeethiIdx = outer['soorya_veethi_idx'] ?? 0;
       int kaviIdx = JamakkolService.calculateKavippu(udayamIdx, arudamIdx, sooryaVeethiIdx);
 
+      // Calculate Jamakkol SubPlanets
+      final subPlanets = calculateAllJamakkolSubPlanets(
+        currentTime: timeToUse,
+        sunrise: sunrise,
+        sunset: sunset,
+        nextSunrise: sunrise.add(const Duration(days: 1)),
+        prevSunset: sunset.subtract(const Duration(days: 1)),
+        sunLon: sunLon,
+      );
+
       setState(() {
         _results = {
           'inner': inner,
@@ -162,6 +172,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           'udayam_idx': udayamIdx,
           'arudam_idx': arudamIdx,
           'kavi_idx': kaviIdx,
+          'sub_planets': subPlanets,
           'strength': JamakkolService.calculateStrengthAnalysis({
             'udayam_idx': udayamIdx,
             'arudam_idx': arudamIdx,
@@ -433,6 +444,36 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     addRow(AppLocalizations.of(context)!.udayam, uDeg);
     addRow(AppLocalizations.of(context)!.arudam, aDeg);
     addRow(AppLocalizations.of(context)!.kavippu, kDeg);
+
+    // Add Jamakkol Subplanets to Outer Pathasaram Table
+    final subPlanets = _results?['sub_planets'] as JamakkolSubPlanets?;
+    if (subPlanets != null) {
+      String getSubPlanetFullName(String name, String lang) {
+        if (lang == 'ta') {
+          if (name == "Rahu") return "ரா(வ) / கோள் இராகு";
+          if (name == "Yamagandan") return "எமகண்டன்";
+          if (name == "Mrityu") return "மிருத்யு";
+        } else if (lang == 'hi') {
+          if (name == "Rahu") return "राहु (मार्गी)";
+          if (name == "Yamagandan") return "यमगंडम";
+          if (name == "Mrityu") return "मृत्यु";
+        } else {
+          if (name == "Rahu") return "Rahu (Clockwise)";
+          if (name == "Yamagandan") return "Yamagandan";
+          if (name == "Mrityu") return "Mrityu";
+        }
+        return name;
+      }
+      final lang = AppLocalizations.of(context)!.localeName;
+      
+      void addSubPlanetRow(SubPlanetResult sp) {
+        double deg = (sp.rasi - 1) * 30.0 + sp.degree;
+        addRow(getSubPlanetFullName(sp.name, lang), deg);
+      }
+      addSubPlanetRow(subPlanets.rahu);
+      addSubPlanetRow(subPlanets.yamagandan);
+      addSubPlanetRow(subPlanets.mrityu);
+    }
 
     final pDegs = outer['planet_degrees'] as Map;
     final namingMap = _isAltNaming ? JamakkolService.JAMAKKOL_TAMIL_ALT : JamakkolService.JAMAKKOL_TAMIL_SHORT;
@@ -883,10 +924,32 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
         int jm = ((jUdayamDeg - jd) * 60).floor();
         rasiMap[jUdayamSign]?.add("${AppLocalizations.of(context)!.udaShort}\u00A0${jd.toString().padLeft(2, '0')}:${jm.toString().padLeft(2, '0')}");
       } else {
+        if (pKey == 'fortuna') return; // Skip Fortuna in Jamakkol Chart
+        
+        final Map<String, dynamic> pInfo = _results!['inner']['planet_info'] ?? {};
+        bool isRetro = pInfo[pKey[0].toUpperCase() + pKey.substring(1)]?['isRetro'] ?? false;
+        double pLon = (pVal['longitude'] ?? 0.0).toDouble();
+        double sunLon = (pDetails['sun']?['longitude'] ?? 0.0).toDouble();
+        bool isCombust = JamakkolService.isPlanetCombust(pKey[0].toUpperCase() + pKey.substring(1), pLon, sunLon, isRetro);
+
         String name = KPService.TAMIL_PLANET_SHORT[pKey[0].toUpperCase() + pKey.substring(1)] ?? pKey;
         if (pKey == 'sun') name = 'சூ';
         if (pKey == 'moon') name = 'சந்';
         name = AstroTranslationService.translate(context, name);
+
+        String suffix = "";
+        final lang = AppLocalizations.of(context)!.localeName;
+        if (isRetro && pKey != 'rahu' && pKey != 'ketu') {
+          suffix += (lang == 'en') ? "R" : "வ";
+        }
+        if (isCombust) {
+          if (suffix.isNotEmpty) suffix += ",";
+          suffix += (lang == 'en') ? "C" : ((lang == 'hi') ? "अ" : "அ");
+        }
+        if (suffix.isNotEmpty) {
+          name = "$name($suffix)";
+        }
+
         rasiMap[sign]!.add("$name\u00A0${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}");
       }
     });
@@ -907,6 +970,40 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     int kD = kDegInSign.floor();
     int kM = ((kDegInSign - kD) * 60).floor();
     rasiMap[KPService.SIGNS[kaviIdx % 12]]?.add("${AppLocalizations.of(context)!.kaviShort}\u00A0${kD.toString().padLeft(2, '0')}:${kM.toString().padLeft(2, '0')}");
+
+    // Subplanets (Rahu, Yamagandan, Mrityu)
+    final lang = AppLocalizations.of(context)!.localeName;
+    final subPlanets = _results?['sub_planets'] as JamakkolSubPlanets?;
+    if (subPlanets != null) {
+      String getSubPlanetDisplayName(String name, String lang) {
+        if (lang == 'ta') {
+          if (name == "Rahu") return "ரா";
+          if (name == "Yamagandan") return "எம";
+          if (name == "Mrityu") return "மிரு";
+        } else if (lang == 'hi') {
+          if (name == "Rahu") return "रा";
+          if (name == "Yamagandan") return "यम";
+          if (name == "Mrityu") return "मृ";
+        } else {
+          if (name == "Rahu") return "Rah";
+          if (name == "Yamagandan") return "Yama";
+          if (name == "Mrityu") return "Mri";
+        }
+        return name;
+      }
+
+      void addSubPlanet(SubPlanetResult sp) {
+        String sign = KPService.SIGNS[sp.rasi - 1];
+        double degInSign = sp.degree;
+        int d = degInSign.floor();
+        int m = ((degInSign - d) * 60).floor();
+        String name = getSubPlanetDisplayName(sp.name, lang);
+        rasiMap[sign]?.add("$name\u00A0${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}");
+      }
+      addSubPlanet(subPlanets.rahu);
+      addSubPlanet(subPlanets.yamagandan);
+      addSubPlanet(subPlanets.mrityu);
+    }
 
     // Border Labels
     final Map<String, String> borderLabels = Map<String, String>.from(_results!['outer']['border_planets']);
@@ -1136,10 +1233,32 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade800))),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF5D1204), fontSize: 15)),
+          Expanded(
+            flex: 5,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 6,
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF5D1204),
+                fontSize: 14,
+              ),
+            ),
+          ),
         ],
       ),
     );

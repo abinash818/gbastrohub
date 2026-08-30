@@ -167,6 +167,7 @@ class JamakkolOnePagePdfService {
 
     final pan = inner['panchangam'] ?? {};
     final details = inner['planet_details'] ?? {};
+    final pInfo = inner['planet_info'] ?? {};
     final moonDetails = details['moon'] ?? details['Moon'] ?? {};
     final nakshatraStr = moonDetails['nakshatra']?.toString() ?? pan['nakshatra']?.toString() ?? "-";
     final padaStr = moonDetails['pada']?.toString() ?? "-";
@@ -375,9 +376,29 @@ class JamakkolOnePagePdfService {
         if (rasiMap.containsKey(jUdayamSign)) rasiMap[jUdayamSign]?.add("<span style='color:green; font-weight:bold'>$udayamLabel&nbsp;${jd.toString().padLeft(2, '0')}:${jm.toString().padLeft(2, '0')}</span>");
       } else {
         String k = pKey.toString();
+        if (k == 'fortuna') return; // Skip Fortuna in PDF Jamakkol Chart
+        
+        bool isRetro = pInfo[k[0].toUpperCase() + k.substring(1)]?['isRetro'] ?? false;
+        double planetLon = (pVal['longitude'] ?? 0.0).toDouble();
+        double sunLon = (details['sun']?['longitude'] ?? 0.0).toDouble();
+        bool isCombust = JamakkolService.isPlanetCombust(k[0].toUpperCase() + k.substring(1), planetLon, sunLon, isRetro);
+
         String pName = _toLocal(k, langCode);
         if (k == 'sun') pName = langCode == 'en' ? 'Sun' : (langCode == 'hi' ? 'सू' : 'சூ');
         if (k == 'moon') pName = langCode == 'en' ? 'Mon' : (langCode == 'hi' ? 'चं' : 'சந்');
+
+        String suffix = "";
+        if (isRetro && k != 'rahu' && k != 'ketu') {
+          suffix += (langCode == 'en') ? "R" : "வ";
+        }
+        if (isCombust) {
+          if (suffix.isNotEmpty) suffix += ",";
+          suffix += (langCode == 'en') ? "C" : ((langCode == 'hi') ? "अ" : "அ");
+        }
+        if (suffix.isNotEmpty) {
+          pName = "$pName($suffix)";
+        }
+
         if (rasiMap.containsKey(sign)) rasiMap[sign]!.add("$pName&nbsp;${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}");
       }
     });
@@ -396,6 +417,48 @@ class JamakkolOnePagePdfService {
     int kM = ((kDegInSign - kD) * 60).floor();
     if (rasiMap.containsKey(KPService.SIGNS[kaviIdx % 12])) {
         rasiMap[KPService.SIGNS[kaviIdx % 12]]?.add("<span style='color:purple; font-weight:bold'>$kaviLabel&nbsp;${kD.toString().padLeft(2, '0')}:${kM.toString().padLeft(2, '0')}</span>");
+    }
+
+    final subPlanets = results['sub_planets'] as JamakkolSubPlanets?;
+    if (subPlanets != null) {
+      String getSubPlanetDisplayName(String name, String lang) {
+        if (lang == 'ta') {
+          if (name == "Rahu") return "ரா";
+          if (name == "Yamagandan") return "எம";
+          if (name == "Mrityu") return "மிரு";
+        } else if (lang == 'hi') {
+          if (name == "Rahu") return "रा";
+          if (name == "Yamagandan") return "यम";
+          if (name == "Mrityu") return "मृ";
+        } else {
+          if (name == "Rahu") return "Rah";
+          if (name == "Yamagandan") return "Yama";
+          if (name == "Mrityu") return "Mri";
+        }
+        return name;
+      }
+
+      void addSubPlanet(SubPlanetResult sp) {
+        String sign = KPService.SIGNS[sp.rasi - 1];
+        double degInSign = sp.degree;
+        int d = degInSign.floor();
+        int m = ((degInSign - d) * 60).floor();
+        String name = getSubPlanetDisplayName(sp.name, langCode);
+        
+        // Define color based on subplanet name
+        String color;
+        if (sp.name == "Rahu") color = "purple";
+        else if (sp.name == "Yamagandan") color = "darkorange";
+        else if (sp.name == "Mrityu") color = "brown";
+        else color = "#B58D3D";
+
+        if (rasiMap.containsKey(sign)) {
+          rasiMap[sign]?.add("<span style='color:$color; font-weight:bold'>$name&nbsp;${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}</span>");
+        }
+      }
+      addSubPlanet(subPlanets.rahu);
+      addSubPlanet(subPlanets.yamagandan);
+      addSubPlanet(subPlanets.mrityu);
     }
 
     String renderOuterLabel(String sign) {
@@ -456,6 +519,33 @@ class JamakkolOnePagePdfService {
     addOuterRow(udayamName, uDeg);
     addOuterRow(arudamName, aDegPatha);
     addOuterRow(kavippuName, kDeg);
+
+    if (subPlanets != null) {
+      String getSubPlanetFullName(String name, String lang) {
+        if (lang == 'ta') {
+          if (name == "Rahu") return "ரா(வ) / கோள் இராகு";
+          if (name == "Yamagandan") return "எமகண்டன்";
+          if (name == "Mrityu") return "மிருத்யு";
+        } else if (lang == 'hi') {
+          if (name == "Rahu") return "राहु (मार्गी)";
+          if (name == "Yamagandan") return "यमगंडम";
+          if (name == "Mrityu") return "मृत्यु";
+        } else {
+          if (name == "Rahu") return "Rahu (Clockwise)";
+          if (name == "Yamagandan") return "Yamagandan";
+          if (name == "Mrityu") return "Mrityu";
+        }
+        return name;
+      }
+      void addSubPlanetRow(SubPlanetResult sp) {
+        double deg = (sp.rasi - 1) * 30.0 + sp.degree;
+        addOuterRow(getSubPlanetFullName(sp.name, langCode), deg);
+      }
+      addSubPlanetRow(subPlanets.rahu);
+      addSubPlanetRow(subPlanets.yamagandan);
+      addSubPlanetRow(subPlanets.mrityu);
+    }
+
     final pDegs = outer['planet_degrees'] as Map? ?? {};
     final namingMap = isAltNaming ? JamakkolService.JAMAKKOL_TAMIL_ALT : JamakkolService.JAMAKKOL_TAMIL_SHORT;
     for (var pName in JamakkolService.JAMAKKOL_PLANETS) {

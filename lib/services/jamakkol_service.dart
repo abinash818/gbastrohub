@@ -595,4 +595,157 @@ class JamakkolService {
       'segment': currentSegment + 1,
     };
   }
+
+  static bool isPlanetCombust(String planetName, double planetLon, double sunLon, bool isRetro) {
+    if (planetName == 'Sun' || planetName == 'Rahu' || planetName == 'Ketu' || planetName == 'Maanthi' || planetName == 'Lagna') {
+      return false;
+    }
+    double diff = (planetLon - sunLon).abs();
+    if (diff > 180) diff = 360 - diff;
+
+    if (planetName == 'Moon') return diff < 12.0;
+    if (planetName == 'Mars') return diff < 17.0;
+    if (planetName == 'Mercury') return diff < (isRetro ? 12.0 : 14.0);
+    if (planetName == 'Jupiter') return diff < 11.0;
+    if (planetName == 'Venus') return diff < (isRetro ? 8.0 : 10.0);
+    if (planetName == 'Saturn') return diff < 15.0;
+
+    return false;
+  }
 }
+
+class SubPlanetResult {
+  final String name;
+  final int rasi;      // 1 to 12
+  final double degree; // 0.0 to 30.0
+
+  SubPlanetResult({required this.name, required this.rasi, required this.degree});
+}
+
+class JamakkolSubPlanets {
+  final bool isDay;
+  final int currentYama;
+  final SubPlanetResult rahu;
+  final SubPlanetResult yamagandan;
+  final SubPlanetResult mrityu;
+
+  JamakkolSubPlanets({
+    required this.isDay,
+    required this.currentYama,
+    required this.rahu,
+    required this.yamagandan,
+    required this.mrityu,
+  });
+}
+
+JamakkolSubPlanets calculateAllJamakkolSubPlanets({
+  required DateTime currentTime,
+  required DateTime sunrise,
+  required DateTime sunset,
+  required DateTime nextSunrise,
+  required DateTime prevSunset,
+  required double sunLon,
+}) {
+  bool isDay = !currentTime.isBefore(sunrise) && currentTime.isBefore(sunset);
+
+  DateTime astroDay = currentTime.isBefore(sunrise)
+      ? sunrise.subtract(const Duration(days: 1))
+      : sunrise;
+  int weekday = astroDay.weekday % 7; // 0=Sunday, 1=Monday, ..., 6=Saturday
+
+  DateTime startTime;
+  DateTime endTime;
+  if (isDay) {
+    startTime = sunrise;
+    endTime = sunset;
+  } else {
+    if (!currentTime.isBefore(sunset)) {
+      startTime = sunset;
+      endTime = nextSunrise;
+    } else {
+      startTime = prevSunset;
+      endTime = sunrise;
+    }
+  }
+
+  double totalDurationSeconds = endTime.difference(startTime).inSeconds.toDouble();
+  double elapsedTimeSeconds = currentTime.difference(startTime).inSeconds.toDouble();
+  if (elapsedTimeSeconds < 0) elapsedTimeSeconds = 0;
+  if (elapsedTimeSeconds > totalDurationSeconds) elapsedTimeSeconds = totalDurationSeconds;
+
+  double elapsedFraction = elapsedTimeSeconds / totalDurationSeconds;
+
+  // 1 Jamam = 90 Minutes (approx 1/8 of total day/night duration)
+  int currentJamam = (elapsedFraction * 8).floor() + 1;
+  if (currentJamam < 1) currentJamam = 1;
+  if (currentJamam > 8) currentJamam = 8;
+
+  double totalMins = elapsedTimeSeconds / 60.0;
+  double elapsedMinsInCurrentJamam = totalMins % (totalDurationSeconds / 8.0 / 60.0);
+
+  // Yamagandan and Rahu Kaal Jamam Indices (Sunday=0, Monday=1, ..., Saturday=6)
+  final List<int> yamaDayJamams = [5, 4, 3, 2, 1, 7, 6];
+  final List<int> yamaNightJamams = [5, 3, 8, 7, 5, 3, 1];
+  final List<int> rahuDayJamams = [8, 2, 7, 5, 6, 4, 3];
+  final List<int> rahuNightJamams = [5, 1, 6, 4, 7, 3, 2];
+
+  int yamaJ = isDay ? yamaDayJamams[weekday] : yamaNightJamams[weekday];
+  int rahuJ = isDay ? rahuDayJamams[weekday] : rahuNightJamams[weekday];
+
+  // Starting base signs (used when C < J)
+  final List<int> yamaDayBases = [10, 7, 4, 1, 10, 7, 4];
+  final List<int> yamaNightBases = [12, 9, 6, 3, 12, 9, 6];
+  final List<int> rahuDayBases = [5, 3, 2, 1, 9, 7, 8];
+  final List<int> rahuNightBases = [1, 10, 8, 9, 6, 4, 3];
+
+  int yamaBase = isDay ? yamaDayBases[weekday] : yamaNightBases[weekday];
+  int rahuBase = isDay ? rahuDayBases[weekday] : rahuNightBases[weekday];
+
+  // Mrityu Bases (continuous calculation)
+  final List<int> mrityuDayBases = [5, 2, 11, 8, 5, 2, 11];
+  final List<int> mrityuNightBases = [11, 8, 5, 2, 11, 8, 5];
+  int mrityuBase = isDay ? mrityuDayBases[weekday] : mrityuNightBases[weekday];
+
+  // Calculate Yamagandan/Rahu position (using Sun's sign as 1st house, shifts by C - J houses clockwise/adding)
+  SubPlanetResult calculateJamamPlanet(String name, int startJamam, int baseSign) {
+    int sunSign = (sunLon / 30.0).floor() + 1; // 1 to 12
+    double sunDeg = sunLon % 30.0;
+
+    int targetSign = sunSign;
+    double targetDeg = sunDeg;
+
+    if (currentJamam < startJamam) {
+      targetSign = baseSign;
+      targetDeg = sunDeg;
+    } else {
+      // Moves by (currentJamam - startJamam) signs
+      int signsShift = currentJamam - startJamam;
+      double degShift = 0.0;
+      if (currentJamam == startJamam) {
+        degShift = elapsedMinsInCurrentJamam * (30.0 / 90.0); // 20' per minute
+      }
+      
+      double finalLon = ((sunSign - 1) * 30.0 + sunDeg + signsShift * 30.0 + degShift) % 360.0;
+      targetSign = (finalLon / 30.0).floor() + 1;
+      targetDeg = finalLon % 30.0;
+    }
+
+    return SubPlanetResult(name: name, rasi: targetSign, degree: targetDeg);
+  }
+
+  // Mrityu continuous clockwise calculation
+  double mrityuStartLon = (mrityuBase - 1) * 30.0;
+  double mrityuLon = (mrityuStartLon - elapsedFraction * 360.0) % 360.0;
+  if (mrityuLon < 0) mrityuLon += 360.0;
+  int mrityuRasi = (mrityuLon / 30.0).floor() + 1;
+  double mrityuDegree = mrityuLon % 30.0;
+
+  return JamakkolSubPlanets(
+    isDay: isDay,
+    currentYama: currentJamam,
+    rahu: calculateJamamPlanet("Rahu", rahuJ, rahuBase),
+    yamagandan: calculateJamamPlanet("Yamagandan", yamaJ, yamaBase),
+    mrityu: SubPlanetResult(name: "Mrityu", rasi: mrityuRasi, degree: mrityuDegree),
+  );
+}
+

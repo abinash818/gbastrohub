@@ -5,7 +5,7 @@ class AstroEngineImpl implements AstroEngine {
   static Future<void> init() async {}
 
   @override
-  AstroResult calculate(DateTime dateTime, double lat, double lon, {bool trueNode = true, HouseSystem houseSystem = HouseSystem.placidus}) {
+  AstroResult calculate(DateTime dateTime, double lat, double lon, {bool trueNode = true, HouseSystem houseSystem = HouseSystem.placidus, int ayanamsaMode = 0}) {
     throw UnsupportedError('Platform not supported');
   }
 
@@ -15,12 +15,12 @@ class AstroEngineImpl implements AstroEngine {
   }
 
   @override
-  double calculatePlanetLongitude(DateTime dateTime, int planetId, {bool trueNode = true}) {
+  double calculatePlanetLongitude(DateTime dateTime, int planetId, {bool trueNode = true, int ayanamsaMode = 0}) {
     throw UnsupportedError('Platform not supported');
   }
 
   @override
-  double calculateLagna(DateTime dateTime, double lat, double lon) {
+  double calculateLagna(DateTime dateTime, double lat, double lon, {int ayanamsaMode = 0}) {
     throw UnsupportedError('Platform not supported');
   }
 }

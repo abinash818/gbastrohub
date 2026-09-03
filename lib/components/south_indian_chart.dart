@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../services/astro_translation_service.dart';
 
 // RASI BOX ORDER (0-15 grid indices)
@@ -27,6 +26,7 @@ class SouthIndianChart extends StatelessWidget {
   final Widget? centerWidget;
   final Map<String, String>? borderLabels;
   final String? highlightSign;
+  final bool allowScroll;
 
   const SouthIndianChart({
     super.key, 
@@ -35,6 +35,7 @@ class SouthIndianChart extends StatelessWidget {
     this.centerWidget,
     this.borderLabels,
     this.highlightSign,
+    this.allowScroll = true,
   });
 
   @override
@@ -47,6 +48,9 @@ class SouthIndianChart extends StatelessWidget {
         final double size = constraints.maxWidth;
         final double boxSize = size / 4;
 
+        final bool hasBorderLabels = borderLabels != null && borderLabels!.isNotEmpty;
+        final double pad = hasBorderLabels ? 24.0 : 0.0;
+
         return Container(
           width: size,
           height: size,
@@ -56,7 +60,7 @@ class SouthIndianChart extends StatelessWidget {
               // 1. Grid
               Positioned.fill(
                 child: Container(
-                  padding: const EdgeInsets.all(24), // Space for border labels
+                  padding: EdgeInsets.all(pad), // Space for border labels if present
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -88,6 +92,7 @@ class SouthIndianChart extends StatelessWidget {
                         return _ChartCell(
                           rasi: rasi,
                           items: items,
+                          allowScroll: allowScroll,
                         );
                       },
                     ),
@@ -96,13 +101,13 @@ class SouthIndianChart extends StatelessWidget {
               ),
               
               // 2. Border Labels
-              if (borderLabels != null) ..._buildBorderLabels(context, size),
+              if (hasBorderLabels) ..._buildBorderLabels(context, size),
 
               // 3. Center Label
               Center(
                 child: SizedBox(
-                  width: (size - 48) / 2 - 8,
-                  height: (size - 48) / 2 - 8,
+                  width: (size - (hasBorderLabels ? 48 : 0)) / 2 - 8,
+                  height: (size - (hasBorderLabels ? 48 : 0)) / 2 - 8,
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: centerWidget ?? Text(
@@ -217,8 +222,9 @@ class SouthIndianChart extends StatelessWidget {
 class _ChartCell extends StatefulWidget {
   final String? rasi;
   final List<String> items;
+  final bool allowScroll;
 
-  const _ChartCell({required this.rasi, required this.items});
+  const _ChartCell({required this.rasi, required this.items, this.allowScroll = true});
 
   @override
   State<_ChartCell> createState() => _ChartCellState();
@@ -239,8 +245,73 @@ class _ChartCellState extends State<_ChartCell> {
 
     final bool isLagnaCell = widget.items.any((e) => e.startsWith("லக்") || e.startsWith("உத") || e.startsWith("Asc") || e.startsWith("Lagna") || e.startsWith("Uda") || e.startsWith("लग्न") || e.startsWith("उदय"));
     final bool isArudamCell = widget.items.any((e) => e.startsWith("ஆரூ") || e.startsWith("Aru") || e.startsWith("आरू"));
-    final bool isKaviCell = widget.items.any((e) => e.startsWith("கவி") || e.startsWith("Kav") || e.startsWith("कवि"));
+    final bool isKaviCell = widget.items.any((e) => e.startsWith("கவி") || e.startsWith("Kav") || e.startsWith("कவி"));
     final bool isSpecialCell = isLagnaCell || isArudamCell || isKaviCell;
+
+    // Non-scrollable static poster mode: auto-scale all items inside FittedBox
+    if (!widget.allowScroll) {
+      return Container(
+        decoration: BoxDecoration(
+          color: isSpecialCell ? (isLagnaCell ? Colors.green.withOpacity(0.05) : (isArudamCell ? Colors.blue.withOpacity(0.05) : Colors.red.withOpacity(0.05))) : Colors.white,
+          border: Border.all(
+            color: isSpecialCell ? (isLagnaCell ? Colors.green.shade700 : (isArudamCell ? Colors.blue.shade800 : Colors.red.shade800)) : Colors.orange.shade800,
+            width: 1.5,
+          ),
+        ),
+        padding: const EdgeInsets.all(2),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: widget.items.map((it) {
+                bool isLagna = it.startsWith("லக்") || it.startsWith("உத") || it.startsWith("Asc") || it.startsWith("Lagna") || it.startsWith("Uda") || it.startsWith("लग्न") || it.startsWith("उदय");
+                bool isArudam = it.startsWith("ஆரூ") || it.startsWith("Aru") || it.startsWith("आरू");
+                bool isKavi = it.startsWith("கவி") || it.startsWith("Kav") || it.startsWith("कवि");
+                bool isYama = it.startsWith("எம") || it.startsWith("Yama") || it.startsWith("यम");
+                bool isMrityu = it.startsWith("மிரு") || it.startsWith("Mri") || it.startsWith("मृ");
+                bool isRahuClockwise = (it.startsWith("ரா") && !it.startsWith("ராகு")) ||
+                                       (it.startsWith("रा") && !it.startsWith("राहु")) ||
+                                       (it.startsWith("Rah") && !it.startsWith("Rahu"));
+                bool isSubPlanet = isYama || isMrityu || isRahuClockwise;
+                bool isSpecial = isLagna || isArudam || isKavi || isSubPlanet;
+
+                Color highlightColor = Colors.transparent;
+                if (isLagna) highlightColor = Colors.green.shade700;
+                else if (isArudam) highlightColor = Colors.blue.shade800;
+                else if (isKavi) highlightColor = Colors.red.shade800;
+                else if (isRahuClockwise) highlightColor = Colors.purple.shade700;
+                else if (isYama) highlightColor = Colors.orange.shade900;
+                else if (isMrityu) highlightColor = Colors.brown.shade700;
+
+                String translatedIt = AstroTranslationService.translate(context, it.trim(), isPlanet: true);
+                translatedIt = translatedIt.replaceAll(RegExp(r'''\s*\d+\s*(?:"|”|'')+$'''), '');
+
+                return Container(
+                  margin: const EdgeInsets.symmetric(vertical: 0.8),
+                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.8),
+                  decoration: isSpecial ? BoxDecoration(
+                    color: highlightColor,
+                    borderRadius: BorderRadius.circular(3),
+                  ) : null,
+                  child: Text(
+                    translatedIt,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                      color: isSpecial ? Colors.white : Colors.indigo.shade900,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      );
+    }
 
     // Dynamically adjust font size to reduce the need for scrolling
     double fontSize = 11.0;
@@ -302,16 +373,20 @@ class _ChartCellState extends State<_ChartCell> {
                 // Replace space with newline to save horizontal space, e.g., "சனி 17:39" -> "சனி\n17:39"
                 
                 String translatedIt = AstroTranslationService.translate(context, it.trim(), isPlanet: true);
-                // Remove seconds (e.g. 03") to keep only DD° MM'
-                translatedIt = translatedIt.replaceAll(RegExp("\\s*\\d+\\s*(?:\"|”|'')+\$"), '');
+                translatedIt = translatedIt.replaceAll(RegExp(r'''\s*\d+\s*(?:"|”|'')+$'''), '');
                 
-                // Replace only the first space with a newline to keep name on top and DD° MM' on the bottom line
-                int firstSpaceIndex = translatedIt.indexOf(' ');
+                // Separate planet name + flags from degree
+                final match = RegExp(r'^(.*?)\s+(\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}°\s*\d{1,2}.*)$').firstMatch(translatedIt);
                 String displayText;
-                if (firstSpaceIndex != -1) {
-                  displayText = translatedIt.substring(0, firstSpaceIndex) + '\n' + translatedIt.substring(firstSpaceIndex + 1);
+                if (match != null) {
+                  displayText = "${match.group(1)}\n${match.group(2)}";
                 } else {
-                  displayText = translatedIt;
+                  int firstSpaceIndex = translatedIt.indexOf(' ');
+                  if (firstSpaceIndex != -1) {
+                    displayText = translatedIt.substring(0, firstSpaceIndex) + '\n' + translatedIt.substring(firstSpaceIndex + 1);
+                  } else {
+                    displayText = translatedIt;
+                  }
                 }
 
 

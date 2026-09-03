@@ -6,6 +6,8 @@ import '../astro_engine/astro_engine.dart';
 import 'package:path_provider/path_provider.dart';
 import '../data/nakshatra_data.dart';
 import 'settings_service.dart';
+import 'astro_special_calculations_service.dart';
+import 'shadbala_service.dart';
 
 
 class KPService {
@@ -37,13 +39,13 @@ class KPService {
   static const Map<String, String> ENGLISH_PLANETS = {
     'Sun': 'Sun', 'Moon': 'Moon', 'Mars': 'Mars', 'Mercury': 'Mercury',
     'Jupiter': 'Jupiter', 'Venus': 'Venus', 'Saturn': 'Saturn', 'Rahu': 'Rahu', 'Ketu': 'Ketu',
-    'Maanthi': 'Maanthi'
+    'Lagna': 'Lagna', 'Maanthi': 'Maanthi'
   };
 
   static const Map<String, String> HINDI_PLANETS = {
     'Sun': 'सूर्य', 'Moon': 'चंद्र', 'Mars': 'मंगल', 'Mercury': 'बुध',
     'Jupiter': 'गुरु', 'Venus': 'शुक्र', 'Saturn': 'शनि', 'Rahu': 'राहु', 'Ketu': 'केतु',
-    'Maanthi': 'मांदी'
+    'Lagna': 'लग्न', 'Maanthi': 'मांदी'
   };
 
   static const Map<String, String> TAMIL_PLANET_SHORT = {
@@ -81,7 +83,7 @@ class KPService {
   static const Map<String, String> TAMIL_PLANETS = {
     'Sun': 'சூரியன்', 'Moon': 'சந்திரன்', 'Mars': 'செவ்வாய்', 'Mercury': 'புதன்',
     'Jupiter': 'குரு', 'Venus': 'சுக்கிரன்', 'Saturn': 'சனி', 'Rahu': 'ராகு', 'Ketu': 'கேது',
-    'Maanthi': 'மாந்தி'
+    'Lagna': 'லக்னம்', 'Maanthi': 'மாந்தி'
   };
 
   static const Map<String, String> TAMIL_PLANETS_SHORT = {
@@ -96,12 +98,55 @@ class KPService {
   ];
 
   static const List<String> TAMIL_YEARS_60 = [
-    "பிரபவ", "விபவ", "சுக்ல", "பிரமோதூத", "பிரசோற்பத்தி", "ஆங்கிரச", "ஸ்ரீமுக", "பவ", "யுவ", "தாது",
-    "ஈஸ்வர", "வெகுதானிய", "பிரமாதி", "விக்ரம", "விஷு", "சித்திரபானு", "சுபானு", "தாரண", "பார்த்திப", "வியய",
-    "சர்வஜித்", "சர்வதாரி", "விரோதி", "விக்ருதி", "கர", "நந்தன", "விஜய", "ஜய", "மன்மத", "துன்முகி",
-    "ஏவிளம்பி", "விளம்பி", "விகாரி", "சார்வரி", "பிலவ", "சுபகிருது", "சோபகிருது", "குரோதி", "விசுவாவசு", "பரிதாபி",
-    "பிலவங்க", "கீலக", "சௌமிய", "சாதாரண", "விரோதிகிருது", "பரிதாபி", "பிரமாதீச", "ஆனந்த", "ராட்சஸ", "நள",
-    "பிங்கள", "காலயுக்தி", "சித்தார்த்தி", "ரௌத்திரி", "துன்மதி", "துந்துபி", "ருத்ரோத்காரி", "ரக்தாட்சி", "குரோதன", "அட்சய"
+    "ஸ்ரீ பிரபவ", "ஸ்ரீ விபவ", "ஸ்ரீ சுக்ல", "ஸ்ரீ பிரமோதூத", "ஸ்ரீ பிரஜோற்பத்தி", "ஸ்ரீ ஆங்கீரச", "ஸ்ரீ ஸ்ரீமுக", "ஸ்ரீ பவ", "ஸ்ரீ யுவ", "ஸ்ரீ தாது",
+    "ஸ்ரீ ஈஸ்வர", "ஸ்ரீ வெகுதானிய", "ஸ்ரீ பிரமாதி", "ஸ்ரீ விக்ரம", "ஸ்ரீ விஷு", "ஸ்ரீ சித்திரபானு", "ஸ்ரீ சுபானு", "ஸ்ரீ தாரண", "ஸ்ரீ பார்த்திப", "ஸ்ரீ வியய",
+    "ஸ்ரீ சர்வஜித்", "ஸ்ரீ சர்வதாரி", "ஸ்ரீ விரோதி", "ஸ்ரீ விக்ருதி", "ஸ்ரீ கர", "ஸ்ரீ நந்தன", "ஸ்ரீ விஜய", "ஸ்ரீ ஜய", "ஸ்ரீ மன்மத", "ஸ்ரீ துன்முகி",
+    "ஸ்ரீ ஹேவிளம்பி", "ஸ்ரீ விளம்பி", "ஸ்ரீ விகாரி", "ஸ்ரீ சார்வரி", "ஸ்ரீ பிலவ", "ஸ்ரீ சுபகிருது", "ஸ்ரீ சோபகிருது", "ஸ்ரீ குரோதி", "ஸ்ரீ விசுவாவசு", "ஸ்ரீ பராபவ",
+    "ஸ்ரீ பிலவங்க", "ஸ்ரீ கீலக", "ஸ்ரீ சௌமிய", "ஸ்ரீ சாதாரண", "ஸ்ரீ விரோதிகிருது", "ஸ்ரீ பரிதாபி", "ஸ்ரீ பிரமாதீச", "ஸ்ரீ ஆனந்த", "ஸ்ரீ ராட்சஸ", "ஸ்ரீ நள",
+    "ஸ்ரீ பிங்கள", "ஸ்ரீ காளயுக்தி", "ஸ்ரீ சித்தார்த்தி", "ஸ்ரீ ரௌத்திரி", "ஸ்ரீ துன்மதி", "ஸ்ரீ துந்துபி", "ஸ்ரீ ருத்ரோத்காரி", "ஸ்ரீ ரக்தாட்சி", "ஸ்ரீ குரோதன", "ஸ்ரீ அட்சய"
+  ];
+
+  static bool isPlanetCombust(String planet, double planetLon, double sunLon, bool isRetro) {
+    if (planet == 'Sun' || planet == 'Rahu' || planet == 'Ketu' || planet == 'Lagna' || planet == 'Fortuna' || planet == 'Maanthi') {
+      return false;
+    }
+    double diff = (planetLon - sunLon).abs();
+    if (diff > 180) diff = 360 - diff;
+
+    Map<String, double> combustOrbs = {
+      'Moon': 12.0,
+      'Mars': isRetro ? 8.0 : 17.0,
+      'Mercury': isRetro ? 12.0 : 14.0,
+      'Jupiter': 11.0,
+      'Venus': isRetro ? 8.0 : 10.0,
+      'Saturn': 15.0,
+    };
+
+    double maxOrb = combustOrbs[planet] ?? 10.0;
+    return diff <= maxOrb;
+  }
+
+  static const Map<String, String> TAMIL_KARANAS = {
+    'Bava': 'பவம்',
+    'Balava': 'பாலவம்',
+    'Kaulava': 'கௌலவம்',
+    'Taitila': 'தைதுலை',
+    'Garaja': 'கரசை',
+    'Vanija': 'வணிசை',
+    'Vishti': 'பத்திரை (விஷ்டி)',
+    'Shakuni': 'சகுனி',
+    'Chatushpada': 'சதுஷ்பாதம்',
+    'Nagawa': 'நாகவம்',
+    'Kimstughna': 'கிம்துக்கினம்',
+  };
+
+  static const List<String> TAMIL_TITHIS = [
+    "பிரதமை", "துவிதியை", "திரிதியை", "சதுர்த்தி", "பஞ்சமி", "சஷ்டி",
+    "சப்தமி", "அஷ்டமி", "நவமி", "தசமி", "ஏகாதசி", "துவாதசி",
+    "திரயோதசி", "சதுர்த்தசி", "பௌர்ணமி",
+    "பிரதமை", "துவிதியை", "திரிதியை", "சதுர்த்தி", "பஞ்சமி", "சஷ்டி",
+    "சப்தமி", "அஷ்டமி", "நவமி", "தசமி", "ஏகாதசி", "துவாதசி",
+    "திரயோதசி", "சதுர்த்தசி", "அமாவாசை"
   ];
 
   // 1. Initialize Astro Engine
@@ -199,13 +244,14 @@ class KPService {
 
   static String formatDegrees(double degrees) {
     double lon = degrees % 30;
+    if (lon < 0) lon += 30;
     int d = lon.floor();
     double remM = (lon - d) * 60;
     int m = remM.floor();
     int s = ((remM - m) * 60).round();
     if (s == 60) { m++; s = 0; }
     if (m == 60) { d++; m = 0; }
-    return "${d.toString().padLeft(2, '0')}° ${m.toString().padLeft(2, '0')}' ${s.toString().padLeft(2, '0')}\"";
+    return "${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
   }
 
   static String formatDegreesDMS(double degrees) {
@@ -351,25 +397,57 @@ class KPService {
       }
     }
     
+    Map<String, List<Map<String, dynamic>>> rasiEntries = {};
+    for (var sign in SIGNS) {
+      rasiEntries[sign] = [];
+    }
+
     double lagnaLon = siderealCusps[1];
     String lagnaDeg = formatDegrees(lagnaLon);
     finalResults['planet_details']['lagna'] = {
       'longitude': lagnaLon, 'rasi': SIGNS[(lagnaLon / 30).floor() % 12], 'lords': getKPLords(lagnaLon),
       'nakshatra': NAKSHATRAS[(lagnaLon / (360/27)).floor() % 27], 'pada': ((lagnaLon % (360/27)) / (360/108)).floor() + 1
     };
-    finalResults['rasi'][SIGNS[(lagnaLon / 30).floor() % 12]]!.add("${TAMIL_PLANETS_SHORT['Lagna']!} $lagnaDeg");
+    String lagnaSign = SIGNS[(lagnaLon / 30).floor() % 12];
+    rasiEntries[lagnaSign]!.add({
+      'deg': lagnaLon % 30,
+      'label': "${TAMIL_PLANETS_SHORT['Lagna']!} $lagnaDeg",
+    });
     int lagnaNavIdx = ((lagnaLon / 30).floor() * 9 + ((lagnaLon % 30) / (30/9)).floor()) % 12;
     finalResults['navamsa'][SIGNS[lagnaNavIdx]]!.add(TAMIL_PLANETS_SHORT['Lagna']!);
+
     planetLons.forEach((pName, pLon) {
       String pDeg = formatDegrees(pLon);
+      bool isRetro = planetInfo[pName]?['isRetro'] == true;
+      bool isCombust = isPlanetCombust(pName, pLon, planetLons['Sun']!, isRetro);
+
+      String flags = "";
+      if (isRetro) flags += " (வ)";
+      if (isCombust) flags += " (அ)";
+
       finalResults['planet_details'][pName.toLowerCase()] = {
         'longitude': pLon, 'rasi': SIGNS[(pLon / 30).floor() % 12], 'lords': getKPLords(pLon),
-        'nakshatra': NAKSHATRAS[(pLon / (360/27)).floor() % 27], 'pada': ((pLon % (360/27)) / (360/108)).floor() + 1
+        'nakshatra': NAKSHATRAS[(pLon / (360/27)).floor() % 27], 'pada': ((pLon % (360/27)) / (360/108)).floor() + 1,
+        'isRetro': isRetro,
+        'isCombust': isCombust,
       };
-      finalResults['rasi'][SIGNS[(pLon / 30).floor() % 12]]!.add("${TAMIL_PLANETS_SHORT[pName]!} $pDeg");
+
+      String pSign = SIGNS[(pLon / 30).floor() % 12];
+      rasiEntries[pSign]!.add({
+        'deg': pLon % 30,
+        'label': "${TAMIL_PLANETS_SHORT[pName]!}$flags $pDeg",
+      });
+
       int navIdx = ((pLon / 30).floor() * 9 + ((pLon % 30) / (30/9)).floor()) % 12;
-      finalResults['navamsa'][SIGNS[navIdx]]!.add(TAMIL_PLANETS_SHORT[pName]!);
+      finalResults['navamsa'][SIGNS[navIdx]]!.add("${TAMIL_PLANETS_SHORT[pName]!}$flags");
     });
+
+    // Degree-wise sorting (ascending order) for each Rasi box
+    for (var sign in SIGNS) {
+      final list = rasiEntries[sign]!;
+      list.sort((a, b) => (a['deg'] as double).compareTo(b['deg'] as double));
+      finalResults['rasi'][sign] = list.map((e) => e['label'] as String).toList();
+    }
     const List<String> ROMAN_BHAVAS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
     for (int i = 1; i <= 12; i++) {
       double hLon = siderealCusps[i];
@@ -392,10 +470,16 @@ class KPService {
       if (houseNum == 0) houseNum = 12;
       planetInfo[pName]!['house'] = houseNum;
       planetInfo[pName]!['lords'] = getKPLords(pLon);
-      finalResults['pavagam'][SIGNS[(siderealCusps[houseNum] / 30).floor() % 12]]!.add(TAMIL_PLANETS_SHORT[pName]!);
+      bool isRetro = planetInfo[pName]?['isRetro'] == true;
+      bool isCombust = isPlanetCombust(pName, pLon, planetLons['Sun']!, isRetro);
+      String flags = "";
+      if (isRetro) flags += " (வ)";
+      if (isCombust) flags += " (அ)";
+      finalResults['pavagam'][SIGNS[(siderealCusps[houseNum] / 30).floor() % 12]]!.add("${TAMIL_PLANETS_SHORT[pName]!}$flags");
     });
     finalResults['dasa'] = _calculateDasaList(planetLons['Moon']!, dt, yearLength);
-    finalResults['ashtakavarga'] = _calculateAshtakavarga(planetLons, lagnaLon);
+    final bool includeLagnaAV = await SettingsService.getIncludeLagnaAshtakavarga();
+    finalResults['ashtakavarga'] = _calculateAshtakavarga(planetLons, lagnaLon, includeLagnaAV: includeLagnaAV);
     finalResults['divisional_charts'] = _calculateAllVargas(planetLons, lagnaLon);
     finalResults['significators'] = _calculateSignificators(planetLons, siderealCusps);
     finalResults['old_significators'] = _calculateOldKPSignificators(planetLons, siderealCusps);
@@ -459,13 +543,84 @@ class KPService {
     };
 
     // 5. Calculate Pars Fortunae (Fortuna)
-    double fortunaLon = (lagnaLon + planetLons['Moon']! - planetLons['Sun']!) % 360;
-    if (fortunaLon < 0) fortunaLon += 360;
+    bool isDayBirth = true;
+    try {
+      final srParts = (pancha['sunrise'] ?? "06:00").toString().split(':');
+      final ssParts = (pancha['sunset'] ?? "18:00").toString().split(':');
+      double srHours = (int.tryParse(srParts[0]) ?? 6) + ((int.tryParse(srParts[1]) ?? 0) / 60.0);
+      double ssHours = (int.tryParse(ssParts[0]) ?? 18) + ((int.tryParse(ssParts[1]) ?? 0) / 60.0);
+      double birthHours = dt.hour + (dt.minute / 60.0);
+      isDayBirth = birthHours >= srHours && birthHours < ssHours;
+    } catch (_) {}
+
+    double fortunaLon = isDayBirth
+        ? (lagnaLon + planetLons['Moon']! - planetLons['Sun']! + 720) % 360
+        : (lagnaLon + planetLons['Sun']! - planetLons['Moon']! + 720) % 360;
+
     finalResults['planet_details']['fortuna'] = {
       'longitude': fortunaLon, 'rasi': SIGNS[(fortunaLon / 30).floor() % 12], 'lords': getKPLords(fortunaLon),
       'nakshatra': NAKSHATRAS[(fortunaLon / (360/27)).floor() % 27], 'pada': ((fortunaLon % (360/27)) / (360/108)).floor() + 1
     };
     finalResults['planet_info']['Fortuna'] = {'isRetro': false};
+
+    // Special Astrology Calculations (இந்து லக்னம், ஜெமினி லக்னங்கள், யோகி-அவயோகி, காரகங்கள், உபகிரகங்கள்)
+    finalResults['indu_lagna'] = AstroSpecialCalculationsService.calculateInduLagna(lagnaLon, planetLons['Moon']!);
+    finalResults['fortuna_detailed'] = AstroSpecialCalculationsService.calculateFortuna(lagnaLon, planetLons['Sun']!, planetLons['Moon']!, isDayBirth);
+    finalResults['jaimini_lagnas'] = AstroSpecialCalculationsService.calculateJaiminiLagnas(
+      lagnaLon: lagnaLon,
+      sunLon: planetLons['Sun']!,
+      birthDt: dt,
+      sunriseStr: pancha['sunrise'] ?? "06:00",
+      planetLons: planetLons,
+    );
+
+    finalResults['yogi_avayogi'] = AstroSpecialCalculationsService.calculateYogiAvayogi(planetLons['Sun']!, planetLons['Moon']!);
+    finalResults['planetary_roles'] = AstroSpecialCalculationsService.calculatePlanetaryRoles(lagnaLon, planetLons);
+    finalResults['kala_pagai'] = AstroSpecialCalculationsService.checkKalaPagai(dasaList: finalResults['dasa'] ?? [], birthDt: dt);
+    finalResults['vainasika_pada'] = AstroSpecialCalculationsService.calculateVainasikaPada(planetLons['Moon']!, planetLons);
+    finalResults['kala_natpu_pagai_age'] = AstroSpecialCalculationsService.checkKalaNatpuAndPagaiAges(dasaList: finalResults['dasa'] ?? [], birthDt: dt);
+
+    finalResults['jaimini_karakas'] = AstroSpecialCalculationsService.calculateJaiminiKarakas(planetLons);
+    finalResults['planetary_avasthas'] = AstroSpecialCalculationsService.calculatePlanetaryAvasthas(planetLons, lagnaLon);
+    finalResults['parivarthana'] = AstroSpecialCalculationsService.checkParivarthana(planetLons);
+    finalResults['visha_amrita'] = AstroSpecialCalculationsService.checkVishaAmritaGhatika(planetLons);
+    finalResults['karma_nakshatras'] = AstroSpecialCalculationsService.checkKarmaNakshatras(planetLons['Moon']!, planetLons);
+    finalResults['pushkara_navamsa'] = AstroSpecialCalculationsService.checkPushkaraNavamsa(planetLons, lagnaLon);
+    finalResults['chandrashtama'] = AstroSpecialCalculationsService.calculateChandrashtama(planetLons['Moon']!);
+    finalResults['navatara'] = AstroSpecialCalculationsService.checkNavataraPositions(planetLons['Moon']!, planetLons);
+
+    finalResults['upagrahas'] = AstroSpecialCalculationsService.calculateUpagrahas(planetLons['Sun']!, dt, pancha['sunrise'] ?? "06:00");
+    finalResults['lagna_change'] = AstroSpecialCalculationsService.calculateLagnaTimeChange(lagnaLon, dt);
+
+    bool isShukla = ((planetLons['Moon']! - planetLons['Sun']! + 360) % 360) < 180;
+    DateTime srDt = DateTime(dt.year, dt.month, dt.day, 6, 0);
+    try {
+      final srParts = (pancha['sunrise'] ?? "06:00").toString().split(':');
+      srDt = DateTime(dt.year, dt.month, dt.day, int.tryParse(srParts[0]) ?? 6, int.tryParse(srParts[1]) ?? 0);
+    } catch (_) {}
+    finalResults['pancha_pakshi'] = AstroSpecialCalculationsService.calculatePanchaPakshi(
+      moonLon: planetLons['Moon']!,
+      currentDt: dt,
+      sunrise: srDt,
+      isShuklaPaksha: isShukla,
+    );
+
+    // 6. Complete 6-Fold Shadbala Calculation
+    Map<String, dynamic> isRetroMap = {};
+    finalResults['planet_info']?.forEach((k, v) {
+      if (v is Map && v['isRetro'] == true) {
+        isRetroMap[k] = true;
+      }
+    });
+
+    finalResults['shadbala'] = ShadbalaService.calculateShadbala(
+      planetLons: planetLons,
+      lagnaLon: lagnaLon,
+      birthDt: dt,
+      sunriseStr: pancha['sunrise'] ?? "06:00",
+      sunsetStr: pancha['sunset'] ?? "18:00",
+      planetRetrograde: isRetroMap,
+    );
 
     return finalResults;
   }
@@ -800,10 +955,26 @@ class KPService {
     return periods;
   }
 
-  static Map<String, dynamic> _calculateAshtakavarga(Map<String, double> planetLons, double lagnaLon) {
+  static Map<String, dynamic> calculateAshtakavargaMap(Map<String, double> planetLons, double lagnaLon, {bool includeLagnaAV = false}) {
+    return _calculateAshtakavarga(planetLons, lagnaLon, includeLagnaAV: includeLagnaAV);
+  }
+
+  static Map<String, dynamic> _calculateAshtakavarga(Map<String, double> planetLons, double lagnaLon, {bool includeLagnaAV = false}) {
     Map<String, int> planetPositions = {}; planetLons.forEach((name, lon) { planetPositions[name] = (lon / 30).floor() % 12; });
     planetPositions['Lagna'] = (lagnaLon / 30).floor() % 12;
-    Map<String, List<int>> bAV = { 'Sun': _getPoints('Sun', planetPositions), 'Moon': _getPoints('Moon', planetPositions), 'Mars': _getPoints('Mars', planetPositions), 'Mercury': _getPoints('Mercury', planetPositions), 'Jupiter': _getPoints('Jupiter', planetPositions), 'Venus': _getPoints('Venus', planetPositions), 'Saturn': _getPoints('Saturn', planetPositions) };
+    Map<String, List<int>> bAV = { 
+      'Sun': _getPoints('Sun', planetPositions), 
+      'Moon': _getPoints('Moon', planetPositions), 
+      'Mars': _getPoints('Mars', planetPositions), 
+      'Mercury': _getPoints('Mercury', planetPositions), 
+      'Jupiter': _getPoints('Jupiter', planetPositions), 
+      'Venus': _getPoints('Venus', planetPositions), 
+      'Saturn': _getPoints('Saturn', planetPositions) 
+    };
+
+    if (includeLagnaAV) {
+      bAV['Lagna'] = _getPoints('Lagna', planetPositions);
+    }
     
     Map<String, List<int>> trikona = {};
     Map<String, List<int>> ekadipathya = {};
@@ -824,6 +995,7 @@ class KPService {
       'trikona': trikona,
       'ekadipathya': ekadipathya,
       'pindas': pindas,
+      'includeLagna': includeLagnaAV,
     };
   }
 
@@ -883,7 +1055,8 @@ class KPService {
      'Mercury': { 'Sun': [5,6,9,11,12], 'Moon': [2,4,6,8,10,11], 'Mars': [1,2,4,7,8,9,10,11], 'Mercury': [1,3,5,6,9,10,11,12], 'Jupiter': [6,8,11,12], 'Venus': [1,2,3,4,5,8,9,11], 'Saturn': [1,2,4,7,8,9,10,11], 'Lagna': [1,2,4,6,8,10,11] },
      'Jupiter': { 'Sun': [1,2,3,4,7,8,9,10,11], 'Moon': [2,5,7,9,11], 'Mars': [1,2,4,7,8,10,11], 'Mercury': [1,2,4,5,6,9,10,11], 'Jupiter': [1,2,3,4,7,8,10,11], 'Venus': [2,5,6,9,10,11], 'Saturn': [3,5,6,12], 'Lagna': [1,2,4,5,6,7,9,10,11] },
      'Venus': { 'Sun': [8,11,12], 'Moon': [1,2,3,4,5,8,9,11,12], 'Mars': [3,5,6,9,11,12], 'Mercury': [3,5,6,9,11], 'Jupiter': [5,8,9,10,11], 'Venus': [1,2,3,4,5,8,9,10,11], 'Saturn': [3,4,5,8,9,10,11], 'Lagna': [1,2,3,4,5,8,9,11] },
-     'Saturn': { 'Sun': [1,2,4,7,8,10,11], 'Moon': [3,6,11], 'Mars': [3,5,6,10,11,12], 'Mercury': [6,8,9,10,11,12], 'Jupiter': [5,6,11,12], 'Venus': [6,11,12], 'Saturn': [3,5,6], 'Lagna': [1,3,4,6,10,11] }
+     'Saturn': { 'Sun': [1,2,4,7,8,10,11], 'Moon': [3,6,11], 'Mars': [3,5,6,10,11,12], 'Mercury': [6,8,9,10,11,12], 'Jupiter': [5,6,11,12], 'Venus': [6,11,12], 'Saturn': [3,5,6], 'Lagna': [1,3,4,6,10,11] },
+     'Lagna': { 'Sun': [3,4,6,10,11,12], 'Moon': [3,6,10,11], 'Mars': [1,3,6,10,11], 'Mercury': [1,2,4,6,8,10,11], 'Jupiter': [1,2,4,5,6,7,9,10,11], 'Venus': [1,2,3,4,5,8,9,11], 'Saturn': [1,3,4,6,10,11], 'Lagna': [3,6,10,11] }
   };
 
   static Map<String, dynamic> _calculateAllVargas(Map<String, double> planetLons, double lagnaLon) {
@@ -904,6 +1077,8 @@ class KPService {
     }
     return vargas;
   }
+
+  static int calculateVargaSignForTest(double lon, int division) => _calculateVargaSign(lon, division);
 
   static int _calculateVargaSign(double lon, int division) {
     int rasiIdx = (lon / 30).floor() % 12;
@@ -935,11 +1110,10 @@ class KPService {
           const evenPanch = [1, 5, 11, 9, 7]; // Taurus (Venus), Virgo (Mercury), Pisces (Jupiter), Capricorn (Saturn), Scorpio (Mars)
           return evenPanch[part % 5];
         }
-      case 6: // Shashtamsha
+      case 6: // Shashtamsha (D6) - Tamil textbook rule: Odd signs -> Aries, Gemini, Leo, Libra, Sag, Aqua; Even signs -> Taurus, Cancer, Virgo, Scorpio, Cap, Pisces
         int part = (degInRasi / 5).floor();
         bool isOdd = (rasiIdx + 1) % 2 != 0;
-        int startRasi = isOdd ? rasiIdx : (rasiIdx + 6) % 12;
-        return (startRasi + part) % 12;
+        return (isOdd ? 0 : 1) + (part * 2);
       case 7: // Saptamsha
         int part = (degInRasi / (30/7)).floor();
         bool isOdd = (rasiIdx + 1) % 2 != 0;
@@ -950,12 +1124,19 @@ class KPService {
         int group = (rasiIdx % 3); // 0=Movable, 1=Fixed, 2=Dual
         int startRasi = (group == 0) ? 0 : (group == 1 ? 8 : 4); // Ar, Sg, Le
         return (startRasi + part) % 12;
-
+      case 9: // Navamsha (D9)
+        int part = (degInRasi / (30 / 9)).floor();
+        int group = (rasiIdx % 3); // 0=Movable, 1=Fixed, 2=Dual
+        int startRasi = (group == 0) ? rasiIdx : (group == 1 ? (rasiIdx + 8) % 12 : (rasiIdx + 4) % 12);
+        return (startRasi + part) % 12;
       case 10: // Dashamsha
         int part = (degInRasi / 3).floor();
         bool isOdd = (rasiIdx + 1) % 2 != 0;
         int startRasi = isOdd ? rasiIdx : (rasiIdx + 8) % 12;
         return (startRasi + part) % 12;
+      case 12: // Dwadashamsha (D12) - 12 divisions of 2.5 deg each, starting from sign itself
+        int part = (degInRasi / 2.5).floor();
+        return (rasiIdx + part) % 12;
       case 16: // Shodashamsha
         int part = (degInRasi / (30/16)).floor();
         int type = (rasiIdx % 3); // 0=Movable, 1=Fixed, 2=Dual
@@ -1001,7 +1182,10 @@ class KPService {
         int group = (rasiIdx % 3); // 0=Movable, 1=Fixed, 2=Dual
         int startRasi = (group == 0) ? 0 : (group == 1 ? 4 : 8); // Ar, Le, Sg
         return (startRasi + part) % 12;
-      default: // Navamsha (D9), Dwadashamsha (D12), Shashtiamsha (D60) - Cyclic
+      case 60: // Shashtiamsha (D60) - 60 divisions of 0.5 deg each, starting from sign itself
+        int part = (degInRasi / 0.5).floor();
+        return (rasiIdx + part) % 12;
+      default:
         return ((rasiIdx * division) + (degInRasi / (30 / division)).floor()) % 12;
     }
   }
@@ -1069,11 +1253,36 @@ class KPService {
       karanaName = movable[(kIndex - 1) % 7];
     }
 
-    final tithiName = tithis[(diff / 12).floor() % 30];
+    int tithiIdx = (diff / 12).floor() % 30;
+    final tithiName = tithis[tithiIdx];
+    bool isShukla = (diff < 180);
+    String tithiTamilBase = TAMIL_TITHIS[tithiIdx];
+    String fullTithiDisplay;
+    if (tithiIdx == 14) {
+      fullTithiDisplay = "பௌர்ணமி (சுக்ல பக்ஷம்)";
+    } else if (tithiIdx == 29) {
+      fullTithiDisplay = "அமாவாசை (கிருஷ்ண பக்ஷம்)";
+    } else {
+      fullTithiDisplay = "${isShukla ? 'வளர்பிறை' : 'தேய்பிறை'} $tithiTamilBase (${isShukla ? 'சுக்ல' : 'கிருஷ்ண'} பக்ஷம்)";
+    }
+
+    String karanaTamil = TAMIL_KARANAS[karanaName] ?? karanaName;
     return <String, dynamic>{
-      'tithi': tithiName, 'yoga': yogas[(((sun + moon) % 360) / (360/27)).floor() % 27], 'nakshatra': NAKSHATRAS[(moon / (360/27)).floor() % 27], 'karana': karanaName,
-      'paksham': (diff < 180) ? "Sukla Paksha (Waxing)" : "Krishna Paksha (Waning)", 'sunrise': sunrise, 'sunset': sunset, 'vara': vara, 'day_lord': dayLord,
-      'tamil_month': TAMIL_MONTHS[tMonthIdx % 12], 'tamil_year': TAMIL_YEARS_60[yearOff % 60], 'tamil_date': tDate, 'diff': diff,
+      'tithi': fullTithiDisplay,
+      'tithi_raw': tithiName,
+      'yoga': yogas[(((sun + moon) % 360) / (360/27)).floor() % 27],
+      'nakshatra': NAKSHATRAS[(moon / (360/27)).floor() % 27],
+      'karana': karanaTamil,
+      'karana_raw': karanaName,
+      'paksham': isShukla ? "வளர்பிறை (சுக்ல பக்ஷம்)" : "தேய்பிறை (கிருஷ்ண பக்ஷம்)",
+      'sunrise': sunrise,
+      'sunset': sunset,
+      'vara': vara,
+      'day_lord': dayLord,
+      'tamil_month': TAMIL_MONTHS[tMonthIdx % 12],
+      'tamil_year': TAMIL_YEARS_60[yearOff % 60],
+      'tamil_date': tDate,
+      'diff': diff,
       'suniya_rasi': _calculateThithiSuniya(tithiName)
     };
 
@@ -1193,9 +1402,9 @@ class KPService {
     };
     final dayData = table[weekday % 7]!;
     String engNak = _nakshatraTamilToEng(nakshatra);
-    if (dayData["Amirtha"]!.contains(engNak)) return "Amirtha Yoga";
-    if (dayData["Marana"]!.contains(engNak)) return "Marana Yoga";
-    return "Siddha Yoga";
+    if (dayData["Amirtha"]!.contains(engNak)) return "அமிர்த யோகம்";
+    if (dayData["Marana"]!.contains(engNak)) return "மரண யோகம்";
+    return "சித்த யோகம்";
   }
 
   static String _nakshatraTamilToEng(String tam) {
@@ -1713,9 +1922,13 @@ class KPService {
     DateTime sunriseUtc = jdToDateTimeUtc(riseJD);
     var sunResult = engine.calculate(sunriseUtc, lat, lon, ayanamsaMode: ayanamsaMode);
 
+    Map<String, String> nithyaToTarget = {
+      'Su': 'Sun', 'Mo': 'Moon', 'Ma': 'Mars', 'Me': 'Mercury', 'Ju': 'Jupiter', 'Ve': 'Venus', 'Sa': 'Saturn', 'Ra': 'Rahu', 'Ke': 'Ketu'
+    };
     Map<String, double> lons = {};
     for (var p in sunResult.planets) {
-      lons[p.name] = p.siderealDegree;
+      String targetName = nithyaToTarget[p.name] ?? p.name;
+      lons[targetName] = p.siderealDegree;
     }
     
     var pancha = await _calculatePanchangam(sunResult.jd, lons, date, lat, lon, timezone, engine);
@@ -1756,6 +1969,78 @@ class KPService {
       'moon_transits': moonTransits,
       'other_transits': otherPlanetsTransits,
       'lagna_transits': lagnaTransits,
+    };
+  }
+
+  static Future<Map<String, String>> calculateEndTimes(DateTime dt, double lat, double lon, double timezone) async {
+    await init();
+    final engine = AstroEngine();
+    final int ayanamsaMode = await SettingsService.getAyanamsa();
+
+    Map<String, int> getTNY(DateTime time) {
+      final utDate = time.subtract(Duration(minutes: (timezone * 60).round()));
+      final res = engine.calculate(utDate, lat, lon, ayanamsaMode: ayanamsaMode);
+
+      double sun = 0.0;
+      double moon = 0.0;
+      for (var p in res.planets) {
+        if (p.name == 'Su' || p.name == 'Sun') sun = p.siderealDegree;
+        if (p.name == 'Mo' || p.name == 'Moon') moon = p.siderealDegree;
+      }
+      double diff = (moon - sun + 360) % 360;
+
+      int tithiIdx = (diff / 12).floor() % 30;
+      int nakIdx = (moon / (360 / 27)).floor() % 27;
+      int yogaIdx = (((sun + moon) % 360) / (360 / 27)).floor() % 27;
+
+      return {'t': tithiIdx, 'n': nakIdx, 'y': yogaIdx};
+    }
+
+    final current = getTNY(dt);
+    final curT = current['t'];
+    final curN = current['n'];
+    final curY = current['y'];
+
+    DateTime? findEndTime(String key, int currentVal) {
+      DateTime start = dt;
+      DateTime end = dt.add(const Duration(hours: 48));
+
+      final endTNY = getTNY(end);
+      if (endTNY[key] == currentVal) return null;
+
+      for (int i = 0; i < 20; i++) {
+        DateTime mid = start.add(Duration(seconds: end.difference(start).inSeconds ~/ 2));
+        final midTNY = getTNY(mid);
+        if (midTNY[key] == currentVal) {
+          start = mid;
+        } else {
+          end = mid;
+        }
+      }
+      return end;
+    }
+
+    DateTime? tEnd = findEndTime('t', curT!);
+    DateTime? nEnd = findEndTime('n', curN!);
+    DateTime? yEnd = findEndTime('y', curY!);
+
+    String formatTime(DateTime? t) {
+      if (t == null) return "நாளை வரை";
+      String prefix = "";
+      if (t.day != dt.day) {
+        prefix = "நாளை ";
+      }
+      int h = t.hour % 12;
+      if (h == 0) h = 12;
+      String m = t.minute.toString().padLeft(2, '0');
+      String ampm = t.hour >= 12 ? "PM" : "AM";
+      return "$prefix$h:$m $ampm";
+    }
+
+    return {
+      'tithi_end': formatTime(tEnd),
+      'nakshatra_end': formatTime(nEnd),
+      'yoga_end': formatTime(yEnd),
     };
   }
 }

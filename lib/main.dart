@@ -17,6 +17,8 @@ import 'screens/jamakkol_screen.dart';
 import 'screens/jamakkol_input_screen.dart';
 import 'screens/horoscope_workspace_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/astro_tools_screen.dart';
+import 'screens/panchangam_screen.dart';
 import 'services/kp_service.dart';
 import 'services/settings_service.dart';
 import 'theme/app_colors.dart';
@@ -98,6 +100,8 @@ class AstrologyApp extends StatelessWidget {
         '/settings': (context) => const SettingsScreen(),
         '/subscriptions': (context) => const SubscriptionPlansScreen(),
         '/saved_horoscopes': (context) => const SavedHoroscopesScreen(),
+        '/astro_tools': (context) => const AstroToolsScreen(),
+        '/panchangam': (context) => const PanchangamScreen(),
         '/jamakkol': (context) => const JamakkolScreen(),
         '/jamakkol_input': (context) => const JamakkolInputScreen(),
         '/login': (context) => const LoginScreen(),

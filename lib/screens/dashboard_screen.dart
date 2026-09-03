@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../components/custom_drawer.dart';
-import '../theme/app_colors.dart';
 import '../services/access_service.dart';
 import 'live_dashboard_screen.dart';
 import 'input_screen.dart';
@@ -146,6 +145,14 @@ class DashboardScreen extends StatelessWidget {
                             "assets/images/marriage_planet.png",
                             '/marriage_matching', 
                             featureKey: 'can_view_matching'
+                          ),
+                          _buildPremiumButton(
+                            context, 
+                            AppLocalizations.of(context)!.panchangamTitle, 
+                            "தினசரி பஞ்சாங்கம் மற்றும் கோசார நிலைகள்",
+                            "assets/images/panchangam_planet.png",
+                            '/panchangam', 
+                            featureKey: 'can_view_panchangam'
                           ),
                           _buildPremiumButton(
                             context, 

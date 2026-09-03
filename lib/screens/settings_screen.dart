@@ -27,12 +27,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   double _lon = 80.2707;
   double _tz = 5.5;
   double _dasaYearLength = 365.25;
-  int _ayanamsaMode = 0; // 0: Lahiri, 5: Krishnamurti
+  int _ayanamsaMode = 0; // 0: Lahiri, 5: Krishnamurti, 6: Custom
+  int _bhavaMethod = 0; // 0: Placidus / KP, 1: Sripati
+  final TextEditingController _customAyanamsaDegController = TextEditingController(text: "24");
+  final TextEditingController _customAyanamsaMinController = TextEditingController(text: "15");
+  final TextEditingController _customAyanamsaSecController = TextEditingController(text: "00");
   double _fontSize = 1.0;
   bool _useTrueNode = false;
   String _selectedLang = 'ta';
   int _udayamMethod = 0;
   int _maandiMethod = 1;
+  bool _includeLagnaAshtakavarga = false;
 
   bool _isLoading = true;
 
@@ -40,6 +45,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    _customAyanamsaDegController.dispose();
+    _customAyanamsaMinController.dispose();
+    _customAyanamsaSecController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -62,21 +75,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     final dyl = await SettingsService.getDasaYearLength();
     final am = await SettingsService.getAyanamsa();
+    final bm = await SettingsService.getBhavaMethod();
+    final customAya = await SettingsService.getCustomAyanamsa();
     final fs = await SettingsService.getFontSize();
     final utn = await SettingsService.getTrueNodeMode();
     final lang = await SettingsService.getLanguage();
     final um = await SettingsService.getUdayamMethod();
     final mm = await SettingsService.getMaandiMethod();
+    final ila = await SettingsService.getIncludeLagnaAshtakavarga();
     
     if (mounted) {
       setState(() {
         _dasaYearLength = dyl;
         _ayanamsaMode = am;
+        _bhavaMethod = bm;
+        _customAyanamsaDegController.text = (customAya['deg'] ?? 24).toString();
+        _customAyanamsaMinController.text = (customAya['min'] ?? 15).toString();
+        _customAyanamsaSecController.text = (customAya['sec'] ?? 0).toString();
         _fontSize = fs;
         _useTrueNode = utn;
         _selectedLang = lang;
         _udayamMethod = um;
         _maandiMethod = mm;
+        _includeLagnaAshtakavarga = ila;
         _isLoading = false;
       });
     }
@@ -98,11 +119,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     await SettingsService.saveDasaYearLength(_dasaYearLength);
     await SettingsService.saveAyanamsa(_ayanamsaMode);
+    await SettingsService.saveBhavaMethod(_bhavaMethod);
+    await SettingsService.saveCustomAyanamsa(
+      deg: int.tryParse(_customAyanamsaDegController.text) ?? 24,
+      min: int.tryParse(_customAyanamsaMinController.text) ?? 15,
+      sec: int.tryParse(_customAyanamsaSecController.text) ?? 0,
+    );
     await SettingsService.saveFontSize(_fontSize);
     await SettingsService.saveTrueNodeMode(_useTrueNode);
     await SettingsService.saveLanguage(_selectedLang);
     await SettingsService.saveUdayamMethod(_udayamMethod);
     await SettingsService.saveMaandiMethod(_maandiMethod);
+    await SettingsService.saveIncludeLagnaAshtakavarga(_includeLagnaAshtakavarga);
 
     // Update the global notifiers so changes take effect immediately
     main_file.appFontScaleNotifier.value = _fontSize;
@@ -183,9 +211,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 24),
             _buildAyanamsaSelector(),
             const SizedBox(height: 24),
+            _buildBhavaMethodSelector(),
+            const SizedBox(height: 24),
             _buildUdayamMethodSelector(),
             const SizedBox(height: 24),
             _buildMaandiMethodSelector(),
+            const SizedBox(height: 24),
+            _buildLagnaAshtakavargaSelector(),
             const SizedBox(height: 36),
             _buildSectionTitle(AstroTranslationService.translate(context, "சந்தா (Subscription)")),
             const SizedBox(height: 16),
@@ -401,6 +433,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               DropdownMenuItem(value: 3, child: Text(AstroTranslationService.translate(context, "KP New (Modern)"))),
               DropdownMenuItem(value: 4, child: Text(AstroTranslationService.translate(context, "KP Straight Line (Khullar)"))),
               DropdownMenuItem(value: 5, child: Text(AstroTranslationService.translate(context, "KP-Newcomb (Auto)"))),
+              DropdownMenuItem(value: 6, child: Text(AstroTranslationService.translate(context, "பயனர் விருப்பம் (Custom Ayanamsa)"))),
             ],
             onChanged: (int? newSelection) {
               if (newSelection != null) {
@@ -409,6 +442,100 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 });
               }
             },
+          ),
+        ),
+        if (_ayanamsaMode == 6) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF6EE),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFB58D3D)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _customAyanamsaDegController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: "பாகை (°)", border: OutlineInputBorder()),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _customAyanamsaMinController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: "கலை (')", border: OutlineInputBorder()),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _customAyanamsaSecController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: "விகலை (\")", border: OutlineInputBorder()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildBhavaMethodSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.pie_chart_outline_rounded, color: Color(0xFFB58D3D), size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                AstroTranslationService.translate(context, "பாவகக் கணித முறை (Bhava Chalit Method)"),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<int>(
+            segments: [
+              ButtonSegment<int>(
+                value: 0,
+                label: Text(AstroTranslationService.translate(context, "பிளசிடஸ் / KP (Placidus)")),
+              ),
+              ButtonSegment<int>(
+                value: 1,
+                label: Text(AstroTranslationService.translate(context, "ஸ்ரீபதி (Sripati)")),
+              ),
+            ],
+            selected: {_bhavaMethod},
+            onSelectionChanged: (Set<int> newSelection) {
+              setState(() {
+                _bhavaMethod = newSelection.first;
+              });
+            },
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return AppColors.primary;
+                }
+                return Colors.white;
+              }),
+              foregroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Colors.white;
+                }
+                return const Color(0xFF5D1204);
+              }),
+            ),
           ),
         ),
       ],
@@ -537,6 +664,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildLagnaAshtakavargaSelector() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.4), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF5D1204).withOpacity(0.04),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.grid_4x4_rounded, color: Color(0xFFB58D3D), size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  AstroTranslationService.translate(context, "லக்ன அஷ்டகவர்க்கம் (Lagna's Own Ashtakavarga)"),
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)),
+                ),
+              ),
+              Switch(
+                value: _includeLagnaAshtakavarga,
+                activeColor: AppColors.primary,
+                activeTrackColor: const Color(0xFFB58D3D).withOpacity(0.5),
+                onChanged: (val) {
+                  setState(() {
+                    _includeLagnaAshtakavarga = val;
+                  });
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _includeLagnaAshtakavarga
+                ? AstroTranslationService.translate(context, "இயக்கப்பட்டுள்ளது: சர்வ அஷ்டவர்க்கத்தில் லக்னத்தின் 49 பரல்களும் சேர்த்து மொத்தம் 386 பரல்களாகக் கணக்கிடப்படும்.")
+                : AstroTranslationService.translate(context, "இயக்கப்படவில்லை: 7 கிரகங்களின் நிலையான சர்வ அஷ்டவர்க்கம் (337 பரல்கள்) மட்டும் கணக்கிடப்படும்."),
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

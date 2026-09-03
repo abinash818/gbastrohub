@@ -12,11 +12,26 @@ class SettingsService {
   static const String _keyCountryIso = 'default_country_iso';
   static const String _keyDasaYearLength = 'dasa_year_length';
   static const String _keyAyanamsa = 'ayanamsa_mode';
+  static const String _keyCustomAyanamsaDeg = 'custom_ayanamsa_deg';
+  static const String _keyCustomAyanamsaMin = 'custom_ayanamsa_min';
+  static const String _keyCustomAyanamsaSec = 'custom_ayanamsa_sec';
+  static const String _keyBhavaMethod = 'bhava_method'; // 0 = Placidus / KP, 1 = Sripati
   static const String _keyFontSize = 'app_font_size';
   static const String _keyTrueNode = 'use_true_node';
   static const String _keyLanguage = 'app_language';
   static const String _keyUdayamMethod = 'udayam_method';
   static const String _keyMaandiMethod = 'maandi_method';
+  static const String _keyIncludeLagnaAshtakavarga = 'include_lagna_ashtakavarga';
+
+  static Future<void> saveIncludeLagnaAshtakavarga(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyIncludeLagnaAshtakavarga, value);
+  }
+
+  static Future<bool> getIncludeLagnaAshtakavarga() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyIncludeLagnaAshtakavarga) ?? false;
+  }
 
   static Future<void> saveMaandiMethod(int method) async {
     final prefs = await SharedPreferences.getInstance();
@@ -86,6 +101,32 @@ class SettingsService {
   static Future<int> getAyanamsa() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_keyAyanamsa) ?? 0; // 0 = Lahiri
+  }
+
+  static Future<void> saveBhavaMethod(int method) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keyBhavaMethod, method);
+  }
+
+  static Future<int> getBhavaMethod() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_keyBhavaMethod) ?? 0; // 0 = Placidus/KP, 1 = Sripati
+  }
+
+  static Future<void> saveCustomAyanamsa({required int deg, required int min, required int sec}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keyCustomAyanamsaDeg, deg);
+    await prefs.setInt(_keyCustomAyanamsaMin, min);
+    await prefs.setInt(_keyCustomAyanamsaSec, sec);
+  }
+
+  static Future<Map<String, int>> getCustomAyanamsa() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'deg': prefs.getInt(_keyCustomAyanamsaDeg) ?? 24,
+      'min': prefs.getInt(_keyCustomAyanamsaMin) ?? 15,
+      'sec': prefs.getInt(_keyCustomAyanamsaSec) ?? 0,
+    };
   }
 
   static Future<void> saveDefaultLocation({

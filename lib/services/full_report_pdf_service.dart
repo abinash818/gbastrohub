@@ -802,9 +802,11 @@ class FullReportPdfService {
                  pw.SizedBox(height: 20),
                  sectionTitle("பிண்டங்கள்"),
                  (() {
-                   final pindas = (ashtakavarga['pindas'] as Map).cast<String, dynamic>();
-                   final planets = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
-                   return pw.Table(
+                    final pindas = (ashtakavarga['pindas'] as Map).cast<String, dynamic>();
+                    final planets = (ashtakavarga['includeLagna'] == true || (ashtakavarga['individual'] as Map?)?.containsKey('Lagna') == true)
+                        ? ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Lagna"]
+                        : ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
+                    return pw.Table(
                      border: pw.TableBorder.all(color: borderColor),
                      children: [
                        pw.TableRow(

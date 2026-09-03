@@ -32,16 +32,18 @@ class AstroTranslationService {
       "Trayodashi": "திரயோதசி", "Chaturdashi": "சதுர்த்தசி", "Pournami": "பௌர்ணமி", "Purnima": "பௌர்ணமி", "Amavasya": "அமாவாசை",
       "Sukla Paksha (Waxing)": "சுக்ல பட்சம் (வளர்பிறை)",
       "Krishna Paksha (Waning)": "கிருஷ்ண பட்சம் (தேய்பிறை)",
-      "Bava": "பவம்", "Balava": "பாலவம்", "Kaulava": "கௌலவம்", "Taitila": "தைதிலை", "Garaja": "கரசை",
-      "Vanija": "பத்திரா", "Vishti": "பத்திரா", "Shakuni": "சகுனி", "Chatushpada": "சதுஷ்பாதம்", "Nagawa": "நாகவம்",
-      "Kimstughna": "கிம்ஸ்துக்கினம்",
+      "Bava": "பவம்", "Balava": "பாலவம்", "Kaulava": "கௌலவம்", "Taitila": "தைதுலை", "Garaja": "கரசை",
+      "Vanija": "வணிசை", "Vishti": "பத்திரை (விஷ்டி)", "Shakuni": "சகுனி", "Chatushpada": "சதுஷ்பாதம்", "Nagawa": "நாகவம்",
+      "Kimstughna": "கிம்துக்கினம்",
       "Vishkumbha": "விஷ்கம்பம்", "Priti": "பிரீதி", "Ayushman": "ஆயுஷ்மான்", "Saubhagya": "சௌபாக்கியம்",
       "Sobhana": "சோபனம்", "Atiganda": "அதிகண்டம்", "Sukarma": "சுகர்மம்", "Dhriti": "திருதி",
       "Shula": "சூலம்", "Ganda": "கண்டம்", "Vriddhi": "விருத்தி", "Dhruva": "துருவம்",
       "Vyaghata": "வியாகாதம்", "Harshana": "ஹர்ஷணம்", "Vajra": "வஜ்ரம்", "Siddhi": "சித்தி",
       "Vyatipata": "வியதீபாதம்", "Variyan": "வரியான்", "Parigha": "பரிகம்", "Shiva": "சிவம்",
       "Siddha": "சித்தம்", "Sadhya": "சாத்தியம்", "Shubha": "சுபம்", "Shukla": "சுக்கிலம்",
-      "Brahma": "பிரம்மா", "Indra": "ஐந்திரம்", "Vaidhriti": "வைதிருதி"
+      "Brahma": "பிரம்மா", "Indra": "ஐந்திரம்", "Vaidhriti": "வைதிருதி",
+      "Amirtha Yoga": "அமிர்த யோகம்", "Marana Yoga": "மரண யோகம்", "Siddha Yoga": "சித்த யோகம்",
+      "Amirtha": "அமிர்த யோகம்", "Marana": "மரண யோகம்"
     };
 
     String normalizedWord = tamilWord;

@@ -46,23 +46,38 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
 
   void _autoSelectCurrentDasa() {
     final List<dynamic>? dasaList = widget.results['dasa'];
-    if (dasaList == null) return;
+    if (dasaList == null || dasaList.isEmpty) return;
     
-    final now = DateTime.now();
+    DateTime now = DateTime.now();
+    final birthDt = widget.results['birth_dt'] as DateTime?;
+    if (birthDt != null && now.isBefore(birthDt)) {
+      now = birthDt;
+    }
+
     for (var d in dasaList) {
-      if (now.isAfter(d['start']) && now.isBefore(d['end'])) {
+      final dStart = d['start'] as DateTime?;
+      final dEnd = d['end'] as DateTime?;
+      if (dStart != null && dEnd != null && !now.isBefore(dStart) && now.isBefore(dEnd)) {
         _selectedDasa = d;
         for (var b in (d['subPeriods'] as List? ?? [])) {
-          if (now.isAfter(b['start']) && now.isBefore(b['end'])) {
+          final bStart = b['start'] as DateTime?;
+          final bEnd = b['end'] as DateTime?;
+          if (bStart != null && bEnd != null && !now.isBefore(bStart) && now.isBefore(bEnd)) {
             _selectedBukthi = b;
             for (var a in (b['subPeriods'] as List? ?? [])) {
-              if (now.isAfter(a['start']) && now.isBefore(a['end'])) {
+              final aStart = a['start'] as DateTime?;
+              final aEnd = a['end'] as DateTime?;
+              if (aStart != null && aEnd != null && !now.isBefore(aStart) && now.isBefore(aEnd)) {
                 _selectedAntharam = a;
                 for (var s in (a['subPeriods'] as List? ?? [])) {
-                  if (now.isAfter(s['start']) && now.isBefore(s['end'])) {
+                  final sStart = s['start'] as DateTime?;
+                  final sEnd = s['end'] as DateTime?;
+                  if (sStart != null && sEnd != null && !now.isBefore(sStart) && now.isBefore(sEnd)) {
                     _selectedSookshmam = s;
                     for (var p in (s['subPeriods'] as List? ?? [])) {
-                      if (now.isAfter(p['start']) && now.isBefore(p['end'])) {
+                      final pStart = p['start'] as DateTime?;
+                      final pEnd = p['end'] as DateTime?;
+                      if (pStart != null && pEnd != null && !now.isBefore(pStart) && now.isBefore(pEnd)) {
                         _selectedPranam = p;
                         break;
                       }
@@ -77,6 +92,17 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           }
         }
         break;
+      }
+    }
+
+    if (_selectedDasa == null && dasaList.isNotEmpty) {
+      _selectedDasa = dasaList.first;
+      final subPeriods = _selectedDasa!['subPeriods'] as List? ?? [];
+      if (subPeriods.isNotEmpty) {
+        _selectedBukthi = subPeriods.firstWhere(
+          (b) => !(b['end'] as DateTime).isBefore(birthDt ?? dasaList.first['start']),
+          orElse: () => subPeriods.first,
+        );
       }
     }
   }
@@ -1377,10 +1403,13 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     final ekadipathya = (av['ekadipathya'] as Map? ?? {}).cast<String, dynamic>();
     final pindas = (av['pindas'] as Map? ?? {}).cast<String, dynamic>();
     
-    final bool includeLagna = av['includeLagna'] == true || individual.containsKey('Lagna');
+    final bool includeLagna = av['includeLagna'] == true && individual.containsKey('Lagna');
     final planets = includeLagna
         ? ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Lagna"]
         : ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
+    if (!planets.contains(_selectedBavPlanet)) {
+      _selectedBavPlanet = "Sun";
+    }
     final List<String> signShortNames = ["மேஷ", "ரிஷ", "மிது", "கட", "சிம்", "கன்", "துலா", "விரு", "தனு", "மக", "கும்", "மீன"];
 
     Map<String, List<String>> sarvaMap = {};
@@ -2633,7 +2662,11 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     avasthas.forEach((planet, info) {
       if (info['status'] != "சமம்" || info['has_digbala'] == true) {
         String pTamil = KPService.TAMIL_PLANETS[planet] ?? planet;
-        rows.add(_buildDetailRow("$pTamil நிலை", "${info['status']} (${info['digbala_text']})", isPlanet: true));
+        String statusDisplay = info['status'];
+        if (info['has_digbala'] == true) {
+          statusDisplay = statusDisplay == "சமம்" ? "திக்பலம்" : "$statusDisplay (திக்பலம்)";
+        }
+        rows.add(_buildDetailRow("$pTamil நிலை", statusDisplay, isPlanet: true));
       }
     });
 
@@ -2872,23 +2905,42 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
 
   Widget _buildCurrentStatusTable() {
     final List<dynamic>? dasaList = widget.results['dasa'];
-    if (dasaList == null) return const SizedBox();
+    if (dasaList == null || dasaList.isEmpty) return const SizedBox();
 
     Map<String, dynamic>? activeDasa;
     Map<String, dynamic>? activeBukthi;
-    final now = DateTime.now();
+    DateTime now = DateTime.now();
+    final birthDt = widget.results['birth_dt'] as DateTime?;
+    if (birthDt != null && now.isBefore(birthDt)) {
+      now = birthDt;
+    }
 
     for (var dasa in dasaList) {
-      if (now.isAfter(dasa['start']) && now.isBefore(dasa['end'])) {
+      final dStart = dasa['start'] as DateTime?;
+      final dEnd = dasa['end'] as DateTime?;
+      if (dStart != null && dEnd != null && !now.isBefore(dStart) && now.isBefore(dEnd)) {
         activeDasa = dasa;
         final List<dynamic> subPeriods = dasa['subPeriods'] ?? [];
         for (var bukthi in subPeriods) {
-          if (now.isAfter(bukthi['start']) && now.isBefore(bukthi['end'])) {
+          final bStart = bukthi['start'] as DateTime?;
+          final bEnd = bukthi['end'] as DateTime?;
+          if (bStart != null && bEnd != null && !now.isBefore(bStart) && now.isBefore(bEnd)) {
             activeBukthi = bukthi;
             break;
           }
         }
         break;
+      }
+    }
+
+    if (activeDasa == null && dasaList.isNotEmpty) {
+      activeDasa = dasaList.first;
+      final subPeriods = activeDasa!['subPeriods'] as List? ?? [];
+      if (subPeriods.isNotEmpty) {
+        activeBukthi = subPeriods.firstWhere(
+          (b) => !(b['end'] as DateTime).isBefore(birthDt ?? dasaList.first['start']),
+          orElse: () => subPeriods.first,
+        );
       }
     }
 

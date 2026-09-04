@@ -193,6 +193,37 @@ class AstroUtils {
     return isShukla ? shuklaBirds[group] : krishnaBirds[group];
   }
 
+  /// படுபட்சி (Padu Patchi: Inauspicious Dying Bird of the Day based on Weekday 0=Sun..6=Sat & Paksha)
+  static String getPaduPatchi(int weekdayIdx, bool isShukla) {
+    // வளர்பிறை (பூர்வபட்சம்):
+    // வல்லூறு: வியாழன், சனி | ஆந்தை: ஞாயிறு, வெள்ளி | காகம்: திங்கள் | கோழி: செவ்வாய் | மயில்: புதன்
+    const shuklaPadu = [
+      "ஆந்தை",   // 0: ஞாயிறு (Sun)
+      "காகம்",   // 1: திங்கள் (Mon)
+      "கோழி",    // 2: செவ்வாய் (Tue)
+      "மயில்",   // 3: புதன் (Wed)
+      "வல்லூறு", // 4: வியாழன் (Thu)
+      "ஆந்தை",   // 5: வெள்ளி (Fri)
+      "வல்லூறு", // 6: சனி (Sat)
+    ];
+
+    // தேய்பிறை (அமரபட்சம்):
+    // வல்லூறு: செவ்வாய் | ஆந்தை: திங்கள் | காகம்: ஞாயிறு | கோழி: வியாழன், சனி | மயில்: புதன், வெள்ளி
+    const krishnaPadu = [
+      "காகம்",   // 0: ஞாயிறு (Sun)
+      "ஆந்தை",   // 1: திங்கள் (Mon)
+      "வல்லூறு", // 2: செவ்வாய் (Tue)
+      "மயில்",   // 3: புதன் (Wed)
+      "கோழி",    // 4: வியாழன் (Thu)
+      "மயில்",   // 5: வெள்ளி (Fri)
+      "கோழி",    // 6: சனி (Sat)
+    ];
+
+    int w = weekdayIdx % 7;
+    if (w < 0) w += 7;
+    return isShukla ? shuklaPadu[w] : krishnaPadu[w];
+  }
+
   /// அமிர்தாதி யோகம் தமிழ் பெயர்
   static String getAmirthathiYogamTamil(String raw) {
     switch (raw.toLowerCase().trim()) {

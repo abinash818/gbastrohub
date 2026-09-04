@@ -71,31 +71,46 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
 
   void _initCurrentDasa() {
     final List<dynamic>? dasaList = widget.fullData['dasa'];
-    if (dasaList == null) return;
+    if (dasaList == null || dasaList.isEmpty) return;
 
-    final now = DateTime.now();
+    DateTime now = DateTime.now();
+    final birthDt = widget.fullData['birth_dt'] as DateTime?;
+    if (birthDt != null && now.isBefore(birthDt)) {
+      now = birthDt;
+    }
+
     for (var d in dasaList) {
-      if (now.isAfter(d['start']) && now.isBefore(d['end'])) {
+      final dStart = d['start'] as DateTime?;
+      final dEnd = d['end'] as DateTime?;
+      if (dStart != null && dEnd != null && !now.isBefore(dStart) && now.isBefore(dEnd)) {
         _selectedDasa = d;
         final subPeriods = d['subPeriods'] as List?;
         if (subPeriods != null) {
           for (var b in subPeriods) {
-            if (now.isAfter(b['start']) && now.isBefore(b['end'])) {
+            final bStart = b['start'] as DateTime?;
+            final bEnd = b['end'] as DateTime?;
+            if (bStart != null && bEnd != null && !now.isBefore(bStart) && now.isBefore(bEnd)) {
               _selectedBukthi = b;
               final antharams = b['subPeriods'] as List?;
               if (antharams != null) {
                 for (var a in antharams) {
-                  if (now.isAfter(a['start']) && now.isBefore(a['end'])) {
+                  final aStart = a['start'] as DateTime?;
+                  final aEnd = a['end'] as DateTime?;
+                  if (aStart != null && aEnd != null && !now.isBefore(aStart) && now.isBefore(aEnd)) {
                     _selectedAntharam = a;
                     final sookshmams = a['subPeriods'] as List?;
                     if (sookshmams != null) {
                       for (var s in sookshmams) {
-                        if (now.isAfter(s['start']) && now.isBefore(s['end'])) {
+                        final sStart = s['start'] as DateTime?;
+                        final sEnd = s['end'] as DateTime?;
+                        if (sStart != null && sEnd != null && !now.isBefore(sStart) && now.isBefore(sEnd)) {
                           _selectedSookshmam = s;
                           final pranams = s['subPeriods'] as List?;
                           if (pranams != null) {
                             for (var p in pranams) {
-                              if (now.isAfter(p['start']) && now.isBefore(p['end'])) {
+                              final pStart = p['start'] as DateTime?;
+                              final pEnd = p['end'] as DateTime?;
+                              if (pStart != null && pEnd != null && !now.isBefore(pStart) && now.isBefore(pEnd)) {
                                 _selectedPranam = p;
                                 break;
                               }
@@ -114,6 +129,17 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
           }
         }
         break;
+      }
+    }
+
+    if (_selectedDasa == null && dasaList.isNotEmpty) {
+      _selectedDasa = dasaList.first;
+      final subPeriods = _selectedDasa!['subPeriods'] as List? ?? [];
+      if (subPeriods.isNotEmpty) {
+        _selectedBukthi = subPeriods.firstWhere(
+          (b) => !(b['end'] as DateTime).isBefore(birthDt ?? dasaList.first['start']),
+          orElse: () => subPeriods.first,
+        );
       }
     }
   }

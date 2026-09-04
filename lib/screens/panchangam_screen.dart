@@ -10,6 +10,7 @@ import '../components/custom_drawer.dart';
 import 'panchangam_image_screen.dart';
 import 'package:astrology_flutter/l10n/app_localizations.dart';
 import '../services/astro_utils.dart';
+import '../services/settings_service.dart';
 
 class PanchangamScreen extends StatefulWidget {
   const PanchangamScreen({super.key});
@@ -126,7 +127,13 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
   Future<void> _loadPanchangam() async {
     setState(() => _isLoading = true);
     try {
-      final results = await KPService.calculateChart("Panchangam", _selectedDate, 13.0827, 80.2707, 5.5);
+      final loc = await SettingsService.getDefaultLocation();
+      final double lat = (loc['lat'] as num?)?.toDouble() ?? 13.0827;
+      final double lon = (loc['lon'] as num?)?.toDouble() ?? 80.2707;
+      final double tz = (loc['tz'] as num?)?.toDouble() ?? 5.5;
+      final String locName = loc['name']?.toString() ?? 'Chennai (சென்னை)';
+
+      final results = await KPService.calculateChart("Panchangam", _selectedDate, lat, lon, tz);
       
       final sunLon = results['planet_details']['sun']['longitude'] as double;
       final moonLon = results['planet_details']['moon']['longitude'] as double;
@@ -176,6 +183,7 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
       final ayanam = AstroUtils.getAyanam(sunLon);
       final season = AstroUtils.getSeason(sunLon);
       final panjaPatchi = AstroUtils.getPanchaPatchi(moonNakIdx, isShukla);
+      final paduPatchi = AstroUtils.getPaduPatchi(weekdayIdx, isShukla);
 
       final kaliYear = AstroUtils.calculateKaliYear(year, month, day);
       final salivahanaYear = AstroUtils.calculateSalivahanaYear(year, month, day);
@@ -210,12 +218,16 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
 
       final nallaNeram = _calculateDynamicNallaNeram(weekdayIdx, sunriseDt, sunsetDt, rahuStart, rahuEnd, yemaStart, yemaEnd);
       
-      final endTimes = await KPService.calculateEndTimes(_selectedDate, 13.0827, 80.2707, 5.5);
+      final endTimes = await KPService.calculateEndTimes(_selectedDate, lat, lon, tz);
 
       setState(() {
         _chartResults = results;
         _panchangamData = {
           ...pancha,
+          'location_name': locName,
+          'lat': lat,
+          'lon': lon,
+          'tz': tz,
           'moon_rasi_idx': moonRasiIdx,
           'rasi': AstroData.raasiList[moonRasiIdx],
           'nethra': nethra,
@@ -227,6 +239,7 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
           'ayanam': ayanam,
           'season': season,
           'panja_patchi': panjaPatchi,
+          'padu_patchi': paduPatchi,
           'chandrashtama': chandrashtama,
           'chandrashtama_nats': chanNatsStr,
           'hijri_year': hijriYear,
@@ -1093,6 +1106,7 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
     String jeeva = p['jeeva'] ?? "1";
     String vivaga = p['vivaga'] ?? "வடமேற்கு";
     String panjaPatchi = p['panja_patchi'] ?? "வல்லூறு";
+    String paduPatchi = p['padu_patchi'] ?? "ஆந்தை";
     String soolam = AstroUtils.getSoolamTamil(p['soolam'] ?? 'north');
     String pariharam = AstroUtils.getPariharamTamil(p['pariharam'] ?? 'milk');
 
@@ -1107,6 +1121,8 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
         _buildRowItem("விவாகச் சக்கரம்", vivaga),
         _buildDivider(),
         _buildRowItem("பஞ்சபட்சி", panjaPatchi),
+        _buildDivider(),
+        _buildRowItem("படுபட்சி", paduPatchi, valueColor: const Color(0xFFC62828)),
         _buildDivider(),
         _buildRowItem("சூலம் & பரிகாரம்", "$soolam (பரிகாரம்: $pariharam)"),
       ],

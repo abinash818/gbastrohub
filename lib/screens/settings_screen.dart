@@ -702,6 +702,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() {
                     _includeLagnaAshtakavarga = val;
                   });
+                  SettingsService.saveIncludeLagnaAshtakavarga(val);
                 },
               ),
             ],
@@ -709,8 +710,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 8),
           Text(
             _includeLagnaAshtakavarga
-                ? AstroTranslationService.translate(context, "இயக்கப்பட்டுள்ளது: சர்வ அஷ்டவர்க்கத்தில் லக்னத்தின் 49 பரல்களும் சேர்த்து மொத்தம் 386 பரல்களாகக் கணக்கிடப்படும்.")
-                : AstroTranslationService.translate(context, "இயக்கப்படவில்லை: 7 கிரகங்களின் நிலையான சர்வ அஷ்டவர்க்கம் (337 பரல்கள்) மட்டும் கணக்கிடப்படும்."),
+                ? AstroTranslationService.translate(context, "இயக்கப்பட்டுள்ளது: லக்னத்தின் சுய அஷ்டவர்க்கம் (49 பரல்கள்) தனி சக்கரமாகவும் அட்டவணையிலும் பார்க்க இயலும். சர்வ அஷ்டவர்க்கம் 7 கிரகங்களின் நிலையான 337 பரல்களாகக் கணக்கிடப்படும்.")
+                : AstroTranslationService.translate(context, "இயக்கப்படவில்லை: 7 கிரகங்களின் நிலையான அஷ்டவர்க்கம் (337 பரல்கள்) மட்டும் கணக்கிடப்படும்."),
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade700,

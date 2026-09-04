@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:astrology_flutter/services/astro_special_calculations_service.dart';
 import 'package:astrology_flutter/services/kp_service.dart';
+import 'package:astrology_flutter/services/astro_utils.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -237,6 +238,28 @@ void main() {
       expect(timeline.length, equals(1));
       expect(timeline[0]['status_type'], equals('natpu'));
       expect(timeline[0]['status'], contains('காலநட்பு'));
+    });
+
+    test('Pancha Patchi and Padu Patchi calculate correctly for Shukla and Krishna Paksha', () {
+      // Shukla Paksha (பூர்வபட்சம்):
+      // வல்லூறு: வியாழன், சனி | ஆந்தை: ஞாயிறு, வெள்ளி | காகம்: திங்கள் | கோழி: செவ்வாய் | மயில்: புதன்
+      expect(AstroUtils.getPaduPatchi(0, true), equals("ஆந்தை"));   // ஞாயிறு
+      expect(AstroUtils.getPaduPatchi(1, true), equals("காகம்"));   // திங்கள்
+      expect(AstroUtils.getPaduPatchi(2, true), equals("கோழி"));    // செவ்வாய்
+      expect(AstroUtils.getPaduPatchi(3, true), equals("மயில்"));    // புதன்
+      expect(AstroUtils.getPaduPatchi(4, true), equals("வல்லூறு")); // வியாழன்
+      expect(AstroUtils.getPaduPatchi(5, true), equals("ஆந்தை"));   // வெள்ளி
+      expect(AstroUtils.getPaduPatchi(6, true), equals("வல்லூறு")); // சனி
+
+      // Krishna Paksha (அமரபட்சம்):
+      // வல்லூறு: செவ்வாய் | ஆந்தை: திங்கள் | காகம்: ஞாயிறு | கோழி: வியாழன், சனி | மயில்: புதன், வெள்ளி
+      expect(AstroUtils.getPaduPatchi(0, false), equals("காகம்"));   // ஞாயிறு
+      expect(AstroUtils.getPaduPatchi(1, false), equals("ஆந்தை"));   // திங்கள்
+      expect(AstroUtils.getPaduPatchi(2, false), equals("வல்லூறு")); // செவ்வாய்
+      expect(AstroUtils.getPaduPatchi(3, false), equals("மயில்"));    // புதன்
+      expect(AstroUtils.getPaduPatchi(4, false), equals("கோழி"));    // வியாழன்
+      expect(AstroUtils.getPaduPatchi(5, false), equals("மயில்"));    // வெள்ளி
+      expect(AstroUtils.getPaduPatchi(6, false), equals("கோழி"));    // சனி
     });
   });
 }

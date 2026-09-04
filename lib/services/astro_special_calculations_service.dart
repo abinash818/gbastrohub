@@ -589,7 +589,7 @@ class AstroSpecialCalculationsService {
       avasthas[planet] = {
         'status': status,
         'has_digbala': hasDigbala,
-        'digbala_text': hasDigbala ? "திக்பலம் உள்ளது" : "நிஷ்பலம்",
+        'digbala_text': hasDigbala ? "திக்பலம் உள்ளது" : "",
         'house': houseFromLagna,
         'rasi_tamil': TAMIL_SIGNS[SIGNS[rasi]],
       };

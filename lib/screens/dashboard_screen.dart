@@ -164,6 +164,14 @@ class DashboardScreen extends StatelessWidget {
                           ),
                           _buildPremiumButton(
                             context, 
+                            "வாஸ்து", 
+                            "மனை அடி சாஸ்திரம் & குழிக்கணக்கு",
+                            "assets/images/vastu_planet.png",
+                            '/vaasthu',
+                            customIcon: Icons.foundation_rounded,
+                          ),
+                          _buildPremiumButton(
+                            context, 
                             AppLocalizations.of(context)!.numerology.split('\n')[0], 
                             "பெயர் மற்றும் எண் கணித பலன்களை அறியவும்",
                             "assets/images/numerology_planet.png",
@@ -203,14 +211,14 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // Premium Grid Button Builder using Planet Images
+  // Premium Grid Button Builder using Planet Images or Custom Icon
   Widget _buildPremiumButton(
     BuildContext context, 
     String title, 
     String subtitle,
-    String imagePath, 
+    String? imagePath, 
     String? route, 
-    {bool isKp = false, bool isNadi = false, bool isAboutTrigger = false, String? featureKey}
+    {bool isKp = false, bool isNadi = false, bool isAboutTrigger = false, String? featureKey, IconData? customIcon}
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -290,16 +298,23 @@ class DashboardScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Planet Image
+                  // Planet Image or Custom Icon
                   SizedBox(
                     height: 40,
                     width: 40,
-                    child: Image.asset(
-                      imagePath,
-                      fit: BoxFit.contain,
-                      color: const Color(0xFFFAF6EE),
-                      colorBlendMode: BlendMode.multiply,
-                    ),
+                    child: customIcon != null
+                        ? Icon(customIcon, color: const Color(0xFF5D1204), size: 34)
+                        : Image.asset(
+                            imagePath ?? 'assets/images/about_planet.png',
+                            fit: BoxFit.contain,
+                            color: const Color(0xFFFAF6EE),
+                            colorBlendMode: BlendMode.multiply,
+                            errorBuilder: (c, e, s) => Icon(
+                              customIcon ?? Icons.auto_awesome, 
+                              color: const Color(0xFF5D1204), 
+                              size: 34
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 6),
                   // Title

@@ -222,21 +222,35 @@ class OnePagePdfService {
     final rasiStr = KPService.TAMIL_SIGNS[moonDetails['lords']?['sign']] ?? KPService.TAMIL_SIGNS[moonDetails['rasi']] ?? moonDetails['rasi'] ?? pan['rasi'] ?? "-";
     final suniyaStr = pan['suniya_rasi']?.toString() ?? "-";
 
-    final now = DateTime.now();
+    DateTime now = DateTime.now();
+    if (birthDt != null && now.isBefore(birthDt)) {
+      now = birthDt;
+    }
     
     Map? currentDasa; Map? currentBukthi; List bukthiList = []; List antharamList = [];
     for (var d in dasaList) {
       final start = d['start'] as DateTime?; final end = d['end'] as DateTime?;
-      if (start != null && end != null && now.isAfter(start) && now.isBefore(end)) {
+      if (start != null && end != null && !now.isBefore(start) && now.isBefore(end)) {
         currentDasa = d; bukthiList = d['subPeriods'] as List? ?? []; break;
       }
+    }
+    if (currentDasa == null && dasaList.isNotEmpty) {
+      currentDasa = dasaList.first;
+      bukthiList = currentDasa!['subPeriods'] as List? ?? [];
     }
     if (bukthiList.isNotEmpty) {
       for (var b in bukthiList) {
         final start = b['start'] as DateTime?; final end = b['end'] as DateTime?;
-        if (start != null && end != null && now.isAfter(start) && now.isBefore(end)) {
+        if (start != null && end != null && !now.isBefore(start) && now.isBefore(end)) {
           currentBukthi = b; antharamList = b['subPeriods'] as List? ?? []; break;
         }
+      }
+      if (currentBukthi == null) {
+        currentBukthi = bukthiList.firstWhere(
+          (b) => !(b['end'] as DateTime).isBefore(birthDt ?? dasaList.first['start']),
+          orElse: () => bukthiList.first,
+        );
+        antharamList = currentBukthi?['subPeriods'] as List? ?? [];
       }
     }
 

@@ -803,7 +803,7 @@ class FullReportPdfService {
                  sectionTitle("பிண்டங்கள்"),
                  (() {
                     final pindas = (ashtakavarga['pindas'] as Map).cast<String, dynamic>();
-                    final planets = (ashtakavarga['includeLagna'] == true || (ashtakavarga['individual'] as Map?)?.containsKey('Lagna') == true)
+                    final planets = (ashtakavarga['includeLagna'] == true && (ashtakavarga['individual'] as Map?)?.containsKey('Lagna') == true)
                         ? ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Lagna"]
                         : ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
                     return pw.Table(
@@ -841,17 +841,36 @@ class FullReportPdfService {
               
               Map<String, dynamic>? activeDasa;
               Map<String, dynamic>? activeBukthi;
-              final now = DateTime.now();
+              DateTime now = DateTime.now();
+              final birthDt = results['birth_dt'] as DateTime?;
+              if (birthDt != null && now.isBefore(birthDt)) {
+                now = birthDt;
+              }
               for (var d in dasaList) {
-                if (now.isAfter(d['start']) && now.isBefore(d['end'])) {
+                final dStart = d['start'] as DateTime?;
+                final dEnd = d['end'] as DateTime?;
+                if (dStart != null && dEnd != null && !now.isBefore(dStart) && now.isBefore(dEnd)) {
                   activeDasa = d;
                   for (var b in (d['subPeriods'] as List? ?? [])) {
-                    if (now.isAfter(b['start']) && now.isBefore(b['end'])) {
+                    final bStart = b['start'] as DateTime?;
+                    final bEnd = b['end'] as DateTime?;
+                    if (bStart != null && bEnd != null && !now.isBefore(bStart) && now.isBefore(bEnd)) {
                       activeBukthi = b;
                       break;
                     }
                   }
                   break;
+                }
+              }
+
+              if (activeDasa == null && dasaList.isNotEmpty) {
+                activeDasa = dasaList.first;
+                final subPeriods = activeDasa!['subPeriods'] as List? ?? [];
+                if (subPeriods.isNotEmpty) {
+                  activeBukthi = subPeriods.firstWhere(
+                    (b) => !(b['end'] as DateTime).isBefore(birthDt ?? dasaList.first['start']),
+                    orElse: () => subPeriods.first,
+                  );
                 }
               }
 

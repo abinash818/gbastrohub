@@ -248,6 +248,35 @@ class _ChartCellState extends State<_ChartCell> {
     final bool isKaviCell = widget.items.any((e) => e.startsWith("கவி") || e.startsWith("Kav") || e.startsWith("कவி"));
     final bool isSpecialCell = isLagnaCell || isArudamCell || isKaviCell;
 
+    // Check if cell is a single number (e.g. Ashtakavarga points)
+    final bool isSingleNumber = widget.items.length == 1 && int.tryParse(widget.items.first.trim()) != null;
+    if (isSingleNumber) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(
+            color: Colors.orange.shade800,
+            width: 1.5,
+          ),
+        ),
+        padding: const EdgeInsets.all(4),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              widget.items.first.trim(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 26.0,
+                fontWeight: FontWeight.w900,
+                color: Colors.indigo.shade900,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     // Non-scrollable static poster mode: auto-scale all items inside FittedBox
     if (!widget.allowScroll) {
       return Container(

@@ -19,6 +19,7 @@ import 'screens/horoscope_workspace_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/astro_tools_screen.dart';
 import 'screens/panchangam_screen.dart';
+import 'screens/vaasthu_screen.dart';
 import 'services/kp_service.dart';
 import 'services/settings_service.dart';
 import 'theme/app_colors.dart';
@@ -104,6 +105,7 @@ class AstrologyApp extends StatelessWidget {
         '/panchangam': (context) => const PanchangamScreen(),
         '/jamakkol': (context) => const JamakkolScreen(),
         '/jamakkol_input': (context) => const JamakkolInputScreen(),
+        '/vaasthu': (context) => const VaasthuScreen(),
         '/login': (context) => const LoginScreen(),
         '/workspace': (context) {
           final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;

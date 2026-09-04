@@ -905,13 +905,26 @@ class KPService {
   }
 
   static List<Map<String, dynamic>> _calculateDasaList(double moonLon, DateTime birthDt, double yearLength) {
-    double totalMinutes = moonLon * 60; double nakMinutes = totalMinutes % 800; int nakIdx = (totalMinutes / 800).floor();
-    String startLord = VIMSHOTTARI_LORDS[nakIdx % 9]; double remainingMinutes = 800 - nakMinutes;
+    double totalMinutes = moonLon * 60;
+    double nakMinutes = totalMinutes % 800;
+    int nakIdx = (totalMinutes / 800).floor();
+    String startLord = VIMSHOTTARI_LORDS[nakIdx % 9];
+    double remainingMinutes = 800 - nakMinutes;
+    double elapsedMinutes = nakMinutes;
+
     List<Map<String, dynamic>> dasaTimeline = [];
     int lordIdx = VIMSHOTTARI_LORDS.indexOf(startLord);
-    DateTime startTime = birthDt;
     double tYears = VIMSHOTTARI_YEARS[startLord]!.toDouble();
-    DateTime endTime = startTime.add(Duration(days: ((remainingMinutes / 800) * tYears * yearLength).floor()));
+
+    // Full first Dasa duration in milliseconds
+    int fullFirstDasaMillis = (tYears * yearLength * 86400000.0).round();
+    int elapsedMillis = ((elapsedMinutes / 800.0) * fullFirstDasaMillis).round();
+    int remainingMillis = fullFirstDasaMillis - elapsedMillis;
+
+    // Theoretical start of the full first Dasa (before birth)
+    DateTime fullFirstDasaStart = birthDt.subtract(Duration(milliseconds: elapsedMillis));
+    // End of the first Dasa
+    DateTime firstDasaEnd = birthDt.add(Duration(milliseconds: remainingMillis));
 
     double balanceYears = (remainingMinutes / 800) * tYears;
     int y = balanceYears.floor();
@@ -922,18 +935,29 @@ class KPService {
 
     dasaTimeline.add({
       'lord': startLord,
-      'start': startTime,
-      'end': endTime,
+      'start': birthDt,
+      'fullStart': fullFirstDasaStart,
+      'end': firstDasaEnd,
       'isCurrent': true,
       'balanceStr': balanceStr,
-      'subPeriods': _calculateSubPeriods(startLord, startTime, endTime, 2, yearLength)
+      'subPeriods': _calculateSubPeriods(startLord, fullFirstDasaStart, firstDasaEnd, 2, yearLength, birthDt: birthDt)
     });
-    startTime = endTime;
+
+    DateTime startTime = firstDasaEnd;
     for (int i = 1; i < 9; i++) {
-        String lord = VIMSHOTTARI_LORDS[(lordIdx + i) % 9]; double y = VIMSHOTTARI_YEARS[lord]!.toDouble();
-        endTime = startTime.add(Duration(days: (y * yearLength).floor()));
-        dasaTimeline.add({ 'lord': lord, 'start': startTime, 'end': endTime, 'isCurrent': false, 'subPeriods': _calculateSubPeriods(lord, startTime, endTime, 2, yearLength) });
-        startTime = endTime;
+      String lord = VIMSHOTTARI_LORDS[(lordIdx + i) % 9];
+      double y = VIMSHOTTARI_YEARS[lord]!.toDouble();
+      int dasaMillis = (y * yearLength * 86400000.0).round();
+      DateTime endTime = startTime.add(Duration(milliseconds: dasaMillis));
+      dasaTimeline.add({
+        'lord': lord,
+        'start': startTime,
+        'fullStart': startTime,
+        'end': endTime,
+        'isCurrent': false,
+        'subPeriods': _calculateSubPeriods(lord, startTime, endTime, 2, yearLength)
+      });
+      startTime = endTime;
     }
     return dasaTimeline;
   }
@@ -941,39 +965,81 @@ class KPService {
   static const List<String> VIMSHOTTARI_LORDS = ['Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury'];
   static const Map<String, int> VIMSHOTTARI_YEARS = {'Ketu': 7, 'Venus': 20, 'Sun': 6, 'Moon': 10, 'Mars': 7, 'Rahu': 18, 'Jupiter': 16, 'Saturn': 19, 'Mercury': 17};
 
-  static List<Map<String, dynamic>> _calculateSubPeriods(String parentLord, DateTime start, DateTime end, int level, double yearLength) {
+  static List<Map<String, dynamic>> _calculateSubPeriods(
+    String parentLord,
+    DateTime start,
+    DateTime end,
+    int level,
+    double yearLength, {
+    DateTime? birthDt,
+  }) {
     if (level > 5) return [];
-    List<Map<String, dynamic>> periods = []; int startIndex = VIMSHOTTARI_LORDS.indexOf(parentLord);
-    Duration totalDuration = end.difference(start); DateTime current = start;
+    List<Map<String, dynamic>> periods = [];
+    int startIndex = VIMSHOTTARI_LORDS.indexOf(parentLord);
+    Duration totalDuration = end.difference(start);
+    DateTime current = start;
     for (int i = 0; i < 9; i++) {
-        String subLord = VIMSHOTTARI_LORDS[(startIndex + i) % 9]; double ratio = VIMSHOTTARI_YEARS[subLord]! / 120.0;
-        int pMillis = (totalDuration.inMilliseconds * ratio).floor(); DateTime subEnd = current.add(Duration(milliseconds: pMillis));
-        if (i == 8 || subEnd.isAfter(end)) subEnd = end;
-        periods.add({ 'lord': subLord, 'start': current, 'end': subEnd, 'level': level, 'subPeriods': level < 5 ? _calculateSubPeriods(subLord, current, subEnd, level + 1, yearLength) : [] });
-        current = subEnd;
+      String subLord = VIMSHOTTARI_LORDS[(startIndex + i) % 9];
+      double ratio = VIMSHOTTARI_YEARS[subLord]! / 120.0;
+      int pMillis = (totalDuration.inMilliseconds * ratio).floor();
+      DateTime subEnd = (i == 8) ? end : current.add(Duration(milliseconds: pMillis));
+      if (subEnd.isAfter(end)) subEnd = end;
+
+      DateTime periodStart = current;
+      if (birthDt != null) {
+        if (subEnd.isBefore(birthDt) || subEnd.isAtSameMomentAs(birthDt)) {
+          current = subEnd;
+          continue;
+        }
+        DateTime effectiveStart = periodStart.isBefore(birthDt) ? birthDt : periodStart;
+        periods.add({
+          'lord': subLord,
+          'start': effectiveStart,
+          'fullStart': periodStart,
+          'end': subEnd,
+          'level': level,
+          'subPeriods': level < 5
+              ? _calculateSubPeriods(subLord, periodStart, subEnd, level + 1, yearLength, birthDt: birthDt)
+              : []
+        });
+      } else {
+        periods.add({
+          'lord': subLord,
+          'start': periodStart,
+          'fullStart': periodStart,
+          'end': subEnd,
+          'level': level,
+          'subPeriods': level < 5
+              ? _calculateSubPeriods(subLord, periodStart, subEnd, level + 1, yearLength)
+              : []
+        });
+      }
+      current = subEnd;
     }
     return periods;
   }
 
-  static Map<String, dynamic> calculateAshtakavargaMap(Map<String, double> planetLons, double lagnaLon, {bool includeLagnaAV = false}) {
+  static Map<String, dynamic> calculateAshtakavargaMap(Map<String, double> planetLons, double lagnaLon, {bool includeLagnaAV = true}) {
     return _calculateAshtakavarga(planetLons, lagnaLon, includeLagnaAV: includeLagnaAV);
   }
 
-  static Map<String, dynamic> _calculateAshtakavarga(Map<String, double> planetLons, double lagnaLon, {bool includeLagnaAV = false}) {
+  static Map<String, dynamic> _calculateAshtakavarga(Map<String, double> planetLons, double lagnaLon, {bool includeLagnaAV = true}) {
     Map<String, int> planetPositions = {}; planetLons.forEach((name, lon) { planetPositions[name] = (lon / 30).floor() % 12; });
     planetPositions['Lagna'] = (lagnaLon / 30).floor() % 12;
-    Map<String, List<int>> bAV = { 
-      'Sun': _getPoints('Sun', planetPositions), 
-      'Moon': _getPoints('Moon', planetPositions), 
-      'Mars': _getPoints('Mars', planetPositions), 
-      'Mercury': _getPoints('Mercury', planetPositions), 
-      'Jupiter': _getPoints('Jupiter', planetPositions), 
-      'Venus': _getPoints('Venus', planetPositions), 
-      'Saturn': _getPoints('Saturn', planetPositions) 
-    };
+    
+    final tables = includeLagnaAV ? _bookLagnaAshtakavargaTables : _defaultAshtakavargaTables;
 
+    Map<String, List<int>> bAV = { 
+      'Sun': _getPoints('Sun', planetPositions, tables), 
+      'Moon': _getPoints('Moon', planetPositions, tables), 
+      'Mars': _getPoints('Mars', planetPositions, tables), 
+      'Mercury': _getPoints('Mercury', planetPositions, tables), 
+      'Jupiter': _getPoints('Jupiter', planetPositions, tables), 
+      'Venus': _getPoints('Venus', planetPositions, tables), 
+      'Saturn': _getPoints('Saturn', planetPositions, tables),
+    };
     if (includeLagnaAV) {
-      bAV['Lagna'] = _getPoints('Lagna', planetPositions);
+      bAV['Lagna'] = _getPoints('Lagna', planetPositions, tables);
     }
     
     Map<String, List<int>> trikona = {};
@@ -988,7 +1054,16 @@ class KPService {
       pindas[p] = _calculatePindas(p, ePoints, planetPositions);
     });
 
-    List<int> total = List.filled(12, 0); bAV.forEach((key, pList) { for (int i = 0; i < 12; i++) total[i] += pList[i]; });
+    // Sarvashtakavarga is always the sum of the 7 classical planets (Sun to Saturn = 337 points)
+    const sevenPlanets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
+    List<int> total = List.filled(12, 0);
+    for (String p in sevenPlanets) {
+      final pList = bAV[p]!;
+      for (int i = 0; i < 12; i++) {
+        total[i] += pList[i];
+      }
+    }
+
     return <String, dynamic>{
       'individual': bAV,
       'total': total,
@@ -1003,9 +1078,19 @@ class KPService {
     const triads = [[0, 4, 8], [1, 5, 9], [2, 6, 10], [3, 7, 11]];
     for (var triad in triads) {
       int zeroCount = triad.where((i) => points[i] == 0).length;
-      if (zeroCount > 0) continue;
+      
+      // Rule 4: If two signs are zero, or all three are equal, make all three zero.
+      if (zeroCount >= 2 || (points[triad[0]] == points[triad[1]] && points[triad[1]] == points[triad[2]])) {
+        for (int i in triad) points[i] = 0;
+        continue;
+      }
+      
+      // Rule 3: If exactly one sign is zero, no changes.
+      if (zeroCount == 1) continue;
+      
+      // Rule 1 & 2: Make all three equal to the minimum.
       int minVal = triad.map((i) => points[i]).reduce((a, b) => a < b ? a : b);
-      for (int i in triad) points[i] -= minVal;
+      for (int i in triad) points[i] = minVal;
     }
     return points;
   }
@@ -1033,7 +1118,6 @@ class KPService {
     return points;
   }
 
-
   static Map<String, int> _calculatePindas(String planet, List<int> points, Map<String, int> planetPos) {
     const rasiG = [7, 10, 8, 4, 10, 5, 7, 8, 9, 5, 11, 12];
     const grahaG = {'Sun': 5, 'Moon': 5, 'Mars': 8, 'Mercury': 5, 'Jupiter': 10, 'Venus': 7, 'Saturn': 5};
@@ -1042,21 +1126,32 @@ class KPService {
     return {'rasi': rPinda, 'graha': gPinda, 'total': rPinda + gPinda};
   }
 
-  static List<int> _getPoints(String planet, Map<String, int> pos) {
-    List<int> sar = List.filled(12, 0); final rules = _ashtakavargaTables[planet]!;
+  static List<int> _getPoints(String planet, Map<String, int> pos, Map<String, Map<String, List<int>>> tables) {
+    List<int> sar = List.filled(12, 0); 
+    final rules = tables[planet] ?? {};
     rules.forEach((refPlanet, goodHouses) { int refPos = pos[refPlanet] ?? 0; for (int h in goodHouses) sar[(refPos + h - 1) % 12]++; });
     return sar;
   }
 
-  static const Map<String, Map<String, List<int>>> _ashtakavargaTables = {
+  static const Map<String, Map<String, List<int>>> _defaultAshtakavargaTables = {
      'Sun': { 'Sun': [1,2,4,7,8,9,10,11], 'Moon': [3,6,10,11], 'Mars': [1,2,4,7,8,9,10,11], 'Mercury': [3,5,6,9,10,11,12], 'Jupiter': [5,6,9,11], 'Venus': [6,7,12], 'Saturn': [1,2,4,7,8,9,10,11], 'Lagna': [3,4,6,10,11,12] },
      'Moon': { 'Sun': [3,6,7,8,10,11], 'Moon': [1,3,6,7,10,11], 'Mars': [2,3,5,6,9,10,11], 'Mercury': [1,3,4,5,7,8,10,11], 'Jupiter': [1,4,7,8,10,11,12], 'Venus': [3,4,5,7,9,10,11], 'Saturn': [3,5,6,11], 'Lagna': [3,6,10,11] },
-     'Mars': { 'Sun': [3,5,6,10,11], 'Moon': [3,6,11], 'Mars': [1,2,4,7,8,9,10,11], 'Mercury': [3,5,6,11], 'Jupiter': [6,10,11,12], 'Venus': [6,8,11,12], 'Saturn': [1,4,7,8,9,10,11], 'Lagna': [1,3,6,10,11] },
+     'Mars': { 'Sun': [3,5,6,10,11], 'Moon': [3,6,11], 'Mars': [1,2,4,7,8,10,11], 'Mercury': [3,5,6,11], 'Jupiter': [6,10,11,12], 'Venus': [6,8,11,12], 'Saturn': [1,4,7,8,9,10,11], 'Lagna': [1,3,6,10,11] },
      'Mercury': { 'Sun': [5,6,9,11,12], 'Moon': [2,4,6,8,10,11], 'Mars': [1,2,4,7,8,9,10,11], 'Mercury': [1,3,5,6,9,10,11,12], 'Jupiter': [6,8,11,12], 'Venus': [1,2,3,4,5,8,9,11], 'Saturn': [1,2,4,7,8,9,10,11], 'Lagna': [1,2,4,6,8,10,11] },
      'Jupiter': { 'Sun': [1,2,3,4,7,8,9,10,11], 'Moon': [2,5,7,9,11], 'Mars': [1,2,4,7,8,10,11], 'Mercury': [1,2,4,5,6,9,10,11], 'Jupiter': [1,2,3,4,7,8,10,11], 'Venus': [2,5,6,9,10,11], 'Saturn': [3,5,6,12], 'Lagna': [1,2,4,5,6,7,9,10,11] },
      'Venus': { 'Sun': [8,11,12], 'Moon': [1,2,3,4,5,8,9,11,12], 'Mars': [3,5,6,9,11,12], 'Mercury': [3,5,6,9,11], 'Jupiter': [5,8,9,10,11], 'Venus': [1,2,3,4,5,8,9,10,11], 'Saturn': [3,4,5,8,9,10,11], 'Lagna': [1,2,3,4,5,8,9,11] },
-     'Saturn': { 'Sun': [1,2,4,7,8,10,11], 'Moon': [3,6,11], 'Mars': [3,5,6,10,11,12], 'Mercury': [6,8,9,10,11,12], 'Jupiter': [5,6,11,12], 'Venus': [6,11,12], 'Saturn': [3,5,6], 'Lagna': [1,3,4,6,10,11] },
-     'Lagna': { 'Sun': [3,4,6,10,11,12], 'Moon': [3,6,10,11], 'Mars': [1,3,6,10,11], 'Mercury': [1,2,4,6,8,10,11], 'Jupiter': [1,2,4,5,6,7,9,10,11], 'Venus': [1,2,3,4,5,8,9,11], 'Saturn': [1,3,4,6,10,11], 'Lagna': [3,6,10,11] }
+     'Saturn': { 'Sun': [1,2,4,7,8,10,11], 'Moon': [3,6,11], 'Mars': [3,5,6,10,11,12], 'Mercury': [6,8,9,10,11,12], 'Jupiter': [5,6,11,12], 'Venus': [6,11,12], 'Saturn': [3,5,6,11], 'Lagna': [1,3,4,6,10,11] }
+  };
+
+  static const Map<String, Map<String, List<int>>> _bookLagnaAshtakavargaTables = {
+     'Sun': { 'Sun': [1,2,4,7,8,9,10,11], 'Moon': [3,6,10,11], 'Mars': [1,2,4,7,8,9,10,11], 'Mercury': [3,5,6,9,10,11,12], 'Jupiter': [5,6,9,11], 'Venus': [6,7,12], 'Saturn': [1,2,4,7,8,9,10,11], 'Lagna': [3,4,6,10,11,12] },
+     'Moon': { 'Sun': [3,6,7,8,10,11], 'Moon': [1,3,6,7,9,10,11], 'Mars': [2,3,5,6,10,11], 'Mercury': [1,3,4,5,7,8,10,11], 'Jupiter': [1,2,4,7,8,10,11], 'Venus': [3,4,5,7,9,10,11], 'Saturn': [3,5,6,11], 'Lagna': [3,6,10,11] },
+     'Mars': { 'Sun': [3,5,6,10,11], 'Moon': [3,6,11], 'Mars': [1,2,4,7,8,10,11], 'Mercury': [3,5,6,11], 'Jupiter': [6,10,11,12], 'Venus': [6,8,11,12], 'Saturn': [1,4,7,8,9,10,11], 'Lagna': [1,3,6,10,11] },
+     'Mercury': { 'Sun': [5,6,9,11,12], 'Moon': [2,4,6,8,10,11], 'Mars': [1,2,4,7,8,9,10,11], 'Mercury': [1,3,5,6,9,10,11,12], 'Jupiter': [6,8,11,12], 'Venus': [1,2,3,4,5,8,9,11], 'Saturn': [1,2,4,7,8,9,10,11], 'Lagna': [1,2,4,6,8,10,11] },
+     'Jupiter': { 'Sun': [1,2,3,4,7,8,9,10,11], 'Moon': [2,5,7,9,11], 'Mars': [1,2,4,7,8,10,11], 'Mercury': [1,2,4,5,6,9,10,11], 'Jupiter': [1,2,3,4,7,8,10,11], 'Venus': [2,5,6,9,10,11], 'Saturn': [3,5,6,12], 'Lagna': [1,2,4,5,6,7,9,10,11] },
+     'Venus': { 'Sun': [8,11,12], 'Moon': [1,2,3,4,5,8,9,11,12], 'Mars': [3,4,6,9,11,12], 'Mercury': [3,5,6,9,11], 'Jupiter': [5,8,9,10,11], 'Venus': [1,2,3,4,5,8,9,10,11], 'Saturn': [3,4,5,8,9,10,11], 'Lagna': [1,2,3,4,5,8,9,11] },
+     'Saturn': { 'Sun': [1,2,4,7,8,10,11], 'Moon': [3,6,11], 'Mars': [3,5,6,10,11,12], 'Mercury': [6,8,9,10,11,12], 'Jupiter': [5,6,11,12], 'Venus': [6,11,12], 'Saturn': [3,5,6,11], 'Lagna': [1,3,4,6,10,11] },
+     'Lagna': { 'Sun': [3,4,6,10,11,12], 'Moon': [3,6,10,11,12], 'Mars': [1,3,6,10,11], 'Mercury': [1,2,4,6,8,10,11], 'Jupiter': [1,2,4,5,6,7,9,10,11], 'Venus': [1,2,3,4,5,8,9], 'Saturn': [1,3,4,6,10,11], 'Lagna': [3,6,10,11] }
   };
 
   static Map<String, dynamic> _calculateAllVargas(Map<String, double> planetLons, double lagnaLon) {

@@ -169,6 +169,16 @@ class CustomDrawer extends StatelessWidget {
                 const SizedBox(height: 5),
                 _buildMenuItem(
                   context,
+                  icon: Icons.foundation_rounded,
+                  iconColor: const Color(0xFFB45309),
+                  title: 'வாஸ்து',
+                  subtitle: 'மனை அடி சாஸ்திரம் (Kuzhikanakku)',
+                  routeName: '/vaasthu',
+                  isSelected: currentRoute == '/vaasthu',
+                ),
+                const SizedBox(height: 5),
+                _buildMenuItem(
+                  context,
                   icon: Icons.auto_fix_high_rounded,
                   iconColor: const Color(0xFF059669),
                   title: 'ஜோதிடக் கருவிகள்',

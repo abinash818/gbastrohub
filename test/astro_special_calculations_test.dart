@@ -261,5 +261,58 @@ void main() {
       expect(AstroUtils.getPaduPatchi(5, false), equals("மயில்"));    // வெள்ளி
       expect(AstroUtils.getPaduPatchi(6, false), equals("கோழி"));    // சனி
     });
+
+    test('Mudakku Rasi and Nakshatra matches textbook table for all 27 nakshatras', () {
+      // 1. Ashwini (0 * 13.333 + 5 deg = 5.0 deg) -> Pooram (10), Simmam (4), Venus
+      var res = AstroSpecialCalculationsService.calculateMudakku(5.0);
+      expect(res['sun_nakshatra'], equals('Ashwini'));
+      expect(res['nakshatra'], equals('Purvaphalguni'));
+      expect(res['rasi'], equals('Leo'));
+      expect(res['lord'], equals('Venus'));
+
+      // 6. Ardra (5 * 13.333 + 5 deg = 71.66 deg) -> Ardra (5), Mithunam (2), Rahu
+      res = AstroSpecialCalculationsService.calculateMudakku(71.66);
+      expect(res['sun_nakshatra'], equals('Arudra'));
+      expect(res['nakshatra'], equals('Arudra'));
+      expect(res['rasi'], equals('Gemini'));
+      expect(res['lord'], equals('Rahu'));
+
+      // 12. Uthiram (11 * 13.333 + 5 deg = 151.66 deg) -> Revathi (26), Meenam (11), Mercury
+      res = AstroSpecialCalculationsService.calculateMudakku(151.66);
+      expect(res['sun_nakshatra'], equals('Uttaraphalguni'));
+      expect(res['nakshatra'], equals('Revati'));
+      expect(res['rasi'], equals('Pisces'));
+      expect(res['lord'], equals('Mercury'));
+
+      // 27. Revathi (26 * 13.333 + 5 deg = 351.66 deg) -> Uthiram (11), Simmam (4), Sun
+      res = AstroSpecialCalculationsService.calculateMudakku(351.66);
+      expect(res['sun_nakshatra'], equals('Revati'));
+      expect(res['nakshatra'], equals('Uttaraphalguni'));
+      expect(res['rasi'], equals('Leo'));
+      expect(res['lord'], equals('Sun'));
+    });
+
+    test('Amirthathi Yogam verifies textbook matching results for sample days and stars', () {
+      // Sunday (0/7) + Bharani (1) -> Prabalarishtam
+      expect(KPService.calculateAmirthathiYogaForTest(7, 1), equals("பிரபலாரிட்ட யோகம்"));
+
+      // Sunday (0/7) + Revati (26) -> Amirtha
+      expect(KPService.calculateAmirthathiYogaForTest(7, 26), equals("அமிர்த யோகம்"));
+
+      // Monday (1) + Poorattathi (24) -> Marana
+      expect(KPService.calculateAmirthathiYogaForTest(1, 24), equals("மரண யோகம்"));
+
+      // Thursday (4) + Pooram (10) -> Marana
+      expect(KPService.calculateAmirthathiYogaForTest(4, 10), equals("மரண யோகம்"));
+
+      // Thursday (4) + Uthiram (11) -> Siddha
+      expect(KPService.calculateAmirthathiYogaForTest(4, 11), equals("சித்த யோகம்"));
+
+      // Friday (5) + Pooram (10) -> Amirtha
+      expect(KPService.calculateAmirthathiYogaForTest(5, 10), equals("அமிர்த யோகம்"));
+
+      // Saturday (6) + Revati (26) -> Prabalarishtam
+      expect(KPService.calculateAmirthathiYogaForTest(6, 26), equals("பிரபலாரிட்ட யோகம்"));
+    });
   });
 }

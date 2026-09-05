@@ -187,6 +187,42 @@ class AstroSpecialCalculationsService {
   // 2. யோகங்கள் & தோஷ அமைப்புகள் (Yogas & Planetary Roles)
   // ──────────────────────────────────────────────────────────────────────────
 
+  // முடக்கு அட்டவணை (சூரியன் நின்ற நட்சத்திர அடிப்படை - 27 Stars)
+  static const List<int> MUDAKKU_NAK_MAP = [
+    10,  9,  8,  7,  6,  5,  4,  3,  2,  1,  0,
+    26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11
+  ];
+
+  static const List<int> MUDAKKU_RASI_MAP = [
+    4, 4, 3, 3, 2, 2, 1, 1, 0, 0, 0,
+    11, 11, 10, 10, 9, 9, 8, 8, 8, 7, 7, 6, 6, 5, 5, 4
+  ];
+
+  /// முடக்கு ராசி, நட்சத்திரம் மற்றும் அதிபர் (சூரியன் நின்ற நட்சத்திர அடிப்படை)
+  static Map<String, dynamic> calculateMudakku(double sunLon) {
+    int sunNakIdx = (sunLon / (360.0 / 27.0)).floor() % 27;
+    int mudakkuNakIdx = MUDAKKU_NAK_MAP[sunNakIdx];
+    int mudakkuRasiIdx = MUDAKKU_RASI_MAP[sunNakIdx];
+    String mudakkuNakLord = NAK_LORDS[mudakkuNakIdx];
+    String mudakkuRasiLord = SIGN_LORDS[mudakkuRasiIdx];
+
+    return {
+      'sun_nakshatra_idx': sunNakIdx,
+      'sun_nakshatra': NAKSHATRAS[sunNakIdx],
+      'sun_nakshatra_tamil': TAMIL_NAKSHATRAS[sunNakIdx],
+      'rasi_idx': mudakkuRasiIdx,
+      'rasi': SIGNS[mudakkuRasiIdx],
+      'rasi_tamil': TAMIL_SIGNS[SIGNS[mudakkuRasiIdx]],
+      'rasi_lord': mudakkuRasiLord,
+      'rasi_lord_tamil': KPService.TAMIL_PLANETS[mudakkuRasiLord] ?? mudakkuRasiLord,
+      'nakshatra_idx': mudakkuNakIdx,
+      'nakshatra': NAKSHATRAS[mudakkuNakIdx],
+      'nakshatra_tamil': TAMIL_NAKSHATRAS[mudakkuNakIdx],
+      'lord': mudakkuNakLord,
+      'lord_tamil': KPService.TAMIL_PLANETS[mudakkuNakLord] ?? mudakkuNakLord,
+    };
+  }
+
   /// 2.1 யோகி, அவயோகி, உபயோகி (பகர்ப்பு யோகி), முடக்கு
   static Map<String, dynamic> calculateYogiAvayogi(double sunLon, double moonLon) {
     // Yogi Point = Sun + Moon + 93° 20' (93.333333°)
@@ -205,9 +241,8 @@ class AstroSpecialCalculationsService {
     // உபயோகி / பகர்ப்பு யோகி (Sahayogi): Yogi Rasi Lord
     String upaYogi = yogiRasiLord;
 
-    // முடக்கு ராசி (Mudakku): Obstructed house opposite of Avayogi
-    int mudakkuRasiIdx = (avayogiRasiIdx + 6) % 12;
-    String mudakkuLord = SIGN_LORDS[mudakkuRasiIdx];
+    // முடக்கு ராசி, நட்சத்திரம் & அதிபர் (சூரியன் நின்ற நட்சத்திர அடிப்படை)
+    final mudakkuData = calculateMudakku(sunLon);
 
     return {
       'yogi': {
@@ -234,12 +269,7 @@ class AstroSpecialCalculationsService {
         'planet': upaYogi,
         'planet_tamil': KPService.TAMIL_PLANETS[upaYogi] ?? upaYogi,
       },
-      'mudakku': {
-        'rasi': SIGNS[mudakkuRasiIdx],
-        'rasi_tamil': TAMIL_SIGNS[SIGNS[mudakkuRasiIdx]],
-        'lord': mudakkuLord,
-        'lord_tamil': KPService.TAMIL_PLANETS[mudakkuLord] ?? mudakkuLord,
-      },
+      'mudakku': mudakkuData,
     };
   }
 

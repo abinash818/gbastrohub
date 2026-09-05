@@ -1485,21 +1485,62 @@ class KPService {
     return "-";
   }
 
+  static const List<List<String>> AMIRTHATHI_YOGAM_TABLE = [
+    // Sunday (ஞாயிறு - 0)
+    ["S", "P", "S", "S", "S", "S", "S", "S", "S", "M", "S", "A", "S", "S", "S", "M", "M", "M", "A", "S", "A", "A", "M", "S", "S", "A", "A"],
+    // Monday (திங்கள் - 1)
+    ["S", "S", "M", "A", "S", "S", "A", "S", "S", "M", "S", "S", "S", "P", "A", "M", "S", "S", "S", "M", "M", "A", "S", "S", "M", "S", "S"],
+    // Tuesday (செவ்வாய் - 2)
+    ["S", "S", "S", "A", "S", "M", "S", "S", "S", "S", "S", "A", "S", "S", "S", "M", "S", "M", "A", "S", "P", "S", "S", "M", "M", "A", "S"],
+    // Wednesday (புதன் - 3)
+    ["M", "S", "A", "S", "S", "S", "S", "S", "S", "S", "A", "A", "M", "S", "S", "S", "S", "S", "M", "A", "A", "S", "P", "S", "A", "S", "M"],
+    // Thursday (வியாழன் - 4)
+    ["A", "S", "M", "M", "M", "M", "A", "S", "S", "A", "M", "S", "S", "S", "A", "S", "S", "P", "S", "S", "S", "S", "S", "M", "S", "S", "S"],
+    // Friday (வெள்ளி - 5)
+    ["A", "S", "S", "M", "S", "S", "S", "M", "M", "M", "A", "S", "A", "S", "S", "S", "S", "M", "A", "P", "S", "M", "S", "S", "S", "S", "S"],
+    // Saturday (சனி - 6)
+    ["S", "S", "S", "A", "S", "S", "S", "S", "M", "A", "S", "M", "M", "M", "S", "S", "S", "S", "S", "S", "S", "S", "S", "A", "M", "S", "P"]
+  ];
+
   static String _getAmirthaYoga(int weekday, String nakshatra) {
-    const table = {
-        0: {"Amirtha": ["Hastha", "Mula", "Uttarashada", "Uttaraphalguni", "Uttarabhadrapada"], "Marana": ["Bharani", "Magha", "Jyeshta", "Purvashada", "Purvabhadrapada"]},
-        1: {"Amirtha": ["Sravana", "Rohini", "Pushya", "Mrigashirsha", "Chitra"], "Marana": ["Krittika", "Aslesha", "Chitra", "Vishakha", "Dhanishta"]},
-        2: {"Amirtha": ["Ashwini", "Magha", "Anuradha", "Revati", "Uttara"], "Marana": ["Rohini", "Pushya", "Anuradha", "Shatabhisha", "Uttara"]},
-        3: {"Amirtha": ["Arudra", "Swati", "Shatabhisha", "Punarvasu", "Vishakha"], "Marana": ["Mrigashirsha", "Swati", "Arudra", "Purvaphalguni", "Punarpusam"]},
-        4: {"Amirtha": ["Bharani", "Purvaphalguni", "Purvashada", "Krittika", "Pushya"], "Marana": ["Punarvasu", "Arudra", "Aslesha", "Magha", "Swati"]},
-        5: {"Amirtha": ["Rohini", "Hastha", "Pushya", "Ashwini", "Anuradha"], "Marana": ["Magha", "Purva", "Hastha", "Chitra", "Swati"]},
-        6: {"Amirtha": ["Krithika", "Aslesha", "Magha", "Uttara", "Chitra"], "Marana": ["Rohini", "Mriga", "Punar", "Swati", "Shatabhisha"]}
-    };
-    final dayData = table[weekday % 7]!;
-    String engNak = _nakshatraTamilToEng(nakshatra);
-    if (dayData["Amirtha"]!.contains(engNak)) return "அமிர்த யோகம்";
-    if (dayData["Marana"]!.contains(engNak)) return "மரண யோகம்";
-    return "சித்த யோகம்";
+    int nakIdx = NAKSHATRAS.indexOf(nakshatra);
+    if (nakIdx == -1) {
+      nakIdx = AstroSpecialCalculationsService.NAKSHATRAS.indexOf(nakshatra);
+    }
+    if (nakIdx == -1) {
+      nakIdx = AstroSpecialCalculationsService.TAMIL_NAKSHATRAS.indexOf(nakshatra);
+    }
+    if (nakIdx == -1) return "சித்த யோகம்";
+
+    // DateTime.weekday: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun
+    int dayIdx = (weekday == 7 || weekday == 0) ? 0 : weekday;
+    if (dayIdx < 0 || dayIdx > 6 || nakIdx < 0 || nakIdx > 26) {
+      return "சித்த யோகம்";
+    }
+
+    String code = AMIRTHATHI_YOGAM_TABLE[dayIdx][nakIdx];
+    switch (code) {
+      case "A": return "அமிர்த யோகம்";
+      case "S": return "சித்த யோகம்";
+      case "M": return "மரண யோகம்";
+      case "P": return "பிரபலாரிட்ட யோகம்";
+      default: return "சித்த யோகம்";
+    }
+  }
+
+  static String calculateAmirthathiYogaForTest(int weekday, int nakIdx) {
+    int dayIdx = (weekday == 7 || weekday == 0) ? 0 : weekday;
+    if (dayIdx < 0 || dayIdx > 6 || nakIdx < 0 || nakIdx > 26) {
+      return "சித்த யோகம்";
+    }
+    String code = AMIRTHATHI_YOGAM_TABLE[dayIdx][nakIdx];
+    switch (code) {
+      case "A": return "அமிர்த யோகம்";
+      case "S": return "சித்த யோகம்";
+      case "M": return "மரண யோகம்";
+      case "P": return "பிரபலாரிட்ட யோகம்";
+      default: return "சித்த யோகம்";
+    }
   }
 
   static String _nakshatraTamilToEng(String tam) {

@@ -2408,7 +2408,10 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
         _buildDetailRow("யோகி கிரகம் / நட்சத்திரம்", "${yogiData['yogi']['planet_tamil']} - ${yogiData['yogi']['nakshatra_tamil']} (${yogiData['yogi']['rasi_tamil']})", isPrimary: true),
         _buildDetailRow("அவயோகி கிரகம் / நட்சத்திரம்", "${yogiData['avayogi']['planet_tamil']} - ${yogiData['avayogi']['nakshatra_tamil']} (${yogiData['avayogi']['rasi_tamil']})"),
         _buildDetailRow("துணை யோகி (பகர்ப்பு யோகி)", yogiData['upayogi']['planet_tamil'] ?? '-', isPlanet: true),
-        _buildDetailRow("முடக்கு ராசி & நாதன்", "${yogiData['mudakku']['rasi_tamil']} (${yogiData['mudakku']['lord_tamil']})"),
+        _buildDetailRow(
+          "முடக்கு ராசி / நட்சத்திரம்",
+          "${yogiData['mudakku']['rasi_tamil']} - ${yogiData['mudakku']['nakshatra_tamil'] ?? ''} (${yogiData['mudakku']['lord_tamil'] ?? yogiData['mudakku']['lord'] ?? ''})",
+        ),
       ],
       if (roles != null) ...[
         if (roles['badhaka'] != null)

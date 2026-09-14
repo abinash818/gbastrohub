@@ -8,7 +8,7 @@ import '../data/nakshatra_data.dart';
 import 'settings_service.dart';
 import 'astro_special_calculations_service.dart';
 import 'shadbala_service.dart';
-
+import 'astro_utils.dart';
 
 class KPService {
   static bool _isInit = false;
@@ -296,19 +296,29 @@ class KPService {
 
   static Future<Map<String, dynamic>> calculateChart(
     String name, DateTime dt, double lat, double lon, double timezone, {
-    double yearLength = 365.25, int siderealModeIndex = 0, bool useMeanNodes = true, int ayanamsaOffsetSeconds = 0,
+    double? yearLength, int? siderealModeIndex, bool? useMeanNodes, int? ayanamsaOffsetSeconds,
     int? horaryNo,
   }) async {
     if (!_isInit) await init();
     
+    final double actualYearLength = yearLength ?? await SettingsService.getDasaYearLength();
+    final int actualAyanamsaMode = siderealModeIndex ?? await SettingsService.getAyanamsa();
+    final bool actualUseMeanNodes = useMeanNodes ?? !(await SettingsService.getTrueNodeMode());
+    int customOffset = 0;
+    if (actualAyanamsaMode == 6) {
+      final customMap = await SettingsService.getCustomAyanamsa();
+      customOffset = (customMap['deg'] ?? 24) * 3600 + (customMap['min'] ?? 15) * 60 + (customMap['sec'] ?? 0);
+    }
+    final int actualAyanamsaOffset = ayanamsaOffsetSeconds ?? customOffset;
+
     final engine = AstroEngine();
-    final result = engine.calculate(dt, lat, lon, trueNode: !useMeanNodes, ayanamsaMode: siderealModeIndex);
+    final result = engine.calculate(dt, lat, lon, trueNode: !actualUseMeanNodes, ayanamsaMode: actualAyanamsaMode);
     
     double jd = result.jd;
-    double ayanamsaOffsetDeg = ayanamsaOffsetSeconds / 3600.0;
+    double ayanamsaOffsetDeg = actualAyanamsaOffset / 3600.0;
 
     // Automatic KP Ayanamsa calculation (if KP-Newcomb is selected and manual offset is 0)
-    if (siderealModeIndex == 5 && ayanamsaOffsetSeconds == 0) {
+    if (actualAyanamsaMode == 5 && actualAyanamsaOffset == 0) {
       // Dynamic calculation matching the reference app's precession model
       // 1972 -> 39 seconds
       // 2026 -> 306 seconds
@@ -344,11 +354,12 @@ class KPService {
     pancha['ayanamsa'] = ayanamsa;
     
     String modeName = "Lahiri";
-    if (siderealModeIndex == 1) modeName = "Raman";
-    else if (siderealModeIndex == 2) modeName = "KP Old";
-    else if (siderealModeIndex == 3) modeName = "KP New";
-    else if (siderealModeIndex == 4) modeName = "KP Straight Line";
-    else if (siderealModeIndex == 5) modeName = "KP-Newcomb";
+    if (actualAyanamsaMode == 1) modeName = "Raman";
+    else if (actualAyanamsaMode == 2) modeName = "KP Old";
+    else if (actualAyanamsaMode == 3) modeName = "KP New";
+    else if (actualAyanamsaMode == 4) modeName = "KP Straight Line";
+    else if (actualAyanamsaMode == 5) modeName = "KP-Newcomb";
+    else if (actualAyanamsaMode == 6) modeName = "Custom";
 
     pancha['ayanamsa_name'] = modeName;
     
@@ -360,7 +371,7 @@ class KPService {
       timezone, 
       pancha, 
       engine, 
-      ayanamsaMode: siderealModeIndex,
+      ayanamsaMode: actualAyanamsaMode,
       sunLon: planetLons['Sun'] ?? 0.0,
     );
     maanthiLon = (maanthiLon + ayanamsaOffsetDeg) % 360.0;
@@ -477,7 +488,8 @@ class KPService {
       if (isCombust) flags += " (அ)";
       finalResults['pavagam'][SIGNS[(siderealCusps[houseNum] / 30).floor() % 12]]!.add("${TAMIL_PLANETS_SHORT[pName]!}$flags");
     });
-    finalResults['dasa'] = _calculateDasaList(planetLons['Moon']!, dt, yearLength);
+    finalResults['year_length'] = actualYearLength;
+    finalResults['dasa'] = _calculateDasaList(planetLons['Moon']!, dt, actualYearLength);
     final bool includeLagnaAV = await SettingsService.getIncludeLagnaAshtakavarga();
     finalResults['ashtakavarga'] = _calculateAshtakavarga(planetLons, lagnaLon, includeLagnaAV: includeLagnaAV);
     finalResults['divisional_charts'] = _calculateAllVargas(planetLons, lagnaLon);
@@ -495,24 +507,45 @@ class KPService {
     // Ayanamsa Text
     finalResults['ayanamsa_text'] = "${formatAbsoluteDegreesDMS(ayanamsa)} ($modeName)";
 
-    // Dasa Balance calculation
+    // Dasa Balance & Garbha Sel calculation
     double moonLon = planetLons['Moon']!;
     double totalMinutes = moonLon * 60;
     double nakMinutes = totalMinutes % 800;
     int nakIdx = (totalMinutes / 800).floor();
     String startLord = VIMSHOTTARI_LORDS[nakIdx % 9];
     double remainingMinutes = 800 - nakMinutes;
+    double elapsedMinutes = nakMinutes;
     double totalYears = VIMSHOTTARI_YEARS[startLord]!.toDouble();
+
+    // Dasa Balance (இருப்பு)
     double balanceYears = (remainingMinutes / 800) * totalYears;
     int y = balanceYears.floor();
     double remM = (balanceYears - y) * 12;
     int m = remM.floor();
     int d = ((remM - m) * 30).round();
+    if (d >= 30) { m++; d = 0; }
+    if (m >= 12) { y++; m = 0; }
+
+    // Garbha Sel (கர்ப்பச் செல்)
+    double elapsedYears = (elapsedMinutes / 800) * totalYears;
+    int ey = elapsedYears.floor();
+    double erM = (elapsedYears - ey) * 12;
+    int em = erM.floor();
+    int ed = ((erM - em) * 30).round();
+    if (ed >= 30) { em++; ed = 0; }
+    if (em >= 12) { ey++; em = 0; }
+
+    String startLordTamil = TAMIL_PLANETS[startLord] ?? startLord;
     finalResults['dasa_balance'] = "${startLord} ${y.toString().padLeft(2, '0')}Y, ${m.toString().padLeft(2, '0')}M, ${d.toString().padLeft(2, '0')}D";
+    finalResults['dasa_balance_tamil'] = "$startLordTamil - $y வரு, $m மா, $d நா";
+    finalResults['garbha_sel_tamil'] = "$startLordTamil - $ey வரு, $em மா, $ed நா";
     finalResults['dasa_balance_lord'] = startLord;
     finalResults['dasa_balance_y'] = y;
     finalResults['dasa_balance_m'] = m;
     finalResults['dasa_balance_d'] = d;
+    finalResults['garbha_sel_y'] = ey;
+    finalResults['garbha_sel_m'] = em;
+    finalResults['garbha_sel_d'] = ed;
     
     // Functional Planets based on Lagna
     finalResults['functional_planets'] = _getFunctionalPlanets(lagnaDetails['rasi']);
@@ -538,7 +571,7 @@ class KPService {
     }
 
     finalResults['era'] = {
-      'kali': dt.year + 3101,
+      'kali': AstroUtils.calculateKaliYear(dt.year, dt.month, dt.day),
       'kollam': dt.year - 824,
     };
 
@@ -931,7 +964,18 @@ class KPService {
     double remM = (balanceYears - y) * 12;
     int m = remM.floor();
     int d = ((remM - m) * 30).round();
+    if (d >= 30) { m++; d = 0; }
+    if (m >= 12) { y++; m = 0; }
     String balanceStr = "$y வரு, $m மா, $d நா";
+
+    double elapsedYears = (elapsedMinutes / 800) * tYears;
+    int ey = elapsedYears.floor();
+    double erM = (elapsedYears - ey) * 12;
+    int em = erM.floor();
+    int ed = ((erM - em) * 30).round();
+    if (ed >= 30) { em++; ed = 0; }
+    if (em >= 12) { ey++; em = 0; }
+    String garbhaSelStr = "$ey வரு, $em மா, $ed நா";
 
     dasaTimeline.add({
       'lord': startLord,
@@ -940,14 +984,21 @@ class KPService {
       'end': firstDasaEnd,
       'isCurrent': true,
       'balanceStr': balanceStr,
+      'balance_y': y,
+      'balance_m': m,
+      'balance_d': d,
+      'garbhaSelStr': garbhaSelStr,
+      'garbha_y': ey,
+      'garbha_m': em,
+      'garbha_d': ed,
       'subPeriods': _calculateSubPeriods(startLord, fullFirstDasaStart, firstDasaEnd, 2, yearLength, birthDt: birthDt)
     });
 
     DateTime startTime = firstDasaEnd;
     for (int i = 1; i < 9; i++) {
       String lord = VIMSHOTTARI_LORDS[(lordIdx + i) % 9];
-      double y = VIMSHOTTARI_YEARS[lord]!.toDouble();
-      int dasaMillis = (y * yearLength * 86400000.0).round();
+      double dy = VIMSHOTTARI_YEARS[lord]!.toDouble();
+      int dasaMillis = (dy * yearLength * 86400000.0).round();
       DateTime endTime = startTime.add(Duration(milliseconds: dasaMillis));
       dasaTimeline.add({
         'lord': lord,
@@ -992,23 +1043,52 @@ class KPService {
           continue;
         }
         DateTime effectiveStart = periodStart.isBefore(birthDt) ? birthDt : periodStart;
+
+        Duration remDuration = subEnd.difference(effectiveStart);
+        double remYears = remDuration.inMilliseconds / (yearLength * 86400000.0);
+        int subY = remYears.floor();
+        double subRemM = (remYears - subY) * 12;
+        int subM = subRemM.floor();
+        int subD = ((subRemM - subM) * 30).round();
+        if (subD >= 30) { subM++; subD = 0; }
+        if (subM >= 12) { subY++; subM = 0; }
+        String subBalanceStr = "$subY வரு, $subM மா, $subD நா";
+
         periods.add({
           'lord': subLord,
           'start': effectiveStart,
           'fullStart': periodStart,
           'end': subEnd,
           'level': level,
+          'balanceStr': subBalanceStr,
+          'balance_y': subY,
+          'balance_m': subM,
+          'balance_d': subD,
           'subPeriods': level < 5
               ? _calculateSubPeriods(subLord, periodStart, subEnd, level + 1, yearLength, birthDt: birthDt)
               : []
         });
       } else {
+        Duration remDuration = subEnd.difference(periodStart);
+        double remYears = remDuration.inMilliseconds / (yearLength * 86400000.0);
+        int subY = remYears.floor();
+        double subRemM = (remYears - subY) * 12;
+        int subM = subRemM.floor();
+        int subD = ((subRemM - subM) * 30).round();
+        if (subD >= 30) { subM++; subD = 0; }
+        if (subM >= 12) { subY++; subM = 0; }
+        String subBalanceStr = "$subY வரு, $subM மா, $subD நா";
+
         periods.add({
           'lord': subLord,
           'start': periodStart,
           'fullStart': periodStart,
           'end': subEnd,
           'level': level,
+          'balanceStr': subBalanceStr,
+          'balance_y': subY,
+          'balance_m': subM,
+          'balance_d': subD,
           'subPeriods': level < 5
               ? _calculateSubPeriods(subLord, periodStart, subEnd, level + 1, yearLength)
               : []

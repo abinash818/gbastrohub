@@ -9,8 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 }
 
 $host = "127.0.0.1";
-$db_name = "u682341828_gbastro";
-$username = "u682341828_gbastro";
+$db_name = "u170490412_gbastro";
+$username = "u170490412_gbastro";
 $password = "Gbastro@2026";
 
 try {

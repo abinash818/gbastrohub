@@ -101,11 +101,11 @@ class AstroUtils {
   }
 
   static int calculateKaliYear(int year, int month, int day) {
-    return (month < 4 || (month == 4 && day <= 13)) ? year + 3100 : year + 3101;
+    return (month < 4 || (month == 4 && day <= 13)) ? year + 3101 : year + 3102;
   }
 
   static int calculateSalivahanaYear(int year, int month, int day) {
-    return (month < 3 || (month == 3 && day <= 21)) ? year - 79 : year - 80;
+    return (month < 4 || (month == 4 && day <= 13)) ? year - 79 : year - 78;
   }
 
   static int calculatePasaliYear(int year, int month, int day) {

@@ -22,7 +22,7 @@ $baseUrl = ($env === 'SANDBOX') ? 'https://api-preprod.phonepe.com/apis/pg-sandb
 $action = $_GET['action'] ?? '';
 
 define('S2S_SECRET', 'Gbastro_S2S_Secret_2026!');
-$hostingerApiUrl = "https://deeppink-hedgehog-734715.hostingersite.com/user_subscription_api.php";
+$hostingerApiUrl = "https://mediumspringgreen-shark-491803.hostingersite.com/user_subscription_api.php";
 
 function callHostingerApi($action, $data) {
     global $hostingerApiUrl;
@@ -136,7 +136,7 @@ try {
         
         $redirectUrl = "https://abinaasananthaguruji.com/api/payment_status.php?orderId=$orderId";
         // Setup webhook callback url pointing directly to Hostinger
-        $webhookUrl = "https://deeppink-hedgehog-734715.hostingersite.com/user_subscription_api.php?action=webhook";
+        $webhookUrl = "https://mediumspringgreen-shark-491803.hostingersite.com/user_subscription_api.php?action=webhook";
 
         $payload = [
             "merchantId" => $merchantId,

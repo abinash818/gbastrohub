@@ -40,7 +40,7 @@ class SettingsService {
 
   static Future<int> getMaandiMethod() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_keyMaandiMethod) ?? 1; // Default to 1 (Start of Saturn's part)
+    return prefs.getInt(_keyMaandiMethod) ?? 4; // Default to 4 (Sun degree + constant degree addition)
   }
 
   static Future<void> saveUdayamMethod(int method) async {

@@ -99,10 +99,14 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       _selectedDasa = dasaList.first;
       final subPeriods = _selectedDasa!['subPeriods'] as List? ?? [];
       if (subPeriods.isNotEmpty) {
-        _selectedBukthi = subPeriods.firstWhere(
-          (b) => !(b['end'] as DateTime).isBefore(birthDt ?? dasaList.first['start']),
-          orElse: () => subPeriods.first,
-        );
+        for (var b in subPeriods) {
+          final end = b['end'] as DateTime?;
+          if (end != null && !end.isBefore(birthDt ?? dasaList.first['start'])) {
+            _selectedBukthi = b as Map<String, dynamic>?;
+            break;
+          }
+        }
+        _selectedBukthi ??= subPeriods.first as Map<String, dynamic>?;
       }
     }
   }
@@ -2940,14 +2944,20 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       activeDasa = dasaList.first;
       final subPeriods = activeDasa!['subPeriods'] as List? ?? [];
       if (subPeriods.isNotEmpty) {
-        activeBukthi = subPeriods.firstWhere(
-          (b) => !(b['end'] as DateTime).isBefore(birthDt ?? dasaList.first['start']),
-          orElse: () => subPeriods.first,
-        );
+        for (var b in subPeriods) {
+          final end = b['end'] as DateTime?;
+          if (end != null && !end.isBefore(birthDt ?? dasaList.first['start'])) {
+            activeBukthi = b as Map<String, dynamic>?;
+            break;
+          }
+        }
+        activeBukthi ??= subPeriods.first as Map<String, dynamic>?;
       }
     }
 
     if (activeDasa == null) return const SizedBox();
+
+    final double yearLength = (widget.results['year_length'] as num?)?.toDouble() ?? 365.25;
 
     return Container(
       decoration: BoxDecoration(
@@ -2959,12 +2969,13 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
         children: [
           _buildStatusRow("ஜனன கால தசை இருப்பு", _calculateBirthDasaBalance()),
           const Divider(height: 1, color: Color(0xFFB58D3D)),
-          _buildStatusRow("நடப்பு தசா இருப்பு", "${activeDasa['lord']} - ${activeDasa['end'].day}-${activeDasa['end'].month}-${activeDasa['end'].year}"),
+          _buildStatusRow("ஜனன கால புத்தி இருப்பு", _calculateBirthBhuktiBalance()),
           const Divider(height: 1, color: Color(0xFFB58D3D)),
-          _buildStatusRow("நடப்பு புத்தி இருப்பு", "${activeBukthi?['lord'] ?? '-'} - ${activeBukthi != null ? "${activeBukthi['end'].day}-${activeBukthi['end'].month}-${activeBukthi['end'].year}" : '-'}"),
+          _buildStatusRow("நடப்பு தசா இருப்பு", _calculateCurrentDasaBalance(activeDasa, yearLength)),
+          const Divider(height: 1, color: Color(0xFFB58D3D)),
+          _buildStatusRow("நடப்பு புத்தி இருப்பு", _calculateCurrentBhuktiBalance(activeBukthi, yearLength)),
           const Divider(height: 1, color: Color(0xFFB58D3D)),
           _buildStatusRow("திதி சூன்ய ராசிகள்", widget.results['panchangam']?['suniya_rasi'] ?? "-"),
-
         ],
       ),
     );
@@ -3287,6 +3298,9 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
 
   String _calculateFullAge(DateTime birthDate) {
     final now = DateTime.now();
+    if (now.isBefore(birthDate)) {
+      return "0 நாள்";
+    }
     int years = now.year - birthDate.year;
     int months = now.month - birthDate.month;
     int days = now.day - birthDate.day;
@@ -3316,6 +3330,77 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
 
     final firstDasa = dasaList[0];
     return "${firstDasa['lord']} - ${firstDasa['balanceStr'] ?? '-'}";
+  }
+
+  String _calculateBirthBhuktiBalance() {
+    final List<dynamic>? dasaList = widget.results['dasa'];
+    final birthDt = widget.results['birth_dt'] as DateTime?;
+    if (dasaList == null || dasaList.isEmpty || birthDt == null) return "-";
+
+    final firstDasa = dasaList[0];
+    final subPeriods = firstDasa['subPeriods'] as List? ?? [];
+    if (subPeriods.isEmpty) return "-";
+
+    Map<String, dynamic>? firstBhukti;
+    for (var b in subPeriods) {
+      final end = b['end'] as DateTime?;
+      if (end != null && !end.isBefore(birthDt)) {
+        firstBhukti = b as Map<String, dynamic>?;
+        break;
+      }
+    }
+    firstBhukti ??= subPeriods.first as Map<String, dynamic>?;
+    if (firstBhukti == null) return "-";
+    return "${firstBhukti['lord']} - ${firstBhukti['balanceStr'] ?? '-'}";
+  }
+
+  String _calculateCurrentDasaBalance(Map<String, dynamic> activeDasa, double yearLength) {
+    DateTime now = DateTime.now();
+    final birthDt = widget.results['birth_dt'] as DateTime?;
+    if (birthDt != null && now.isBefore(birthDt)) {
+      now = birthDt;
+    }
+
+    final dEnd = activeDasa['end'] as DateTime?;
+    if (dEnd == null) return "-";
+
+    Duration rem = dEnd.difference(now);
+    if (rem.isNegative) rem = Duration.zero;
+    double remYears = rem.inMilliseconds / (yearLength * 86400000.0);
+    int y = remYears.floor();
+    double remM = (remYears - y) * 12;
+    int m = remM.floor();
+    int d = ((remM - m) * 30).round();
+    if (d >= 30) { m++; d = 0; }
+    if (m >= 12) { y++; m = 0; }
+    String balStr = "$y வரு, $m மா, $d நா";
+    String endStr = "${dEnd.day}-${dEnd.month}-${dEnd.year}";
+    return "${activeDasa['lord']} - $balStr ($endStr வரை)";
+  }
+
+  String _calculateCurrentBhuktiBalance(Map<String, dynamic>? activeBukthi, double yearLength) {
+    if (activeBukthi == null) return "-";
+    DateTime now = DateTime.now();
+    final birthDt = widget.results['birth_dt'] as DateTime?;
+    if (birthDt != null && now.isBefore(birthDt)) {
+      now = birthDt;
+    }
+
+    final bEnd = activeBukthi['end'] as DateTime?;
+    if (bEnd == null) return "-";
+
+    Duration rem = bEnd.difference(now);
+    if (rem.isNegative) rem = Duration.zero;
+    double remYears = rem.inMilliseconds / (yearLength * 86400000.0);
+    int y = remYears.floor();
+    double remM = (remYears - y) * 12;
+    int m = remM.floor();
+    int d = ((remM - m) * 30).round();
+    if (d >= 30) { m++; d = 0; }
+    if (m >= 12) { y++; m = 0; }
+    String balStr = "$y வரு, $m மா, $d நா";
+    String endStr = "${bEnd.day}-${bEnd.month}-${bEnd.year}";
+    return "${activeBukthi['lord']} - $balStr ($endStr வரை)";
   }
   Widget _buildPrasannamView() {
     final prasannamData = widget.results['prasannam_data'] as Map<String, dynamic>?;

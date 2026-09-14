@@ -334,6 +334,7 @@ class AstroTranslationService {
       tMap["சுப/அசுப கிரகங்கள்"] = "Benefic/Malefic Planets";
       tMap["நேரம் & யோகங்கள்"] = "Time & Yogas";
       tMap["ஜனன கால தசை இருப்பு"] = "Birth Dasa Balance";
+      tMap["ஜனன கால புத்தி இருப்பு"] = "Birth Bhukti Balance";
       tMap["நடப்பு தசா இருப்பு"] = "Current Dasa Balance";
       tMap["நடப்பு புத்தி இருப்பு"] = "Current Bukthi Balance";
       tMap["திதி சூன்ய ராசிகள்"] = "Tithi Sunya Rasis";
@@ -347,6 +348,10 @@ class AstroTranslationService {
       tMap["யோனி"] = "Yoni";
       tMap["ஆதியந்த பரம நாழிகை"] = "Aadhiyantha Parama Nazhigai";
       tMap["பிறக்கும் போது தசா இருப்பு"] = "Dasa Balance at Birth";
+      tMap["வரு"] = "Y";
+      tMap["மா"] = "M";
+      tMap["நா"] = "D";
+      tMap["வரை"] = "until";
       // Tithis, Yogas, Karanas in English
       tMap["பிரதமை"] = "Prathama";
       tMap["துவிதியை"] = "Dwitiya";
@@ -608,6 +613,7 @@ class AstroTranslationService {
       tMap["சுப/அசுப கிரகங்கள்"] = "शुभ/अशुभ ग्रह (Benefic/Malefic)";
       tMap["நேரம் & யோகங்கள்"] = "समय और योग (Time & Yogas)";
       tMap["ஜனன கால தசை இருப்பு"] = "जन्म दशा शेष (Birth Dasa Bal)";
+      tMap["ஜனன கால புத்தி இருப்பு"] = "जन्म भुक्ति शेष (Birth Bhukti Bal)";
       tMap["நடப்பு தசா இருப்பு"] = "वर्तमान दशा शेष (Current Dasa Bal)";
       tMap["நடப்பு புத்தி இருப்பு"] = "वर्तमान भुक्ति शेष (Current Bukthi Bal)";
       tMap["திதி சூன்ய ராசிகள்"] = "तिथि शून्य राशियाँ (Tithi Sunya Rasis)";
@@ -620,6 +626,10 @@ class AstroTranslationService {
       tMap["நாடி"] = "नाड़ी (Naadi)";
       tMap["யோனி"] = "योनि (Yoni)";
       tMap["ஆதியந்த பரம நாழிகை"] = "आदियन्त परम नाड़िगै (Aadhiyantha Nazhigai)";
+      tMap["வரு"] = "वर्ष";
+      tMap["மா"] = "माह";
+      tMap["நா"] = "दिन";
+      tMap["வரை"] = "तक";
       // Short planet codes in Hindi
       tMap["சூரி"] = "सूर्य";
       tMap["சந்"] = "चंद्र";

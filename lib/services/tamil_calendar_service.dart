@@ -189,10 +189,10 @@ class TamilCalendarService {
     }
     int tamilDay = remainingDays + 1;
 
-    int kaliYear = tamilYear + 3101;
+    int kaliYear = tamilYear + 3102;
 
     // Salivahana Shaka Year
-    int salivahanaYear = kaliYear - 3179;
+    int salivahanaYear = kaliYear - 3180;
 
     // Kollam Year (Kerala/Kanyakumari Era)
     // Boundary at Chingam 1 (approx Aug 17)

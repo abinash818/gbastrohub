@@ -7,6 +7,6 @@ define('PHONEPE_ENV', 'PRODUCTION');
 
 // Database credentials
 define('DB_HOST', '127.0.0.1');
-define('DB_USER', 'u682341828_gbastro');
+define('DB_USER', 'u170490412_gbastro');
 define('DB_PASS', 'Gbastro@2026');
-define('DB_NAME', 'u682341828_gbastro');
+define('DB_NAME', 'u170490412_gbastro');

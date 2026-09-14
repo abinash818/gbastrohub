@@ -36,7 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _useTrueNode = false;
   String _selectedLang = 'ta';
   int _udayamMethod = 0;
-  int _maandiMethod = 1;
+  int _maandiMethod = 4;
   bool _includeLagnaAshtakavarga = false;
 
   bool _isLoading = true;
@@ -81,7 +81,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final utn = await SettingsService.getTrueNodeMode();
     final lang = await SettingsService.getLanguage();
     final um = await SettingsService.getUdayamMethod();
-    final mm = await SettingsService.getMaandiMethod();
     final ila = await SettingsService.getIncludeLagnaAshtakavarga();
     
     if (mounted) {
@@ -96,7 +95,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _useTrueNode = utn;
         _selectedLang = lang;
         _udayamMethod = um;
-        _maandiMethod = mm;
+        _maandiMethod = 4;
         _includeLagnaAshtakavarga = ila;
         _isLoading = false;
       });
@@ -340,6 +339,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() {
                 _useTrueNode = newSelection.first;
               });
+              SettingsService.saveTrueNodeMode(newSelection.first);
             },
             style: SegmentedButton.styleFrom(
               selectedBackgroundColor: AppColors.primary,
@@ -382,6 +382,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() {
                 _dasaYearLength = newSelection.first;
               });
+              SettingsService.saveDasaYearLength(newSelection.first);
             },
             style: SegmentedButton.styleFrom(
               selectedBackgroundColor: AppColors.primary,
@@ -440,6 +441,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 setState(() {
                   _ayanamsaMode = newSelection;
                 });
+                SettingsService.saveAyanamsa(newSelection);
               }
             },
           ),
@@ -521,6 +523,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() {
                 _bhavaMethod = newSelection.first;
               });
+              SettingsService.saveBhavaMethod(newSelection.first);
             },
             style: ButtonStyle(
               backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
@@ -577,6 +580,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() {
                 _udayamMethod = newSelection.first;
               });
+              SettingsService.saveUdayamMethod(newSelection.first);
             },
             style: SegmentedButton.styleFrom(
               selectedBackgroundColor: AppColors.primary,
@@ -620,34 +624,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           items: [
             DropdownMenuItem(
-              value: 0,
-              child: Text(
-                AstroTranslationService.translate(context, "நாள்/இரவு நாழிகை மற்றும் நிலையான நாழிகை விகிதாச்சாரம்"),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            DropdownMenuItem(
-              value: 1,
-              child: Text(
-                AstroTranslationService.translate(context, "8 சம பாகங்கள் மற்றும் சனியின் பாகத் தொடக்கம் (Start)"),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            DropdownMenuItem(
-              value: 2,
-              child: Text(
-                AstroTranslationService.translate(context, "8 சம பாகங்கள் மற்றும் சனியின் பாக நடுப்பகுதி (Middle)"),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            DropdownMenuItem(
-              value: 3,
-              child: Text(
-                AstroTranslationService.translate(context, "8 சம பாகங்கள் மற்றும் சனியின் பாக முடிவு (End)"),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            DropdownMenuItem(
               value: 4,
               child: Text(
                 AstroTranslationService.translate(context, "சூரியன் பாகை + நிலையான பாகை கூட்டும் முறை"),
@@ -660,6 +636,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() {
                 _maandiMethod = val;
               });
+              SettingsService.saveMaandiMethod(val);
             }
           },
         ),

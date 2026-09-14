@@ -67,22 +67,28 @@
  <h3>8. Data Security</h3>
  <p>We implement appropriate security measures to protect your personal information. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.</p>
 
- <h3>9. Your Rights</h3>
- <p>You have the right to request access to, correction of, or deletion of your personal data. To exercise these rights, please contact us using the details below.</p>
+  <h3>9. Account and Data Deletion (User Rights)</h3>
+  <p>You have the full right to request access to, correction of, or permanent deletion of your account and personal astrological data at any time.</p>
+  <p><strong>To request Account & Data Deletion:</strong></p>
+  <ul>
+    <li>Send an email to <a href="mailto:gbastrosuite@gmail.com" style="color: var(--accent-gold);">gbastrosuite@gmail.com</a> with the subject <em>"Account Deletion Request"</em>.</li>
+    <li>Or call/WhatsApp our support team at <a href="tel:+917373411173" style="color: var(--accent-gold);">+91 73734 11173</a>.</li>
+  </ul>
+  <p>Upon verification, all stored account data and saved charts will be permanently deleted within 7 business days.</p>
 
- <h3>10. Changes to This Policy</h3>
- <p>We may update this privacy policy from time to time. Any changes will be posted on this page with an updated date.</p>
+  <h3>10. Changes to This Policy</h3>
+  <p>We may update this privacy policy from time to time. Any changes will be posted on this page with an updated date.</p>
 
- <h3>11. Contact Us</h3>
- <p>If you have questions about this privacy policy or wish to request data removal, please contact:</p>
- <p>
- <strong>Sri AadhiGuru Education</strong><br>
- Prop: Mr. Karunagaran<br>
- 48/29, N Mada St, near Masilamanieswarar Temple,<br>
- Thirumullaivoyal, Chennai 600062<br>
- Phone: <a href="tel:+919600666225">+91 9600 666 225</a><br>
- Email: <a href="mailto:aadhiguru.com@gmail.com">aadhiguru.com@gmail.com</a>
- </p>
+  <h3>11. Contact Us</h3>
+  <p>If you have questions about this privacy policy or wish to request data removal, please contact:</p>
+  <p>
+  <strong>GB ASTRO Support Team</strong><br>
+  Sri AadhiGuru Education (Prop: Mr. Karunagaran)<br>
+  48/29, N Mada St, near Masilamanieswarar Temple,<br>
+  Thirumullaivoyal, Chennai 600062<br>
+  Phone / WhatsApp: <a href="tel:+917373411173" style="color: var(--accent-gold);">+91 73734 11173</a><br>
+  Email: <a href="mailto:gbastrosuite@gmail.com" style="color: var(--accent-gold);">gbastrosuite@gmail.com</a>
+  </p>
  </div>
  </div>
  </section>

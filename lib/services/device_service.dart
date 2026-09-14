@@ -6,7 +6,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 
 class DeviceService {
   // --- CHANGE THIS TO YOUR ACTUAL SERVER URL ---
-  static const String apiUrl = "https://deeppink-hedgehog-734715.hostingersite.com/muruga_api.php";
+  static const String apiUrl = "https://mediumspringgreen-shark-491803.hostingersite.com/muruga_api.php";
 
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
 

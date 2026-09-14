@@ -977,7 +977,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     if (subPlanets != null) {
       String getSubPlanetDisplayName(String name, String lang) {
         if (lang == 'ta') {
-          if (name == "Rahu") return "ரா";
+          if (name == "Rahu") return "ரா.கா";
           if (name == "Yamagandan") return "எம";
           if (name == "Mrityu") return "மிரு";
         } else if (lang == 'hi') {

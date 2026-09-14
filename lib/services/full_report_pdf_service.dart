@@ -532,23 +532,25 @@ class FullReportPdfService {
         
         String garbhaSelStr = "-";
         String dasaIruppuStr = "-";
-        if (dasaList.isNotEmpty && birthDt != null) {
-          DateTime start = dasaList.first['start'] as DateTime;
-          DateTime end = dasaList.first['end'] as DateTime;
-          
-          int remainingDays = end.difference(birthDt).inDays;
-          if (remainingDays < 0) remainingDays = 0;
-          int rY = remainingDays ~/ 365;
-          int rM = (remainingDays % 365) ~/ 30;
-          int rD = (remainingDays % 365) % 30;
-          dasaIruppuStr = "$rY வருடம் $rM மாதம் $rD நாள்";
-          
-          int pastDays = birthDt.difference(start).inDays;
-          if (pastDays < 0) pastDays = 0;
-          int pY = pastDays ~/ 365;
-          int pM = (pastDays % 365) ~/ 30;
-          int pD = (pastDays % 365) % 30;
-          garbhaSelStr = "$pY வருடம் $pM மாதம் $pD நாள்";
+        if (dasaList.isNotEmpty) {
+          final firstDasa = dasaList.first;
+          if (firstDasa['balance_y'] != null) {
+            int rY = firstDasa['balance_y'];
+            int rM = firstDasa['balance_m'];
+            int rD = firstDasa['balance_d'];
+            dasaIruppuStr = "$rY வருடம் $rM மாதம் $rD நாள்";
+          } else if (firstDasa['balanceStr'] != null) {
+            dasaIruppuStr = firstDasa['balanceStr'].toString().replaceAll("வரு", "வருடம்").replaceAll("மா", "மாதம்").replaceAll("நா", "நாள்");
+          }
+
+          if (firstDasa['garbha_y'] != null) {
+            int pY = firstDasa['garbha_y'];
+            int pM = firstDasa['garbha_m'];
+            int pD = firstDasa['garbha_d'];
+            garbhaSelStr = "$pY வருடம் $pM மாதம் $pD நாள்";
+          } else if (firstDasa['garbhaSelStr'] != null) {
+            garbhaSelStr = firstDasa['garbhaSelStr'].toString().replaceAll("வரு", "வருடம்").replaceAll("மா", "மாதம்").replaceAll("நா", "நாள்");
+          }
         }
 
         String ayanamsaVal = panchangam['ayanamsa'] ?? "24:13:02";
@@ -867,10 +869,14 @@ class FullReportPdfService {
                 activeDasa = dasaList.first;
                 final subPeriods = activeDasa!['subPeriods'] as List? ?? [];
                 if (subPeriods.isNotEmpty) {
-                  activeBukthi = subPeriods.firstWhere(
-                    (b) => !(b['end'] as DateTime).isBefore(birthDt ?? dasaList.first['start']),
-                    orElse: () => subPeriods.first,
-                  );
+                  for (var b in subPeriods) {
+                    final end = b['end'] as DateTime?;
+                    if (end != null && !end.isBefore(birthDt ?? dasaList.first['start'])) {
+                      activeBukthi = b as Map<String, dynamic>?;
+                      break;
+                    }
+                  }
+                  activeBukthi ??= subPeriods.first as Map<String, dynamic>?;
                 }
               }
 

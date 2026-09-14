@@ -6,8 +6,8 @@ header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 $host = "127.0.0.1";
-$db_name = "u682341828_gbastro";
-$username = "u682341828_gbastro";
+$db_name = "u170490412_gbastro";
+$username = "u170490412_gbastro";
 $password = "Gbastro@2026";
 
 try {
@@ -28,9 +28,19 @@ if (!empty($data->action)) {
         $email = $data->email;
         $device_id = $data->device_id;
 
-        // Bypass device verification for Play Store Reviewer account
-        if (strtolower($email) === 'playstore@gbastro.com') {
-            echo json_encode(array("status" => "APPROVED", "message" => "Reviewer access granted", "access" => (object)array()));
+        // Bypass device verification for Play Store Reviewer / Tester accounts
+        if (in_array(strtolower($email), array('apptester@gmail.com', 'playstore@gbastro.com'))) {
+            $access = (object) array(
+                'can_view_jathagam' => true,
+                'can_view_matching' => true,
+                'can_view_kp' => true,
+                'can_view_numerology' => true,
+                'can_view_jamakkol' => true,
+                'can_view_nadi' => true,
+                'can_view_muhurtham' => true,
+                'can_view_panchangam' => true
+            );
+            echo json_encode(array("status" => "APPROVED", "message" => "Reviewer access granted", "access" => $access));
             exit();
         }
 
@@ -141,8 +151,17 @@ if (!empty($data->action)) {
             $update->execute([':phone' => $phone_number, ':id' => $user_id]);
         } else {
             // New user registration
-            $insert = $conn->prepare("INSERT INTO app_users (email, phone_number, status, device_limit) VALUES (:email, :phone, 'PENDING', 1)");
-            $insert->execute([':email' => $email, ':phone' => $phone_number]);
+            $is_tester = in_array(strtolower($email), array('apptester@gmail.com', 'playstore@gbastro.com'));
+            $initial_status = $is_tester ? 'APPROVED' : 'PENDING';
+            $initial_limit = $is_tester ? 100 : 1;
+            
+            $insert = $conn->prepare("INSERT INTO app_users (email, phone_number, status, device_limit) VALUES (:email, :phone, :status, :limit)");
+            $insert->execute([
+                ':email' => $email,
+                ':phone' => $phone_number,
+                ':status' => $initial_status,
+                ':limit' => $initial_limit
+            ]);
             $user_id = $conn->lastInsertId();
         }
 

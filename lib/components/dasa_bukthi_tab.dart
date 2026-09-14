@@ -136,10 +136,14 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
       _selectedDasa = dasaList.first;
       final subPeriods = _selectedDasa!['subPeriods'] as List? ?? [];
       if (subPeriods.isNotEmpty) {
-        _selectedBukthi = subPeriods.firstWhere(
-          (b) => !(b['end'] as DateTime).isBefore(birthDt ?? dasaList.first['start']),
-          orElse: () => subPeriods.first,
-        );
+        for (var b in subPeriods) {
+          final end = b['end'] as DateTime?;
+          if (end != null && !end.isBefore(birthDt ?? dasaList.first['start'])) {
+            _selectedBukthi = b as Map<String, dynamic>?;
+            break;
+          }
+        }
+        _selectedBukthi ??= subPeriods.first as Map<String, dynamic>?;
       }
     }
   }

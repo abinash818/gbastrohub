@@ -192,26 +192,20 @@ class OnePagePdfService {
     final weekdayStr = pan['vara']?.toString() ?? (birthDt != null ? KPService.VARA_TAMIL[birthDt.weekday % 7] : "-");
     
     String dasaBalance = "-";
-    if (dasaList.isNotEmpty && birthDt != null) {
+    if (dasaList.isNotEmpty) {
       final firstDasa = dasaList[0];
-      final end = firstDasa['end'] as DateTime?;
-      if (end != null) {
-        final diff = end.difference(birthDt);
-        int totalDays = diff.inDays;
-        int years = (totalDays / 365.25).floor();
-        totalDays = (totalDays % 365.25).floor();
-        int months = (totalDays / 30.44).floor();
-        int days = (totalDays % 30.44).floor();
-        final String lordLocal = langCode == 'en' 
-            ? (KPService.ENGLISH_PLANETS[firstDasa['lord']] ?? firstDasa['lord'] ?? "-") 
-            : (langCode == 'hi' 
-                ? (KPService.HINDI_PLANETS[firstDasa['lord']] ?? firstDasa['lord'] ?? "-") 
-                : (KPService.TAMIL_PLANETS[firstDasa['lord']] ?? firstDasa['lord'] ?? "-"));
-        final String yStr = langCode == 'en' ? 'y' : (langCode == 'hi' ? 'वर्ष' : 'வரு');
-        final String mStr = langCode == 'en' ? 'm' : (langCode == 'hi' ? 'महीने' : 'மா');
-        final String dStr = langCode == 'en' ? 'd' : (langCode == 'hi' ? 'दिन' : 'நா');
-        dasaBalance = "$lordLocal - $years $yStr, $months $mStr, $days $dStr";
-      }
+      int years = firstDasa['balance_y'] ?? 0;
+      int months = firstDasa['balance_m'] ?? 0;
+      int days = firstDasa['balance_d'] ?? 0;
+      final String lordLocal = langCode == 'en' 
+          ? (KPService.ENGLISH_PLANETS[firstDasa['lord']] ?? firstDasa['lord'] ?? "-") 
+          : (langCode == 'hi' 
+              ? (KPService.HINDI_PLANETS[firstDasa['lord']] ?? firstDasa['lord'] ?? "-") 
+              : (KPService.TAMIL_PLANETS[firstDasa['lord']] ?? firstDasa['lord'] ?? "-"));
+      final String yStr = langCode == 'en' ? 'y' : (langCode == 'hi' ? 'वर्ष' : 'வரு');
+      final String mStr = langCode == 'en' ? 'm' : (langCode == 'hi' ? 'महीने' : 'மா');
+      final String dStr = langCode == 'en' ? 'd' : (langCode == 'hi' ? 'दिन' : 'நா');
+      dasaBalance = "$lordLocal - $years $yStr, $months $mStr, $days $dStr";
     }
     
     final tamilYear = pan['tamil_year']?.toString() ?? "-";
@@ -246,10 +240,14 @@ class OnePagePdfService {
         }
       }
       if (currentBukthi == null) {
-        currentBukthi = bukthiList.firstWhere(
-          (b) => !(b['end'] as DateTime).isBefore(birthDt ?? dasaList.first['start']),
-          orElse: () => bukthiList.first,
-        );
+        for (var b in bukthiList) {
+          final end = b['end'] as DateTime?;
+          if (end != null && !end.isBefore(birthDt ?? dasaList.first['start'])) {
+            currentBukthi = b;
+            break;
+          }
+        }
+        currentBukthi ??= bukthiList.first;
         antharamList = currentBukthi?['subPeriods'] as List? ?? [];
       }
     }

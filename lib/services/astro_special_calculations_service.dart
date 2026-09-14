@@ -143,12 +143,26 @@ class AstroSpecialCalculationsService {
     double hoursFromSunrise = _getHoursFromSunrise(birthDt, sunriseStr);
     double nazhigaiFromSunrise = hoursFromSunrise * 2.5;
 
-    // Hora Lagna: 1 Hour = 1 Rasi (30°)
-    double hlLon = (sunLon + (hoursFromSunrise * 30.0)) % 360.0;
+    // Check if Sun's Rasi is Odd or Even for Hora Lagna (0-indexed: 0=Aries(Odd), 1=Taurus(Even)...)
+    int sunRasi = (sunLon / 30).floor() % 12;
+    bool isSunOddSign = (sunRasi % 2 == 0);
+
+    // Hora Lagna: 1 Hora (2 Ghatis = 48 mins) = 1 Rasi (30°), i.e., 15° per hour
+    double hlOffset = hoursFromSunrise * 15.0;
+    double hlLon = isSunOddSign
+        ? (sunLon + hlOffset) % 360.0
+        : ((sunLon - hlOffset) % 360.0 + 360.0) % 360.0;
     int hlRasi = (hlLon / 30).floor() % 12;
 
-    // Ghatika Lagna: 1 Ghatika (Nazhigai) = 1 Rasi (30°)
-    double glLon = (lagnaLon + (nazhigaiFromSunrise * 30.0)) % 360.0;
+    // Check if Lagna's Rasi is Odd or Even for Ghatika Lagna
+    int lagnaRasiIdx = (lagnaLon / 30).floor() % 12;
+    bool isLagnaOddSign = (lagnaRasiIdx % 2 == 0);
+
+    // Ghatika Lagna: 1 Ghati (Nazhigai = 24 mins) = 1 Rasi (30°), i.e., 75° per hour
+    double glOffset = nazhigaiFromSunrise * 30.0;
+    double glLon = isLagnaOddSign
+        ? (sunLon + glOffset) % 360.0
+        : ((sunLon - glOffset) % 360.0 + 360.0) % 360.0;
     int glRasi = (glLon / 30).floor() % 12;
 
     return {

@@ -382,12 +382,13 @@ class _ChartCellState extends State<_ChartCell> {
                 bool isArudam = it.startsWith("ஆரூ") || it.startsWith("Aru") || it.startsWith("आरू");
                 bool isKavi = it.startsWith("கவி") || it.startsWith("Kav") || it.startsWith("कवि");
                 
-                bool isYama = it.startsWith("எம") || it.startsWith("Yama") || it.startsWith("यम");
+                bool isMarana = it.startsWith("மார") || it.startsWith("Mar") || it.startsWith("मार");
+                bool isYama = it.startsWith("எம") || it.startsWith("யம") || it.startsWith("Yama") || it.startsWith("यम");
                 bool isMrityu = it.startsWith("மிரு") || it.startsWith("Mri") || it.startsWith("मृ");
                 bool isRahuClockwise = (it.startsWith("ரா") && !it.startsWith("ராகு")) ||
                                        (it.startsWith("रा") && !it.startsWith("राहु")) ||
                                        (it.startsWith("Rah") && !it.startsWith("Rahu"));
-                bool isSubPlanet = isYama || isMrityu || isRahuClockwise;
+                bool isSubPlanet = isMarana || isYama || isMrityu || isRahuClockwise;
                 
                 bool isSpecial = isLagna || isArudam || isKavi || isSubPlanet;
                 
@@ -395,13 +396,14 @@ class _ChartCellState extends State<_ChartCell> {
                 if (isLagna) highlightColor = Colors.green.shade700;
                 else if (isArudam) highlightColor = Colors.blue.shade800;
                 else if (isKavi) highlightColor = Colors.red.shade800;
+                else if (isMarana) highlightColor = Colors.teal.shade800;
                 else if (isRahuClockwise) highlightColor = Colors.purple.shade700;
-                else if (isYama) highlightColor = Colors.orange.shade900;
                 else if (isMrityu) highlightColor = Colors.brown.shade700;
+                else if (isYama) highlightColor = Colors.orange.shade900;
 
                 // Replace space with newline to save horizontal space, e.g., "சனி 17:39" -> "சனி\n17:39"
-                
                 String translatedIt = AstroTranslationService.translate(context, it.trim(), isPlanet: true);
+                translatedIt = translatedIt.replaceAll('\u00A0', ' ').replaceAll('&nbsp;', ' ');
                 translatedIt = translatedIt.replaceAll(RegExp(r'''\s*\d+\s*(?:"|”|'')+$'''), '');
                 
                 // Separate planet name + flags from degree

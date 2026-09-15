@@ -423,17 +423,20 @@ class JamakkolOnePagePdfService {
     if (subPlanets != null) {
       String getSubPlanetDisplayName(String name, String lang) {
         if (lang == 'ta') {
+          if (name == "Marana") return "மார";
           if (name == "Rahu") return "ரா.கா";
-          if (name == "Yamagandan") return "எம";
           if (name == "Mrityu") return "மிரு";
+          if (name == "Yamagandan") return "யம";
         } else if (lang == 'hi') {
+          if (name == "Marana") return "मार";
           if (name == "Rahu") return "रा";
-          if (name == "Yamagandan") return "यम";
           if (name == "Mrityu") return "मृ";
+          if (name == "Yamagandan") return "यम";
         } else {
+          if (name == "Marana") return "Mar";
           if (name == "Rahu") return "Rah";
-          if (name == "Yamagandan") return "Yama";
           if (name == "Mrityu") return "Mri";
+          if (name == "Yamagandan") return "Yama";
         }
         return name;
       }
@@ -447,9 +450,10 @@ class JamakkolOnePagePdfService {
         
         // Define color based on subplanet name
         String color;
-        if (sp.name == "Rahu") color = "purple";
-        else if (sp.name == "Yamagandan") color = "darkorange";
+        if (sp.name == "Marana") color = "#00695C"; // Dark teal
+        else if (sp.name == "Rahu") color = "purple";
         else if (sp.name == "Mrityu") color = "brown";
+        else if (sp.name == "Yamagandan") color = "darkorange";
         else color = "#B58D3D";
 
         if (rasiMap.containsKey(sign)) {
@@ -457,8 +461,8 @@ class JamakkolOnePagePdfService {
         }
       }
       addSubPlanet(subPlanets.rahu);
-      addSubPlanet(subPlanets.yamagandan);
       addSubPlanet(subPlanets.mrityu);
+      addSubPlanet(subPlanets.yamagandan);
     }
 
     String renderOuterLabel(String sign) {

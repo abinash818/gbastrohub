@@ -971,23 +971,26 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     int kM = ((kDegInSign - kD) * 60).floor();
     rasiMap[KPService.SIGNS[kaviIdx % 12]]?.add("${AppLocalizations.of(context)!.kaviShort}\u00A0${kD.toString().padLeft(2, '0')}:${kM.toString().padLeft(2, '0')}");
 
-    // Subplanets (Rahu, Yamagandan, Mrityu)
+    // Subplanets (Marana, Rahu, Mrityu, Yamagandan)
     final lang = AppLocalizations.of(context)!.localeName;
     final subPlanets = _results?['sub_planets'] as JamakkolSubPlanets?;
     if (subPlanets != null) {
       String getSubPlanetDisplayName(String name, String lang) {
         if (lang == 'ta') {
+          if (name == "Marana") return "மார";
           if (name == "Rahu") return "ரா.கா";
-          if (name == "Yamagandan") return "எம";
           if (name == "Mrityu") return "மிரு";
+          if (name == "Yamagandan") return "யம";
         } else if (lang == 'hi') {
+          if (name == "Marana") return "मार";
           if (name == "Rahu") return "रा";
-          if (name == "Yamagandan") return "यम";
           if (name == "Mrityu") return "मृ";
+          if (name == "Yamagandan") return "यम";
         } else {
+          if (name == "Marana") return "Mar";
           if (name == "Rahu") return "Rah";
-          if (name == "Yamagandan") return "Yama";
           if (name == "Mrityu") return "Mri";
+          if (name == "Yamagandan") return "Yama";
         }
         return name;
       }
@@ -1001,8 +1004,8 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
         rasiMap[sign]?.add("$name\u00A0${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}");
       }
       addSubPlanet(subPlanets.rahu);
-      addSubPlanet(subPlanets.yamagandan);
       addSubPlanet(subPlanets.mrityu);
+      addSubPlanet(subPlanets.yamagandan);
     }
 
     // Border Labels

@@ -692,9 +692,9 @@ JamakkolSubPlanets calculateAllJamakkolSubPlanets({
   const List<int> maranaDayBases = [8, 0, 6, 3, 5, 1, 8];   // Sun:Sg(8), Mon:Ar(0), Tue:Li(6), Wed:Ca(3), Thu:Vi(5), Fri:Ta(1), Sat:Sg(8)
 
   // இரவு நேர தொடக்க ராசிகள் (1-ஆம் ஜாமம்)
-  const List<int> rahuNightBases   = [2, 6, 9, 9, 0, 7, 4];  // Sun:Ge(2), Mon:Li(6), Tue:Cp(9), Wed:Cp(9), Thu:Ar(0), Fri:Sc(7), Sat:Le(4)
-  const List<int> miruNightBases   = [0, 10, 10, 6, 0, 2, 5]; // Sun:Ar(0), Mon:Aq(10), Tue:Aq(10), Wed:Li(6), Thu:Ar(0), Fri:Ge(2), Sat:Vi(5)
-  const List<int> yamaNightBases   = [11, 9, 11, 5, 2, 1, 6]; // Sun:Pi(11), Mon:Cp(9), Tue:Pi(11), Wed:Vi(5), Thu:Ge(2), Fri:Ta(1), Sat:Li(6)
+  const List<int> rahuNightBases   = [2, 6, 7, 9, 0, 7, 4];  // Sun:Ge(2), Mon:Li(6), Tue:Sc(7), Wed:Cp(9), Thu:Ar(0), Fri:Sc(7), Sat:Le(4)
+  const List<int> miruNightBases   = [0, 10, 7, 6, 0, 2, 5]; // Sun:Ar(0), Mon:Aq(10), Tue:Sc(7), Wed:Li(6), Thu:Ar(0), Fri:Ge(2), Sat:Vi(5)
+  const List<int> yamaNightBases   = [11, 9, 7, 5, 2, 1, 6]; // Sun:Pi(11), Mon:Cp(9), Tue:Sc(7), Wed:Vi(5), Thu:Ge(2), Fri:Ta(1), Sat:Li(6)
   const List<int> maranaNightBases = [6, 2, 8, 9, 1, 7, 4];  // Sun:Li(6), Mon:Ge(2), Tue:Sg(8), Wed:Cp(9), Thu:Ta(1), Fri:Sc(7), Sat:Le(4)
 
   int baseMarana = isDay ? maranaDayBases[weekday] : maranaNightBases[weekday];

@@ -23,14 +23,14 @@ void main() {
 
     print("--- Mon, 15-06-2026 12:00:00 PM (Monday Day, Yama 4) ---");
     print("IsDay: ${subPlanets.isDay}, Yama: ${subPlanets.currentYama}");
-    print("Rahu (ரா.கா): Rasi=${subPlanets.rahu.rasi} (Katakam)");
-    print("Mrityu (மிரு): Rasi=${subPlanets.mrityu.rasi} (Katakam)");
+    print("Rahu (ரா.கா): Rasi=${subPlanets.rahu.rasi} (Mithunam)");
+    print("Mrityu (மிரு): Rasi=${subPlanets.mrityu.rasi} (Mithunam)");
     print("Yamagandan (யம): Rasi=${subPlanets.yamagandan.rasi} (Simham)");
 
     expect(subPlanets.currentYama, equals(4));
-    expect(subPlanets.rahu.rasi, equals(4)); // Katakam (கடகம்)
-    expect(subPlanets.mrityu.rasi, equals(4)); // Katakam (கடகம்)
-    expect(subPlanets.yamagandan.rasi, equals(5)); // Simham (சிம்மம்)
+    expect(subPlanets.rahu.rasi, equals(3)); // Mithunam (மிதுனம் - (11 + 4 - 1)%12 = 2 -> index 2 + 1 = 3)
+    expect(subPlanets.mrityu.rasi, equals(3)); // Mithunam (மிதுனம் - (11 + 4 - 1)%12 = 2 -> index 2 + 1 = 3)
+    expect(subPlanets.yamagandan.rasi, equals(5)); // Simham (சிம்மம் - (1 + 4 - 1)%12 = 4 -> index 4 + 1 = 5)
   });
 
   test('Test 2: Tue, 15-09-2026 11:31:10 PM at Namakkal (Tuesday Night, Yama 4)', () {
@@ -52,13 +52,13 @@ void main() {
 
     print("--- Tue, 15-09-2026 11:31:10 PM (Tuesday Night, Yama 4) ---");
     print("IsDay: ${subPlanets.isDay}, Yama: ${subPlanets.currentYama}");
-    print("Rahu (ரா.கா): Rasi=${subPlanets.rahu.rasi} (Rishabham)");
-    print("Mrityu (மிரு): Rasi=${subPlanets.mrityu.rasi} (Mithunam)");
-    print("Yamagandan (யம): Rasi=${subPlanets.yamagandan.rasi} (Katakam)");
+    print("Rahu (ரா.கா): Rasi=${subPlanets.rahu.rasi} (Mesham)");
+    print("Mrityu (மிரு): Rasi=${subPlanets.mrityu.rasi} (Rishabham)");
+    print("Yamagandan (யம): Rasi=${subPlanets.yamagandan.rasi} (Mithunam)");
 
     expect(subPlanets.currentYama, equals(4));
-    expect(subPlanets.rahu.rasi, equals(2)); // Rishabham (ரிஷபம்)
-    expect(subPlanets.mrityu.rasi, equals(3)); // Mithunam (மிதுனம்)
-    expect(subPlanets.yamagandan.rasi, equals(4)); // Katakam (கடகம்)
+    expect(subPlanets.rahu.rasi, equals(1)); // (9 + 4 - 1)%12 = 0 -> Mesham (1)
+    expect(subPlanets.mrityu.rasi, equals(2)); // (10 + 4 - 1)%12 = 1 -> Rishabham (2)
+    expect(subPlanets.yamagandan.rasi, equals(3)); // (11 + 4 - 1)%12 = 2 -> Mithunam (3)
   });
 }

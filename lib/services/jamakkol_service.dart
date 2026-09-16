@@ -684,15 +684,18 @@ JamakkolSubPlanets calculateAllJamakkolSubPlanets({
 
   // Individual Base Rasi Tables (0:Aries, 1:Taurus, ..., 11:Pisces)
   // Weekdays: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-  const List<int> rahuDayBases   = [9, 0, 7, 4, 6, 2, 0];  // Sun:Cp(9), Mon:Ar(0), Tue:Sc(7), Wed:Le(4), Thu:Li(6), Fri:Ge(2), Sat:Ar(0)
-  const List<int> miruDayBases   = [7, 0, 3, 1, 11, 9, 1]; // Sun:Sc(7), Mon:Ar(0), Tue:Ca(3), Wed:Ta(1), Thu:Pi(11), Fri:Cp(9), Sat:Ta(1)
-  const List<int> yamaDayBases   = [6, 1, 2, 0, 10, 8, 2]; // Sun:Li(6), Mon:Ta(1), Tue:Ge(2), Wed:Ar(0), Thu:Aq(10), Fri:Sg(8), Sat:Ge(2)
-  const List<int> maranaDayBases = [8, 0, 6, 3, 5, 1, 11]; // Sun:Sg(8), Mon:Ar(0), Tue:Li(6), Wed:Ca(3), Thu:Vi(5), Fri:Ta(1), Sat:Pi(11)
 
-  const List<int> rahuNightBases   = [2, 6, 10, 9, 0, 7, 4];  // Sun:Ge(2), Mon:Li(6), Tue:Aq(10), Wed:Cp(9), Thu:Ar(0), Fri:Sc(7), Sat:Le(4)
-  const List<int> miruNightBases   = [0, 10, 11, 6, 0, 2, 5]; // Sun:Ar(0), Mon:Aq(10), Tue:Pi(11), Wed:Li(6), Thu:Ar(0), Fri:Ge(2), Sat:Vi(5)
-  const List<int> yamaNightBases   = [11, 9, 0, 5, 2, 1, 6];  // Sun:Pi(11), Mon:Cp(9), Tue:Ar(0), Wed:Vi(5), Thu:Ge(2), Fri:Ta(1), Sat:Li(6)
-  const List<int> maranaNightBases = [6, 2, 9, 9, 1, 7, 4];  // Sun:Li(6), Mon:Ge(2), Tue:Cp(9), Wed:Cp(9), Thu:Ta(1), Fri:Sc(7), Sat:Le(4)
+  // பகல் நேர தொடக்க ராசிகள் (1-ஆம் ஜாமம்)
+  const List<int> rahuDayBases   = [9, 11, 7, 4, 6, 2, 9];  // Sun:Cp(9), Mon:Pi(11), Tue:Sc(7), Wed:Le(4), Thu:Li(6), Fri:Ge(2), Sat:Cp(9)
+  const List<int> miruDayBases   = [7, 11, 3, 1, 11, 9, 10]; // Sun:Sc(7), Mon:Pi(11), Tue:Ca(3), Wed:Ta(1), Thu:Pi(11), Fri:Cp(9), Sat:Aq(10)
+  const List<int> yamaDayBases   = [6, 1, 2, 0, 10, 8, 11]; // Sun:Li(6), Mon:Ta(1), Tue:Ge(2), Wed:Ar(0), Thu:Aq(10), Fri:Sg(8), Sat:Pi(11)
+  const List<int> maranaDayBases = [8, 0, 6, 3, 5, 1, 8];   // Sun:Sg(8), Mon:Ar(0), Tue:Li(6), Wed:Ca(3), Thu:Vi(5), Fri:Ta(1), Sat:Sg(8)
+
+  // இரவு நேர தொடக்க ராசிகள் (1-ஆம் ஜாமம்)
+  const List<int> rahuNightBases   = [2, 6, 9, 9, 0, 7, 4];  // Sun:Ge(2), Mon:Li(6), Tue:Cp(9), Wed:Cp(9), Thu:Ar(0), Fri:Sc(7), Sat:Le(4)
+  const List<int> miruNightBases   = [0, 10, 10, 6, 0, 2, 5]; // Sun:Ar(0), Mon:Aq(10), Tue:Aq(10), Wed:Li(6), Thu:Ar(0), Fri:Ge(2), Sat:Vi(5)
+  const List<int> yamaNightBases   = [11, 9, 11, 5, 2, 1, 6]; // Sun:Pi(11), Mon:Cp(9), Tue:Pi(11), Wed:Vi(5), Thu:Ge(2), Fri:Ta(1), Sat:Li(6)
+  const List<int> maranaNightBases = [6, 2, 8, 9, 1, 7, 4];  // Sun:Li(6), Mon:Ge(2), Tue:Sg(8), Wed:Cp(9), Thu:Ta(1), Fri:Sc(7), Sat:Le(4)
 
   int baseMarana = isDay ? maranaDayBases[weekday] : maranaNightBases[weekday];
   int baseRahu   = isDay ? rahuDayBases[weekday]   : rahuNightBases[weekday];

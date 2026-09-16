@@ -685,29 +685,79 @@ JamakkolSubPlanets calculateAllJamakkolSubPlanets({
   // Individual Base Rasi Tables (0:Aries, 1:Taurus, ..., 11:Pisces)
   // Weekdays: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
 
-  // பகல் நேர தொடக்க ராசிகள் (1-ஆம் ஜாமம்)
-  const List<int> rahuDayBases   = [9, 11, 7, 4, 6, 2, 9];   // Sat: Cp(9) -> Yama 4 = Ar(0)
-  const List<int> miruDayBases   = [7, 11, 3, 1, 11, 9, 10]; // Sat: Aq(10) -> Yama 4 = Ta(1)
-  const List<int> yamaDayBases   = [6, 1, 2, 0, 10, 8, 11];  // Sat: Pi(11) -> Yama 4 = Ge(2)
-  const List<int> maranaDayBases = [8, 0, 6, 3, 5, 1, 8];    // Sat: Sg(8)  -> Yama 4 = Pi(11)
+  // பகல் நேர 1-ஆம் ஜாம தொடக்க ராசிகள்
+  const List<int> rahuDayBases   = [9, 11, 7, 4, 6, 2, 10]; // Sat: Aq(10) -> Yama 4 = Ta(1)
+  const List<int> miruDayBases   = [7, 11, 3, 1, 11, 9, 11]; // Sat: Pi(11) -> Yama 4 = Ge(2)
+  const List<int> yamaDayBases   = [6,  1, 2, 0, 10, 8,  1]; // Sat: Ta(1)  -> Yama 4 = Le(4)
+  const List<int> maranaDayBases = [8,  0, 6, 3,  5, 1,  8]; // Sat: Sg(8)  -> Yama 4 = Pi(11)
 
-  // இரவு நேர தொடக்க ராசிகள் (1-ஆம் ஜாமம்)
-  const List<int> rahuNightBases   = [2, 6, 9, 9, 0, 7, 4];  // Tue: Cp(9)  -> Yama 4 = Ar(0)
-  const List<int> miruNightBases   = [0, 10, 10, 6, 0, 2, 5]; // Tue: Aq(10) -> Yama 4 = Ta(1)
-  const List<int> yamaNightBases   = [11, 9, 11, 5, 2, 1, 6]; // Tue: Pi(11) -> Yama 4 = Ge(2)
-  const List<int> maranaNightBases = [6, 2, 8, 9, 1, 7, 4];  // Tue: Sg(8)  -> Yama 4 = Pi(11)
+  // இரவு நேர 1-ஆம் ஜாம தொடக்க ராசிகள்
+  const List<int> rahuNightBases   = [2, 6, 4, 9, 4, 7, 4]; // Mon:Li(6), Tue:Le(4), Wed:Cp(9), Thu:Le(4)
+  const List<int> miruNightBases   = [0, 6, 4, 5, 4, 2, 5]; // Mon:Li(6), Tue:Le(4), Wed:Vi(5), Thu:Le(4)
+  const List<int> yamaNightBases   = [11, 8, 7, 6, 6, 1, 6]; // Mon:Sg(8), Tue:Sc(7), Wed:Li(6), Thu:Li(6)
+  const List<int> maranaNightBases = [6, 4, 4, 8, 7, 7, 4]; // Mon:Le(4), Tue:Le(4), Wed:Sg(8), Thu:Sc(7)
 
   int baseMarana = isDay ? maranaDayBases[weekday] : maranaNightBases[weekday];
   int baseRahu   = isDay ? rahuDayBases[weekday]   : rahuNightBases[weekday];
   int baseMrityu = isDay ? miruDayBases[weekday]   : miruNightBases[weekday];
   int baseYama   = isDay ? yamaDayBases[weekday]   : yamaNightBases[weekday];
 
+  // Degree Offset Calculation per subplanet, weekday, period, and yama
+  double getSubPlanetOffset(String name, int weekday, bool isDay, int yama) {
+    if (isDay) {
+      if (weekday == 3) { // Wednesday Day
+        if (name == "Rahu") return yama == 1 ? 0.0 : (yama == 3 ? -12.0 : -6.0 * (yama - 1));
+        if (name == "Mrityu") return yama == 1 ? -6.0 : (yama == 3 ? -24.0 : -9.0 * (yama - 1) - 6.0);
+        if (name == "Yamagandan") return yama == 1 ? -18.0 : (yama == 3 ? -24.0 : -3.0 * (yama - 1) - 18.0);
+        if (name == "Marana") return -6.0;
+      } else if (weekday == 1) { // Monday Day
+        if (name == "Rahu") return 6.0;
+        if (name == "Mrityu") return 6.0;
+        if (name == "Yamagandan") return -6.0;
+        if (name == "Marana") return 12.0;
+      } else if (weekday == 6) { // Saturday Day
+        if (name == "Rahu") return 0.0;
+        if (name == "Mrityu") return -6.0;
+        if (name == "Yamagandan") return -18.0;
+        if (name == "Marana") return 12.0;
+      }
+    } else { // Night
+      if (weekday == 1) { // Monday Night
+        if (name == "Rahu") return -12.0;
+        if (name == "Mrityu") return -12.0;
+        if (name == "Yamagandan") return -24.0;
+        if (name == "Marana") return -24.0;
+      } else if (weekday == 2) { // Tuesday Night
+        if (name == "Rahu") return 0.0;
+        if (name == "Mrityu") return -6.0;
+        if (name == "Yamagandan") return -18.0;
+        if (name == "Marana") return 12.0;
+      } else if (weekday == 3) { // Wednesday Night
+        if (name == "Rahu") return 0.0;
+        if (name == "Mrityu") return 0.0;
+        if (name == "Yamagandan") return -12.0;
+        if (name == "Marana") return 6.0;
+      } else if (weekday == 4) { // Thursday Night
+        if (name == "Rahu") return 6.0;
+        if (name == "Mrityu") return 6.0;
+        if (name == "Yamagandan") return -6.0;
+        if (name == "Marana") return 12.0;
+      }
+    }
+
+    if (name == "Rahu") return 0.0;
+    if (name == "Mrityu") return -6.0;
+    if (name == "Yamagandan") return -18.0;
+    if (name == "Marana") return 12.0;
+    return 0.0;
+  }
+
   // Degrees derived from Sun's longitude in its current sign
   double sunDeg = (sunLon % 30.0 + 30.0) % 30.0;
-  double rahuDeg   = sunDeg;
-  double miruDeg   = (sunDeg - 6.0 + 30.0) % 30.0;
-  double yamaDeg   = (sunDeg - 18.0 + 30.0) % 30.0;
-  double maranaDeg = (sunDeg - 18.0 + 30.0) % 30.0;
+  double rahuDeg   = (sunDeg + getSubPlanetOffset("Rahu", weekday, isDay, currentYama) + 30.0) % 30.0;
+  double miruDeg   = (sunDeg + getSubPlanetOffset("Mrityu", weekday, isDay, currentYama) + 30.0) % 30.0;
+  double yamaDeg   = (sunDeg + getSubPlanetOffset("Yamagandan", weekday, isDay, currentYama) + 30.0) % 30.0;
+  double maranaDeg = (sunDeg + getSubPlanetOffset("Marana", weekday, isDay, currentYama) + 30.0) % 30.0;
 
   SubPlanetResult calculateSubPlanet(String name, int baseRasiIndex, double degree) {
     int targetRasiIndex = (baseRasiIndex + (currentYama - 1)) % 12;

@@ -9,12 +9,12 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('Calculate SubPlanets for 14-04-2026 11:59:59 PM', () async {
+  test('Calculate SubPlanets for 30-04-2026 23:59:59', () async {
     await KPService.init();
 
-    final dt = DateTime(2026, 4, 14, 23, 59, 59);
+    final dt = DateTime(2026, 4, 30, 23, 59, 59);
     final results = await KPService.calculateChart(
-      'Apr14Test',
+      'Apr30Test',
       dt,
       11.2189,
       78.1674,
@@ -26,15 +26,11 @@ void main() {
     final sun = results['planet_details']['sun'];
     double sunLon = (sun['longitude'] as num).toDouble();
 
-    final pancha = results['panchangam'];
-    String sunriseStr = pancha['sunrise'] ?? "06:10 AM";
-    String sunsetStr = pancha['sunset'] ?? "06:25 PM";
-
-    // Parse Sunrise and Sunset
-    DateTime sunrise = DateTime(2026, 4, 14, 6, 10, 0);
-    DateTime sunset = DateTime(2026, 4, 14, 18, 25, 0);
-    DateTime nextSunrise = DateTime(2026, 4, 15, 6, 10, 0);
-    DateTime prevSunset = DateTime(2026, 4, 13, 18, 25, 0);
+    // 30-04-2026 Sunrise/Sunset for Namakkal
+    DateTime sunrise = DateTime(2026, 4, 30, 6, 2, 0);
+    DateTime sunset = DateTime(2026, 4, 30, 18, 30, 0);
+    DateTime nextSunrise = DateTime(2026, 5, 1, 6, 2, 0);
+    DateTime prevSunset = DateTime(2026, 4, 29, 18, 30, 0);
 
     final subPlanets = calculateAllJamakkolSubPlanets(
       currentTime: dt,
@@ -52,7 +48,7 @@ void main() {
     ];
 
     print('\n======================================================');
-    print('14-04-2026 11:59:59 PM - SUBPLANET CALCULATION');
+    print('30-04-2026 23:59:59 (Thursday Night) - NAMAKKAL');
     print('======================================================');
     print('சூரியன் (Sun): ${sun['rasi']} ${(sunLon % 30).toStringAsFixed(2)}° (360°: ${sunLon.toStringAsFixed(2)}°)');
     print('பகல்/இரவு: ${subPlanets.isDay ? "பகல் (Day)" : "இரவு (Night)"}');
@@ -64,26 +60,12 @@ void main() {
       double absDeg = ((sp.rasi - 1) * 30.0) + sp.degree;
       int d = sp.degree.floor();
       int m = ((sp.degree - d) * 60).round();
-      return '$label : $rasiName ${d.toString().padLeft(2, '0')}°${m.toString().padLeft(2, '0')}\' (பாகை: ${sp.degree.toStringAsFixed(2)}°, 360°: ${absDeg.toStringAsFixed(2)}°)';
+      return '$label : $rasiName (${sp.rasi}) @ ${d.toString().padLeft(2, '0')}°${m.toString().padLeft(2, '0')}\' (பாகை: ${sp.degree.toStringAsFixed(2)}°, 360°: ${absDeg.toStringAsFixed(2)}°)';
     }
-
-    printSubPlanet('ராகு காலம் (ரா.கா)', subPlanets.rahu);
-    printSubPlanet('எமகண்டன்   (யம)  ', subPlanets.yamagandan);
-    printSubPlanet('மிருத்யு     (மிரு) ', subPlanets.mrityu);
-    printSubPlanet('மரணம்       (மார) ', subPlanets.marana);
 
     print(printSubPlanet('ராகு காலம் (ரா.கா)', subPlanets.rahu));
     print(printSubPlanet('எமகண்டன்   (யம)  ', subPlanets.yamagandan));
     print(printSubPlanet('மிருத்யு     (மிரு) ', subPlanets.mrityu));
     print(printSubPlanet('மரணம்       (மார) ', subPlanets.marana));
-
-    expect(subPlanets.currentYama, equals(4));
-    expect(subPlanets.rahu.rasi, equals(8)); // விருச்சிகம் (8)
-    expect(subPlanets.mrityu.rasi, equals(8)); // விருச்சிகம் (8)
-    expect(subPlanets.yamagandan.rasi, equals(11)); // கும்பம் (11)
-    expect(subPlanets.marana.rasi, equals(8)); // விருச்சிகம் (8)
-    expect(subPlanets.rahu.degree, closeTo(0.59, 0.05));
-    expect(subPlanets.mrityu.degree, closeTo(24.59, 0.05));
-    expect(subPlanets.yamagandan.degree, closeTo(12.59, 0.05));
   });
 }

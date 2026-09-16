@@ -61,4 +61,36 @@ void main() {
     expect(subPlanets.mrityu.rasi, equals(2)); // (10 + 4 - 1)%12 = 1 -> Rishabham (2)
     expect(subPlanets.yamagandan.rasi, equals(3)); // (11 + 4 - 1)%12 = 2 -> Mithunam (3)
   });
+
+  test('Test 4: Sat, 21-03-2026 12:01:59 PM at Namakkal (Saturday Day, Yama 4 - T4)', () {
+    DateTime dt = DateTime(2026, 3, 21, 12, 1, 59);
+    DateTime sunrise = DateTime(2026, 3, 21, 6, 22, 0);
+    DateTime sunset = DateTime(2026, 3, 21, 18, 29, 0);
+    DateTime nextSunrise = DateTime(2026, 3, 22, 6, 22, 0);
+    DateTime prevSunset = DateTime(2026, 3, 20, 18, 29, 0);
+    double sunLon = 336.31; // Meenam 06.31°
+
+    final subPlanets = calculateAllJamakkolSubPlanets(
+      currentTime: dt,
+      sunrise: sunrise,
+      sunset: sunset,
+      nextSunrise: nextSunrise,
+      prevSunset: prevSunset,
+      sunLon: sunLon,
+    );
+
+    print("--- Sat, 21-03-2026 12:01:59 PM (Saturday Day, Yama 4 - T4) ---");
+    print("IsDay: ${subPlanets.isDay}, Yama: ${subPlanets.currentYama}");
+    print("Rahu (ரா.கா): Rasi=${subPlanets.rahu.rasi} (Rishabam) Deg=${subPlanets.rahu.degree.toStringAsFixed(2)}");
+    print("Mrityu (மிரு): Rasi=${subPlanets.mrityu.rasi} (Mithunam) Deg=${subPlanets.mrityu.degree.toStringAsFixed(2)}");
+    print("Yamagandan (யம): Rasi=${subPlanets.yamagandan.rasi} (Katakam) Deg=${subPlanets.yamagandan.degree.toStringAsFixed(2)}");
+
+    expect(subPlanets.currentYama, equals(4));
+    expect(subPlanets.rahu.rasi, equals(2)); // Rishabam (ரிஷபம் - (10 + 4 - 1)%12 = 1 -> Rasi 2)
+    expect(subPlanets.mrityu.rasi, equals(3)); // Mithunam (மிதுனம் - (11 + 4 - 1)%12 = 2 -> Rasi 3)
+    expect(subPlanets.yamagandan.rasi, equals(4)); // Katakam (கடகம் - (0 + 4 - 1)%12 = 3 -> Rasi 4)
+    expect(subPlanets.rahu.degree, closeTo(6.31, 0.05));
+    expect(subPlanets.mrityu.degree, closeTo(0.31, 0.05));
+    expect(subPlanets.yamagandan.degree, closeTo(18.31, 0.05));
+  });
 }

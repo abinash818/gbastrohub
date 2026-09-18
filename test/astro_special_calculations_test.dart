@@ -83,33 +83,33 @@ void main() {
       expect(hRes, equals(10.0));
     });
 
-    test('D6 (Shashtamsha) exactly matches textbook table for male and female signs', () {
-      // Odd sign: Aries (0)
+    test('D6 (Shashtamsha) exactly matches standard Parashari table for male and female signs', () {
+      // Odd sign: Aries (0) or Gemini (2)
       // 0-5° -> Aries (0)
-      // 5-10° -> Gemini (2)
-      // 10-15° -> Leo (4)
-      // 15-20° -> Libra (6)
-      // 20-25° -> Sagittarius (8)
-      // 25-30° -> Aquarius (10)
+      // 5-10° -> Taurus (1)
+      // 10-15° -> Gemini (2)
+      // 15-20° -> Cancer (3)
+      // 20-25° -> Leo (4)
+      // 25-30° -> Virgo (5)
       expect(KPService.calculateVargaSignForTest(2.5, 6), equals(0));  // Aries
-      expect(KPService.calculateVargaSignForTest(7.5, 6), equals(2));  // Gemini
-      expect(KPService.calculateVargaSignForTest(12.5, 6), equals(4)); // Leo
-      expect(KPService.calculateVargaSignForTest(17.5, 6), equals(6)); // Libra
-      expect(KPService.calculateVargaSignForTest(22.5, 6), equals(8)); // Sagittarius
-      expect(KPService.calculateVargaSignForTest(27.5, 6), equals(10));// Aquarius
+      expect(KPService.calculateVargaSignForTest(7.5, 6), equals(1));  // Taurus
+      expect(KPService.calculateVargaSignForTest(12.5, 6), equals(2)); // Gemini
+      expect(KPService.calculateVargaSignForTest(17.5, 6), equals(3)); // Cancer
+      expect(KPService.calculateVargaSignForTest(22.5, 6), equals(4)); // Leo
+      expect(KPService.calculateVargaSignForTest(27.5, 6), equals(5)); // Virgo
 
       // Even sign: Taurus (1) [longitude 30-60]
-      // 0-5° (lon 32.5) -> Taurus (1)
-      // 5-10° (lon 37.5) -> Cancer (3)
-      // 10-15° (lon 42.5) -> Virgo (5)
-      // 15-20° (lon 47.5) -> Scorpio (7)
-      // 20-25° (lon 52.5) -> Capricorn (9)
+      // 0-5° (lon 32.5) -> Libra (6)
+      // 5-10° (lon 37.5) -> Scorpio (7)
+      // 10-15° (lon 42.5) -> Sagittarius (8)
+      // 15-20° (lon 47.5) -> Capricorn (9)
+      // 20-25° (lon 52.5) -> Aquarius (10)
       // 25-30° (lon 57.5) -> Pisces (11)
-      expect(KPService.calculateVargaSignForTest(32.5, 6), equals(1));  // Taurus
-      expect(KPService.calculateVargaSignForTest(37.5, 6), equals(3));  // Cancer
-      expect(KPService.calculateVargaSignForTest(42.5, 6), equals(5));  // Virgo
-      expect(KPService.calculateVargaSignForTest(47.5, 6), equals(7));  // Scorpio
-      expect(KPService.calculateVargaSignForTest(52.5, 6), equals(9));  // Capricorn
+      expect(KPService.calculateVargaSignForTest(32.5, 6), equals(6));  // Libra
+      expect(KPService.calculateVargaSignForTest(37.5, 6), equals(7));  // Scorpio
+      expect(KPService.calculateVargaSignForTest(42.5, 6), equals(8));  // Sagittarius
+      expect(KPService.calculateVargaSignForTest(47.5, 6), equals(9));  // Capricorn
+      expect(KPService.calculateVargaSignForTest(52.5, 6), equals(10)); // Aquarius
       expect(KPService.calculateVargaSignForTest(57.5, 6), equals(11)); // Pisces
     });
 
@@ -124,6 +124,88 @@ void main() {
       expect(KPService.calculateVargaSignForTest(33.0, 12), equals(2));
       expect(KPService.calculateVargaSignForTest(36.0, 12), equals(3));
       expect(KPService.calculateVargaSignForTest(58.0, 12), equals(0));
+    });
+
+    test('All Vargas D1 to D60 comply with classical BPHS rules', () {
+      // Test lon = 14° in Aries (0, Movable, Odd, Fire)
+      // D1: Aries (0)
+      expect(KPService.calculateVargaSignForTest(14.0, 1), equals(0));
+      // D2: 14° in Odd sign -> Leo (4)
+      expect(KPService.calculateVargaSignForTest(14.0, 2), equals(4));
+      // D3: 14° (10-20°) -> 5th house -> Leo (4)
+      expect(KPService.calculateVargaSignForTest(14.0, 3), equals(4));
+      // D4: 14° (7.5-15°) -> 4th house -> Cancer (3)
+      expect(KPService.calculateVargaSignForTest(14.0, 4), equals(3));
+      // D5: 14° (12-18°, part 2 in Odd) -> Sag (8)
+      expect(KPService.calculateVargaSignForTest(14.0, 5), equals(8));
+      // D6: 14° (10-15°, part 2 in Odd) -> Gemini (2)
+      expect(KPService.calculateVargaSignForTest(14.0, 6), equals(2));
+      // D7: 14° (12.85-17.14°, part 3 in Odd) -> Cancer (3)
+      expect(KPService.calculateVargaSignForTest(14.0, 7), equals(3));
+      // D8: 14° (11.25-15°, part 3 in Movable) -> Cancer (3)
+      expect(KPService.calculateVargaSignForTest(14.0, 8), equals(3));
+      // D9: 14° (13.33-16.66°, part 4 in Movable) -> Leo (4)
+      expect(KPService.calculateVargaSignForTest(14.0, 9), equals(4));
+      // D10: 14° (12-15°, part 4 in Odd) -> Leo (4)
+      expect(KPService.calculateVargaSignForTest(14.0, 10), equals(4));
+      // D12: 14° (12.5-15°, part 5) -> Virgo (5)
+      expect(KPService.calculateVargaSignForTest(14.0, 12), equals(5));
+      // D16: 14° (part 7 in Movable: 13.125-15°) -> Scorpio (7)
+      expect(KPService.calculateVargaSignForTest(14.0, 16), equals(7));
+      // D20: 14° (part 9 in Movable: 13.5-15°) -> Capricorn (9)
+      expect(KPService.calculateVargaSignForTest(14.0, 20), equals(9));
+      // D24: 14° (part 11 in Odd starting from Leo: 13.75-15°) -> Cancer (3)
+      expect(KPService.calculateVargaSignForTest(14.0, 24), equals(3));
+      // D27: 14° (part 12 in Fire starting from Aries: 13.33-14.44°) -> Aries (0)
+      expect(KPService.calculateVargaSignForTest(14.0, 27), equals(0));
+      // D30: 14° (10-18° in Odd) -> Sagittarius (8)
+      expect(KPService.calculateVargaSignForTest(14.0, 30), equals(8));
+      // D40: 14° (part 18 in Odd starting from Aries: 13.5-14.25°) -> Libra (6)
+      expect(KPService.calculateVargaSignForTest(14.0, 40), equals(6));
+      // D45: 14° (part 21 in Movable starting from Aries: 14.0-14.66°) -> Capricorn (9)
+      expect(KPService.calculateVargaSignForTest(14.0, 45), equals(9));
+      // D60: 14° (part 28 starting from Aries: 14.0-14.5°) -> Leo (4)
+      expect(KPService.calculateVargaSignForTest(14.0, 60), equals(4));
+
+      // Test lon = 44° in Taurus (1, Fixed, Even, Earth)
+      // D1: Taurus (1)
+      expect(KPService.calculateVargaSignForTest(44.0, 1), equals(1));
+      // D2: 14° in Even sign -> Cancer (3)
+      expect(KPService.calculateVargaSignForTest(44.0, 2), equals(3));
+      // D3: 14° (10-20°) -> 5th from Taurus -> Virgo (5)
+      expect(KPService.calculateVargaSignForTest(44.0, 3), equals(5));
+      // D4: 14° (7.5-15°) -> 4th from Taurus -> Leo (4)
+      expect(KPService.calculateVargaSignForTest(44.0, 4), equals(4));
+      // D5: 14° (12-18°, part 2 in Even) -> Pisces (11)
+      expect(KPService.calculateVargaSignForTest(44.0, 5), equals(11));
+      // D6: 14° (10-15°, part 2 in Even starting from Libra=6) -> Sagittarius (8)
+      expect(KPService.calculateVargaSignForTest(44.0, 6), equals(8));
+      // D7: 14° (12.85-17.14°, part 3 in Even starting from 7th from Taurus = Scorpio=7) -> Aquarius (10)
+      expect(KPService.calculateVargaSignForTest(44.0, 7), equals(10));
+      // D8: 14° (11.25-15°, part 3 in Fixed starting from Sag=8) -> Pisces (11)
+      expect(KPService.calculateVargaSignForTest(44.0, 8), equals(11));
+      // D9: 14° (13.33-16.66°, part 4 in Fixed starting from Capricorn=9) -> Taurus (1)
+      expect(KPService.calculateVargaSignForTest(44.0, 9), equals(1));
+      // D10: 14° (12-15°, part 4 in Even starting from Capricorn=9) -> Taurus (1)
+      expect(KPService.calculateVargaSignForTest(44.0, 10), equals(1));
+      // D12: 14° (12.5-15°, part 5 starting from Taurus=1) -> Libra (6)
+      expect(KPService.calculateVargaSignForTest(44.0, 12), equals(6));
+      // D16: 14° (part 7 in Fixed starting from Leo=4) -> Pisces (11)
+      expect(KPService.calculateVargaSignForTest(44.0, 16), equals(11));
+      // D20: 14° (part 9 in Fixed starting from Sag=8) -> Virgo (5)
+      expect(KPService.calculateVargaSignForTest(44.0, 20), equals(5));
+      // D24: 14° (part 11 in Even starting from Cancer=3) -> Gemini (2)
+      expect(KPService.calculateVargaSignForTest(44.0, 24), equals(2));
+      // D27: 14° (part 12 in Earth starting from Cancer=3) -> Cancer (3)
+      expect(KPService.calculateVargaSignForTest(44.0, 27), equals(3));
+      // D30: 14° (12-20° in Even) -> Pisces (11)
+      expect(KPService.calculateVargaSignForTest(44.0, 30), equals(11));
+      // D40: 14° (part 18 in Even starting from Libra=6) -> Aries (0)
+      expect(KPService.calculateVargaSignForTest(44.0, 40), equals(0));
+      // D45: 14° (part 21 in Fixed starting from Leo=4) -> Taurus (1)
+      expect(KPService.calculateVargaSignForTest(44.0, 45), equals(1));
+      // D60: 14° (part 28 starting from Taurus=1) -> Virgo (5)
+      expect(KPService.calculateVargaSignForTest(44.0, 60), equals(5));
     });
 
     test('Chandrashtama correctly computes 8th sign and 17th star', () {
@@ -313,6 +395,86 @@ void main() {
 
       // Saturday (6) + Revati (26) -> Prabalarishtam
       expect(KPService.calculateAmirthathiYogaForTest(6, 26), equals("பிரபலாரிட்ட யோகம்"));
+    });
+
+    test('Dasa Nalvar (Bodhaka, Vedhaka, Pachaka, Karaka) correctly matches classical rules', () {
+      // 1. Sun Dasa
+      var sunNalvar = AstroSpecialCalculationsService.getDasaNalvar('Sun')!;
+      expect(sunNalvar['bodhaka']['planet'], equals('Mars'));
+      expect(sunNalvar['bodhaka']['house'], equals(7));
+      expect(sunNalvar['vedhaka']['planet'], equals('Venus'));
+      expect(sunNalvar['vedhaka']['house'], equals(11));
+      expect(sunNalvar['pachaka']['planet'], equals('Saturn'));
+      expect(sunNalvar['pachaka']['house'], equals(6));
+      expect(sunNalvar['karaka']['planet'], equals('Jupiter'));
+      expect(sunNalvar['karaka']['house'], equals(9));
+
+      // 2. Moon Dasa
+      var moonNalvar = AstroSpecialCalculationsService.getDasaNalvar('Moon')!;
+      expect(moonNalvar['bodhaka']['planet'], equals('Mars'));
+      expect(moonNalvar['bodhaka']['house'], equals(9));
+      expect(moonNalvar['vedhaka']['planet'], equals('Sun'));
+      expect(moonNalvar['vedhaka']['house'], equals(3));
+      expect(moonNalvar['pachaka']['planet'], equals('Venus'));
+      expect(moonNalvar['pachaka']['house'], equals(5));
+      expect(moonNalvar['karaka']['planet'], equals('Saturn'));
+      expect(moonNalvar['karaka']['house'], equals(11));
+
+      // 3. Saturn Dasa
+      var saturnNalvar = AstroSpecialCalculationsService.getDasaNalvar('Saturn')!;
+      expect(saturnNalvar['bodhaka']['planet'], equals('Moon'));
+      expect(saturnNalvar['bodhaka']['house'], equals(11));
+      expect(saturnNalvar['vedhaka']['planet'], equals('Mars'));
+      expect(saturnNalvar['vedhaka']['house'], equals(7));
+      expect(saturnNalvar['pachaka']['planet'], equals('Venus'));
+      expect(saturnNalvar['pachaka']['house'], equals(3));
+      expect(saturnNalvar['karaka']['planet'], equals('Jupiter'));
+      expect(saturnNalvar['karaka']['house'], equals(6));
+    });
+
+    test('DNA Nakshatra Karma registry precisely maps all 27 nakshatras', () {
+      // Sun (4 stars): Ashwini, Ashlesha, Anuradha, Purva Bhadrapada
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('அஸ்வினி'), equals('Sun'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('ஆயில்யம்'), equals('Sun'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('அனுஷம்'), equals('Sun'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('பூரட்டாதி'), equals('Sun'));
+
+      // Moon (4 stars): Bharani, Magha, Jyeshtha, Uttara Bhadrapada
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('பரணி'), equals('Moon'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('மகம்'), equals('Moon'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('கேட்டை'), equals('Moon'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('உத்தரட்டாதி'), equals('Moon'));
+
+      // Mars (4 stars): Krittika, Purva Phalguni, Mula, Revati
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('கார்த்திகை'), equals('Mars'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('பூரம்'), equals('Mars'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('மூலம்'), equals('Mars'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('ரேவதி'), equals('Mars'));
+
+      // Mercury (3 stars): Rohini, Uttara Phalguni, Purvashada
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('ரோகிணி'), equals('Mercury'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('உத்திரம்'), equals('Mercury'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('பூராடம்'), equals('Mercury'));
+
+      // Jupiter (3 stars): Mrigashirsha, Hasta, Uttarashada
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('மிருகசீரிடம்'), equals('Jupiter'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('அஸ்தம்'), equals('Jupiter'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('உத்திராடம்'), equals('Jupiter'));
+
+      // Venus (3 stars): Ardra, Chitra, Shravana
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('திருவாதிரை'), equals('Venus'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('சித்திரை'), equals('Venus'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('திருவோணம்'), equals('Venus'));
+
+      // Saturn (3 stars): Punarvasu, Swati, Dhanishta
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('புனர்பூசம்'), equals('Saturn'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('சுவாதி'), equals('Saturn'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('அவிட்டம்'), equals('Saturn'));
+
+      // Rahu (3 stars): Pushya, Vishakha, Shatabhisha
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('பூசம்'), equals('Rahu'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('விசாகம்'), equals('Rahu'));
+      expect(AstroSpecialCalculationsService.getDnaPlanetFromNakshatra('சதயம்'), equals('Rahu'));
     });
   });
 }

@@ -1060,4 +1060,222 @@ class AstroSpecialCalculationsService {
     } catch (_) {}
     return 6.0;
   }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 6. தசா நாதனின் நால்வர் (போதகன், வேதகன், பாசகன், காரகன் - Dasa Nalvar)
+  // ──────────────────────────────────────────────────────────────────────────
+  static const Map<String, Map<String, dynamic>> DASA_NALVAR_TABLE = {
+    'Sun': {
+      'dasa_tamil': 'சூரிய தசை',
+      'bodhaka': {'planet': 'Mars', 'tamil': 'செவ்', 'full_tamil': 'செவ்வாய்', 'house': 7},
+      'vedhaka': {'planet': 'Venus', 'tamil': 'சுக்', 'full_tamil': 'சுக்கிரன்', 'house': 11},
+      'pachaka': {'planet': 'Saturn', 'tamil': 'சனி', 'full_tamil': 'சனி', 'house': 6},
+      'karaka': {'planet': 'Jupiter', 'tamil': 'குரு', 'full_tamil': 'குரு', 'house': 9},
+    },
+    'Moon': {
+      'dasa_tamil': 'சந்திர தசை',
+      'bodhaka': {'planet': 'Mars', 'tamil': 'செவ்', 'full_tamil': 'செவ்வாய்', 'house': 9},
+      'vedhaka': {'planet': 'Sun', 'tamil': 'சூரியன்', 'full_tamil': 'சூரியன்', 'house': 3},
+      'pachaka': {'planet': 'Venus', 'tamil': 'சுக்', 'full_tamil': 'சுக்கிரன்', 'house': 5},
+      'karaka': {'planet': 'Saturn', 'tamil': 'சனி', 'full_tamil': 'சனி', 'house': 11},
+    },
+    'Mars': {
+      'dasa_tamil': 'செவ்வாய் தசை',
+      'bodhaka': {'planet': 'Moon', 'tamil': 'சந்', 'full_tamil': 'சந்திரன்', 'house': 6},
+      'vedhaka': {'planet': 'Mercury', 'tamil': 'புதன்', 'full_tamil': 'புதன்', 'house': 12},
+      'pachaka': {'planet': 'Sun', 'tamil': 'சூரி', 'full_tamil': 'சூரியன்', 'house': 2},
+      'karaka': {'planet': 'Saturn', 'tamil': 'சனி', 'full_tamil': 'சனி', 'house': 11},
+    },
+    'Mercury': {
+      'dasa_tamil': 'புதன் தசை',
+      'bodhaka': {'planet': 'Jupiter', 'tamil': 'குரு', 'full_tamil': 'குரு', 'house': 4},
+      'vedhaka': {'planet': 'Mars', 'tamil': 'செவ்', 'full_tamil': 'செவ்வாய்', 'house': 5},
+      'pachaka': {'planet': 'Moon', 'tamil': 'சந்', 'full_tamil': 'சந்திரன்', 'house': 2},
+      'karaka': {'planet': 'Venus', 'tamil': 'சுக்', 'full_tamil': 'சுக்கிரன்', 'house': 5},
+    },
+    'Jupiter': {
+      'dasa_tamil': 'குரு தசை',
+      'bodhaka': {'planet': 'Mars', 'tamil': 'செவ்', 'full_tamil': 'செவ்வாய்', 'house': 8},
+      'vedhaka': {'planet': 'Sun', 'tamil': 'சூரி', 'full_tamil': 'சூரியன்', 'house': 12},
+      'pachaka': {'planet': 'Saturn', 'tamil': 'சனி', 'full_tamil': 'சனி', 'house': 6},
+      'karaka': {'planet': 'Moon', 'tamil': 'சந்', 'full_tamil': 'சந்திரன்', 'house': 7},
+    },
+    'Venus': {
+      'dasa_tamil': 'சுக்கிரன் தசை',
+      'bodhaka': {'planet': 'Jupiter', 'tamil': 'குரு', 'full_tamil': 'குரு', 'house': 12},
+      'vedhaka': {'planet': 'Saturn', 'tamil': 'சனி', 'full_tamil': 'சனி', 'house': 4},
+      'pachaka': {'planet': 'Mercury', 'tamil': 'புத', 'full_tamil': 'புதன்', 'house': 2},
+      'karaka': {'planet': 'Sun', 'tamil': 'சூரி', 'full_tamil': 'சூரியன்', 'house': 6},
+    },
+    'Saturn': {
+      'dasa_tamil': 'சனி தசை',
+      'bodhaka': {'planet': 'Moon', 'tamil': 'சந்', 'full_tamil': 'சந்திரன்', 'house': 11},
+      'vedhaka': {'planet': 'Mars', 'tamil': 'செவ்', 'full_tamil': 'செவ்வாய்', 'house': 7},
+      'pachaka': {'planet': 'Venus', 'tamil': 'சுக்', 'full_tamil': 'சுக்கிரன்', 'house': 3},
+      'karaka': {'planet': 'Jupiter', 'tamil': 'குரு', 'full_tamil': 'குரு', 'house': 6},
+    },
+    'Rahu': {
+      'dasa_tamil': 'ராகு தசை',
+      'bodhaka': {'planet': 'Moon', 'tamil': 'சந்', 'full_tamil': 'சந்திரன்', 'house': 11},
+      'vedhaka': {'planet': 'Mars', 'tamil': 'செவ்', 'full_tamil': 'செவ்வாய்', 'house': 7},
+      'pachaka': {'planet': 'Venus', 'tamil': 'சுக்', 'full_tamil': 'சுக்கிரன்', 'house': 3},
+      'karaka': {'planet': 'Jupiter', 'tamil': 'குரு', 'full_tamil': 'குரு', 'house': 6},
+    },
+    'Ketu': {
+      'dasa_tamil': 'கேது தசை',
+      'bodhaka': {'planet': 'Moon', 'tamil': 'சந்', 'full_tamil': 'சந்திரன்', 'house': 6},
+      'vedhaka': {'planet': 'Mercury', 'tamil': 'புதன்', 'full_tamil': 'புதன்', 'house': 12},
+      'pachaka': {'planet': 'Sun', 'tamil': 'சூரி', 'full_tamil': 'சூரியன்', 'house': 2},
+      'karaka': {'planet': 'Saturn', 'tamil': 'சனி', 'full_tamil': 'சனி', 'house': 11},
+    },
+  };
+
+  /// Returns Dasa Nalvar for a given Dasa Lord
+  static Map<String, dynamic>? getDasaNalvar(String dasaLord) {
+    String key = dasaLord.trim();
+    // Normalize Tamil / English names
+    if (key.contains('சூரி') || key.contains('Sun')) key = 'Sun';
+    else if (key.contains('சந்') || key.contains('Moon')) key = 'Moon';
+    else if (key.contains('செவ்') || key.contains('Mars')) key = 'Mars';
+    else if (key.contains('புத') || key.contains('Mercury')) key = 'Mercury';
+    else if (key.contains('குரு') || key.contains('Jupiter')) key = 'Jupiter';
+    else if (key.contains('சுக்') || key.contains('Venus')) key = 'Venus';
+    else if (key.contains('சனி') || key.contains('Saturn')) key = 'Saturn';
+    else if (key.contains('ராகு') || key.contains('Rahu')) key = 'Rahu';
+    else if (key.contains('கேது') || key.contains('Ketu')) key = 'Ketu';
+
+    return DASA_NALVAR_TABLE[key];
+  }
+
+  /// Returns Master List of all 7 classical Dasa Nalvar entries
+  static List<Map<String, dynamic>> getAllDasaNalvarMasterList() {
+    const list = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
+    return list.map((p) => {'key': p, ...?DASA_NALVAR_TABLE[p]}).toList();
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 7. DNA நட்சத்திர கர்ம பதிவுகள் (DNA Nakshatra Karma Registry)
+  // ──────────────────────────────────────────────────────────────────────────
+  static const List<String> DNA_CYCLE_PLANETS = [
+    'Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu'
+  ];
+
+  static const Map<String, String> DNA_PLANET_TAMIL = {
+    'Sun': 'சூரியன்',
+    'Moon': 'சந்திரன்',
+    'Mars': 'செவ்வாய்',
+    'Mercury': 'புதன்',
+    'Jupiter': 'குரு',
+    'Venus': 'சுக்கிரன்',
+    'Saturn': 'சனி',
+    'Rahu': 'ராகு',
+  };
+
+  static const Map<String, String> DNA_PLANET_SHORT_TAMIL = {
+    'Sun': 'சூரி',
+    'Moon': 'சந்',
+    'Mars': 'செவ்',
+    'Mercury': 'புத',
+    'Jupiter': 'குரு',
+    'Venus': 'சுக்',
+    'Saturn': 'சனி',
+    'Rahu': 'ராகு',
+  };
+
+  static const Map<String, List<String>> KARMA_MASTER_TABLE = {
+    'Sun': ['அசுவனி', 'ஆயில்யம்', 'அனுஷம்', 'பூரட்டாதி'],
+    'Moon': ['பரணி', 'மகம்', 'கேட்டை', 'உத்தரட்டாதி'],
+    'Mars': ['கார்த்திகை', 'பூரம்', 'மூலம்', 'ரேவதி'],
+    'Mercury': ['ரோகிணி', 'உத்திரம்', 'பூராடம்'],
+    'Jupiter': ['மிருகசீர்ஷம்', 'அஸ்தம்', 'உத்திராடம்'],
+    'Venus': ['திருவாதிரை', 'சித்திரை', 'திருவோணம்'],
+    'Saturn': ['புனர்பூசம்', 'சுவாதி', 'அவிட்டம்'],
+    'Rahu': ['பூசம்', 'விசாகம்', 'சதயம்'],
+  };
+
+  static const Map<String, List<String>> DNA_MASTER_TABLE = KARMA_MASTER_TABLE;
+
+  /// Returns DNA/Karma Planet ('Sun', 'Moon', etc.) based on absolute longitude (0-360)
+  static String getDnaPlanetFromLongitude(double lon) {
+    int nakIdx = ((lon % 360) / (360 / 27)).floor() % 27;
+    return DNA_CYCLE_PLANETS[nakIdx % 8];
+  }
+  static String getKarmaPlanetFromLongitude(double lon) => getDnaPlanetFromLongitude(lon);
+
+  /// Returns DNA/Karma Planet ('Sun', 'Moon', etc.) based on Nakshatra Name
+  static String getDnaPlanetFromNakshatra(String nakshatra) {
+    final clean = nakshatra.trim();
+    // 1. Exact match in Karma Master Table
+    for (var entry in KARMA_MASTER_TABLE.entries) {
+      if (entry.value.any((star) => star == clean)) {
+        return entry.key;
+      }
+    }
+    // 2. Exact match in English list
+    int idx = KPService.NAKSHATRAS.indexWhere((n) => n.toLowerCase() == clean.toLowerCase());
+    if (idx != -1) {
+      return DNA_CYCLE_PLANETS[idx % 8];
+    }
+    // 3. Exact match in Tamil list
+    int tIdx = TAMIL_NAKSHATRAS.indexWhere((n) => n == clean);
+    if (tIdx != -1) {
+      return DNA_CYCLE_PLANETS[tIdx % 8];
+    }
+    // 4. Normalized variations
+    if (clean.contains('அசுவ') || clean.contains('அஸ்வ') || clean.toLowerCase().contains('ashwi')) return 'Sun';
+    if (clean.contains('பரணி') || clean.toLowerCase().contains('bharani')) return 'Moon';
+    if (clean.contains('கார்த்தி') || clean.contains('கிருத்தி') || clean.toLowerCase().contains('krittika')) return 'Mars';
+    if (clean.contains('ரோகிணி') || clean.toLowerCase().contains('rohini')) return 'Mercury';
+    if (clean.contains('மிருக') || clean.toLowerCase().contains('mriga')) return 'Jupiter';
+    if (clean.contains('திருவாதிரை') || clean.toLowerCase().contains('ardra') || clean.toLowerCase().contains('arudra')) return 'Venus';
+    if (clean.contains('புனர்பூச') || clean.toLowerCase().contains('punar')) return 'Saturn';
+    if (clean.contains('பூச') || clean.toLowerCase().contains('pushya')) return 'Rahu';
+    if (clean.contains('ஆயில்') || clean.toLowerCase().contains('aslesha') || clean.toLowerCase().contains('ashlesha')) return 'Sun';
+    if (clean.contains('மகம்') || clean.toLowerCase().contains('magha')) return 'Moon';
+    if (clean.contains('பூரம்') || clean.toLowerCase().contains('purvaphal')) return 'Mars';
+    if (clean.contains('உத்திர') && !clean.contains('உத்திரா') && !clean.contains('உத்தரட்') && !clean.contains('உத்திரட்') || clean.toLowerCase().contains('uttaraphal')) return 'Mercury';
+    if (clean.contains('அஸ்த') || clean.toLowerCase().contains('hastha') || clean.toLowerCase().contains('hasta')) return 'Jupiter';
+    if (clean.contains('சித்திரை') || clean.toLowerCase().contains('chitra')) return 'Venus';
+    if (clean.contains('சுவாதி') || clean.toLowerCase().contains('swati')) return 'Saturn';
+    if (clean.contains('விசாக') || clean.toLowerCase().contains('vishakha')) return 'Rahu';
+    if (clean.contains('அனுஷ') || clean.toLowerCase().contains('anuradha')) return 'Sun';
+    if (clean.contains('கேட்டை') || clean.toLowerCase().contains('jyesh')) return 'Moon';
+    if (clean.contains('மூலம்') || clean.toLowerCase().contains('mula')) return 'Mars';
+    if (clean.contains('பூராட') || clean.toLowerCase().contains('purvashada')) return 'Mercury';
+    if (clean.contains('உத்திராட') || clean.toLowerCase().contains('uttarashada')) return 'Jupiter';
+    if (clean.contains('திருவோண') || clean.toLowerCase().contains('shravana')) return 'Venus';
+    if (clean.contains('அவிட்ட') || clean.toLowerCase().contains('dhanishta')) return 'Saturn';
+    if (clean.contains('சதய') || clean.toLowerCase().contains('shatabhisha')) return 'Rahu';
+    if (clean.contains('பூரட்டா') || clean.toLowerCase().contains('purvabhadra')) return 'Sun';
+    if (clean.contains('உத்தரட்டா') || clean.contains('உத்திரட்டா') || clean.toLowerCase().contains('uttarabhadra')) return 'Moon';
+    if (clean.contains('ரேவதி') || clean.toLowerCase().contains('revati')) return 'Mars';
+
+    return 'Sun';
+  }
+  static String getKarmaPlanetFromNakshatra(String nakshatra) => getDnaPlanetFromNakshatra(nakshatra);
+
+  /// Returns formatted Tamil name of the DNA Planet
+  static String getDnaPlanetTamil(String? nakshatra, [double? lon]) {
+    String pKey = 'Sun';
+    if (lon != null) {
+      pKey = getDnaPlanetFromLongitude(lon);
+    } else if (nakshatra != null && nakshatra.isNotEmpty) {
+      pKey = getDnaPlanetFromNakshatra(nakshatra);
+    }
+    return DNA_PLANET_TAMIL[pKey] ?? pKey;
+  }
+  static String getKarmaPlanetTamil(String? nakshatra, [double? lon]) => getDnaPlanetTamil(nakshatra, lon);
+
+  /// Returns formatted Short Tamil name of the DNA Planet
+  static String getDnaPlanetShortTamil(String? nakshatra, [double? lon]) {
+    String pKey = 'Sun';
+    if (lon != null) {
+      pKey = getDnaPlanetFromLongitude(lon);
+    } else if (nakshatra != null && nakshatra.isNotEmpty) {
+      pKey = getDnaPlanetFromNakshatra(nakshatra);
+    }
+    return DNA_PLANET_SHORT_TAMIL[pKey] ?? pKey;
+  }
+  static String getKarmaPlanetShortTamil(String? nakshatra, [double? lon]) => getDnaPlanetShortTamil(nakshatra, lon);
 }
+

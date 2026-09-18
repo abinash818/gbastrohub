@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/astro_translation_service.dart';
+import '../services/astro_special_calculations_service.dart';
 
 class DasaBukthiTab extends StatefulWidget {
   final Map<String, dynamic> fullData;
@@ -244,7 +245,8 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
 
           // 2. Bhukti Section
           if (_selectedDasa != null) ...[
-            const SizedBox(height: 20),
+            _buildDasaNalvarCard(_selectedDasa!['lord']?.toString() ?? ''),
+            const SizedBox(height: 16),
             _buildDasaSection(
               _getTranslatedText("புத்தி"),
               _selectedDasa!['subPeriods'] ?? [],
@@ -914,6 +916,151 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
             fontSize: 11.5,
           ),
         ),
+      ),
+    );
+  }
+
+  // ── தசா நாதனின் நால்வர் (போதகன், வேதகன், பாசகன், காரகன்) ────────────
+  Widget _buildDasaNalvarCard(String dasaLord) {
+    final nalvar = AstroSpecialCalculationsService.getDasaNalvar(dasaLord);
+    if (nalvar == null) return const SizedBox();
+
+    final bodhaka = nalvar['bodhaka'] as Map<String, dynamic>;
+    final vedhaka = nalvar['vedhaka'] as Map<String, dynamic>;
+    final pachaka = nalvar['pachaka'] as Map<String, dynamic>;
+    final karaka = nalvar['karaka'] as Map<String, dynamic>;
+    final String dasaTamil = nalvar['dasa_tamil'] ?? "$dasaLord தசை";
+
+    return Container(
+      margin: const EdgeInsets.only(top: 4, bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF6EE),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFB58D3D), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.stars_rounded, color: Color(0xFF5D1204), size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "$dasaTamil - நால்வர் (துணைவர்கள்)",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Color(0xFF5D1204),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _buildNalvarChip(
+                  title: "போதகன்",
+                  desc: "நற்பலன் தருபவர்",
+                  planet: bodhaka['full_tamil'],
+                  color: const Color(0xFF2E7D32),
+                  bgColor: const Color(0xFFE8F5E9),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildNalvarChip(
+                  title: "வேதகன்",
+                  desc: "தடை தருபவர்",
+                  planet: vedhaka['full_tamil'],
+                  color: const Color(0xFFC62828),
+                  bgColor: const Color(0xFFFFEBEE),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: _buildNalvarChip(
+                  title: "பாசகன்",
+                  desc: "அனுபவிக்க வைப்பவர்",
+                  planet: pachaka['full_tamil'],
+                  color: const Color(0xFFE65100),
+                  bgColor: const Color(0xFFFFF3E0),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildNalvarChip(
+                  title: "காரகன்",
+                  desc: "நிலைநிறுத்துபவர்",
+                  planet: karaka['full_tamil'],
+                  color: const Color(0xFF1565C0),
+                  bgColor: const Color(0xFFE3F2FD),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNalvarChip({
+    required String title,
+    required String desc,
+    required String planet,
+    required Color color,
+    required Color bgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.5), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            planet,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w900,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            desc,
+            style: TextStyle(
+              color: Colors.grey.shade700,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }

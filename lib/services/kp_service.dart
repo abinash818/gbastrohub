@@ -551,9 +551,25 @@ class KPService {
     finalResults['functional_planets'] = _getFunctionalPlanets(lagnaDetails['rasi']);
     
     // Time calculations
+    DateTime astroDate = dt;
+    if (pancha['sunrise'] != null && pancha['sunrise'] != "-") {
+      try {
+        final parts = (pancha['sunrise'] as String).split(' ');
+        final hms = parts[0].split(':');
+        int h = int.parse(hms[0]);
+        int m = int.parse(hms[1]);
+        int s = hms.length > 2 ? int.parse(hms[2]) : 0;
+        if (parts[1] == "PM" && h < 12) h += 12;
+        if (parts[1] == "AM" && h == 12) h = 0;
+        DateTime sr = DateTime(dt.year, dt.month, dt.day, h, m, s);
+        if (dt.isBefore(sr)) {
+          astroDate = dt.subtract(const Duration(days: 1));
+        }
+      } catch (_) {}
+    }
     finalResults['nazhigai'] = _calculateNazhigai(pancha['sunrise'], dt);
-    finalResults['hora'] = _calculateHora(pancha['sunrise'], dt, dt.weekday);
-    finalResults['special_yoga'] = _getAmirthaYoga(dt.weekday, star);
+    finalResults['hora'] = _calculateHora(pancha['sunrise'], dt, astroDate.weekday);
+    finalResults['special_yoga'] = _getAmirthaYoga(astroDate.weekday, star);
     
     // Matching Attributes
     final currentNakIdx = NAKSHATRAS.indexOf(star);
@@ -686,7 +702,8 @@ class KPService {
       DateTime sunset = parseTime(sunsetStr, dt);
       
       bool isDayBirth = dt.isAfter(sunrise) && dt.isBefore(sunset);
-      int weekday = dt.weekday % 7; // 0=Sun, 1=Mon, ...
+      DateTime astroDate = dt.isBefore(sunrise) ? dt.subtract(const Duration(days: 1)) : dt;
+      int weekday = astroDate.weekday % 7; // 0=Sun, 1=Mon, ...
 
       int maandiMethod = await SettingsService.getMaandiMethod();
       
@@ -1285,10 +1302,11 @@ class KPService {
           const evenPanch = [1, 5, 11, 9, 7]; // Taurus (Venus), Virgo (Mercury), Pisces (Jupiter), Capricorn (Saturn), Scorpio (Mars)
           return evenPanch[part % 5];
         }
-      case 6: // Shashtamsha (D6) - Tamil textbook rule: Odd signs -> Aries, Gemini, Leo, Libra, Sag, Aqua; Even signs -> Taurus, Cancer, Virgo, Scorpio, Cap, Pisces
+      case 6: // Shashtamsha (D6) - Standard Parasari rule: Odd signs -> start from Aries (0..5); Even signs -> start from Libra (6..11)
         int part = (degInRasi / 5).floor();
         bool isOdd = (rasiIdx + 1) % 2 != 0;
-        return (isOdd ? 0 : 1) + (part * 2);
+        int startRasi = isOdd ? 0 : 6;
+        return (startRasi + part) % 12;
       case 7: // Saptamsha
         int part = (degInRasi / (30/7)).floor();
         bool isOdd = (rasiIdx + 1) % 2 != 0;

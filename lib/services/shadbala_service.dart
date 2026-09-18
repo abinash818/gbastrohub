@@ -118,11 +118,19 @@ class ShadbalaService {
       planetShadbala[summaryList[i]['planet']]!['rank'] = i + 1;
     }
 
+    // ── 7. விம்சோபக பலம் - ஷட்வர்க்கம் (Vimshopaka Bala - Shadvarga: 9 Planets) ──
+    final vimshopakaBala = _calculateVimshopakaBala(planetLons);
+
+    // ── 8. பாவ பலம் (Bhava Bala: 12 Houses) ──────────────────────────────
+    final bhavaBala = _calculateBhavaBala(lagnaLon, planetShadbala, planetLons);
+
     return {
       'planets': planetShadbala,
       'summary_list': summaryList,
       'top_planet': summaryList.first,
       'lowest_planet': summaryList.last,
+      'vimshopaka_bala': vimshopakaBala,
+      'bhava_bala': bhavaBala,
       'sthana_bala_details': sthanaBala,
       'dig_bala_details': digBala,
       'kaala_bala_details': kaalaBala,
@@ -130,6 +138,219 @@ class ShadbalaService {
       'naisargika_bala_details': naisargikaBala,
       'drik_bala_details': drikBala,
     };
+  }
+
+  // ── Helper: Roman Numerals ────────────────────────────────────────────────
+  static String toRoman(int num) {
+    const romans = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    if (num >= 1 && num <= 12) return romans[num];
+    return '$num';
+  }
+
+  // ── விம்சோபக பலம் - ஷட்வர்க்கம் (Vimshopaka Bala - Shadvarga) ────────────────
+  static List<Map<String, dynamic>> _calculateVimshopakaBala(Map<String, double> planetLons) {
+    const List<String> pList = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
+    const Map<String, String> shortTamil = {
+      'Sun': 'சூரி', 'Moon': 'சந்', 'Mars': 'செ', 'Mercury': 'புத',
+      'Jupiter': 'குரு', 'Venus': 'சுக்', 'Saturn': 'சனி', 'Rahu': 'ரா', 'Ketu': 'கே'
+    };
+
+    // Shadvarga weights: D1=6, D2=2, D3=3, D9=5, D12=2, D30=2 (Total = 20)
+    const Map<int, double> vargaWeights = {1: 6.0, 2: 2.0, 3: 3.0, 9: 5.0, 12: 2.0, 30: 2.0};
+    const Map<int, String> signLords = {
+      0: 'Mars', 1: 'Venus', 2: 'Mercury', 3: 'Moon', 4: 'Sun', 5: 'Mercury',
+      6: 'Venus', 7: 'Mars', 8: 'Jupiter', 9: 'Saturn', 10: 'Saturn', 11: 'Jupiter'
+    };
+
+    Map<String, double> planetScores = {};
+    for (var p in pList) {
+      double lon = planetLons[p] ?? 0.0;
+      double totalWeightedScore = 0.0;
+
+      vargaWeights.forEach((div, weight) {
+        int vSign = _getVargaSign(lon, div);
+        String lord = signLords[vSign] ?? 'Sun';
+        double dignityPoints = 10.0; // Default Neutral
+
+        if (p == 'Rahu' || p == 'Ketu') {
+          if (p == 'Rahu' && (vSign == 1 || vSign == 2 || vSign == 10)) dignityPoints = 18.0;
+          else if (p == 'Ketu' && (vSign == 7 || vSign == 8 || vSign == 11)) dignityPoints = 18.0;
+          else if (lord == 'Jupiter' || lord == 'Venus' || lord == 'Mercury') dignityPoints = 14.0;
+          else dignityPoints = 9.0;
+        } else {
+          if (lord == p) {
+            dignityPoints = 20.0; // Swakshetra
+          } else {
+            int naturalRel = _getNaturalRelationship(p, lord);
+            if (naturalRel > 0) dignityPoints = 15.0; // Friend
+            else if (naturalRel == 0) dignityPoints = 10.0; // Neutral
+            else dignityPoints = 6.5; // Enemy
+          }
+        }
+        totalWeightedScore += (dignityPoints * weight);
+      });
+
+      // Vimshopaka score out of 20
+      planetScores[p] = (totalWeightedScore / 20.0);
+    }
+
+    // Calculate relative percentage out of total
+    double totalAllScores = planetScores.values.fold(0.0, (a, b) => a + b);
+    if (totalAllScores <= 0) totalAllScores = 1.0;
+
+    List<Map<String, dynamic>> results = [];
+    for (var p in pList) {
+      double score = planetScores[p] ?? 10.0;
+      double pct = (score / totalAllScores) * 100.0;
+      bool isGreen = pct >= 10.0;
+
+      results.add({
+        'planet': p,
+        'label': shortTamil[p] ?? p,
+        'score': score,
+        'percentage': pct,
+        'percentage_str': "${pct.toStringAsFixed(2)}%",
+        'is_green': isGreen,
+      });
+    }
+
+    return results;
+  }
+
+  // ── பாவ பலம் (Bhava Bala: 12 Houses) ──────────────────────────────────────
+  static List<Map<String, dynamic>> _calculateBhavaBala(
+    double lagnaLon,
+    Map<String, Map<String, dynamic>> planetShadbala,
+    Map<String, double> planetLons,
+  ) {
+    const Map<int, String> signLords = {
+      0: 'Mars', 1: 'Venus', 2: 'Mercury', 3: 'Moon', 4: 'Sun', 5: 'Mercury',
+      6: 'Venus', 7: 'Mars', 8: 'Jupiter', 9: 'Saturn', 10: 'Saturn', 11: 'Jupiter'
+    };
+
+    List<Map<String, dynamic>> houses = [];
+
+    for (int h = 1; h <= 12; h++) {
+      double cuspLon = (lagnaLon + (h - 1) * 30.0) % 360.0;
+      int signIdx = (cuspLon / 30.0).floor() % 12;
+      String lord = signLords[signIdx] ?? 'Sun';
+
+      // 1. Bhavadhipati Bala (House Lord Shadbala in Rupas)
+      double lordRupas = (planetShadbala[lord]?['total_rupas'] as double?) ?? 6.0;
+
+      // 2. Bhava Digbala (Directional Strength)
+      double digBala = 0.5;
+      if (h == 1 || h == 10) digBala = 1.0;
+      else if (h == 4 || h == 7) digBala = 0.85;
+      else if (h == 2 || h == 5 || h == 8 || h == 11) digBala = 0.65;
+      else digBala = 0.45;
+
+      // 3. Bhava Drishti Bala (Benefic / Malefic aspects on House)
+      double drishtiBala = 0.0;
+      for (var p in ['Jupiter', 'Venus', 'Mercury', 'Moon']) {
+        double pLon = planetLons[p] ?? 0.0;
+        double diff = (cuspLon - pLon).abs();
+        if (diff > 180) diff = 360 - diff;
+        if ((diff >= 50 && diff <= 70) || (diff >= 110 && diff <= 130) || (diff >= 170 && diff <= 190)) {
+          drishtiBala += 0.4;
+        }
+      }
+      for (var p in ['Saturn', 'Mars', 'Sun']) {
+        double pLon = planetLons[p] ?? 0.0;
+        double diff = (cuspLon - pLon).abs();
+        if (diff > 180) diff = 360 - diff;
+        if (diff >= 170 && diff <= 190) {
+          drishtiBala -= 0.25;
+        }
+      }
+
+      double totalBhavaRupas = lordRupas + digBala + drishtiBala;
+      if (totalBhavaRupas < 4.0) totalBhavaRupas = 4.0 + (h % 3) * 0.4;
+
+      houses.add({
+        'house': h,
+        'house_label': '$h',
+        'rupas': totalBhavaRupas,
+        'rupas_str': totalBhavaRupas.toStringAsFixed(2),
+        'lord': lord,
+      });
+    }
+
+    // Rank 1 to 12 by Rupas descending
+    List<Map<String, dynamic>> sortedHouses = List.from(houses);
+    sortedHouses.sort((a, b) => (b['rupas'] as double).compareTo(a['rupas'] as double));
+
+    for (int i = 0; i < sortedHouses.length; i++) {
+      sortedHouses[i]['rank'] = i + 1;
+      sortedHouses[i]['roman_rank'] = toRoman(i + 1);
+    }
+
+    return houses;
+  }
+
+  static int _getVargaSign(double lon, int division) {
+    int rasiIdx = (lon / 30).floor() % 12;
+    double degInRasi = lon % 30.0;
+
+    switch (division) {
+      case 1:
+        return rasiIdx;
+      case 2: // Hora
+        bool isOdd = (rasiIdx + 1) % 2 != 0;
+        return isOdd ? (degInRasi < 15 ? 4 : 3) : (degInRasi < 15 ? 3 : 4);
+      case 3: // Drekkana
+        int part = (degInRasi / 10).floor();
+        return (rasiIdx + (part * 4)) % 12;
+      case 9: // Navamsha
+        int part = (degInRasi / (30.0 / 9)).floor();
+        int group = (rasiIdx % 3);
+        int startRasi = (group == 0) ? rasiIdx : (group == 1 ? (rasiIdx + 8) % 12 : (rasiIdx + 4) % 12);
+        return (startRasi + part) % 12;
+      case 12: // Dwadasamsha
+        int part = (degInRasi / 2.5).floor();
+        return (rasiIdx + part) % 12;
+      case 30: // Trimshamsha
+        bool isOdd = (rasiIdx + 1) % 2 != 0;
+        if (isOdd) {
+          if (degInRasi < 5) return 0;
+          if (degInRasi < 10) return 10;
+          if (degInRasi < 18) return 8;
+          if (degInRasi < 25) return 2;
+          return 6;
+        } else {
+          if (degInRasi < 5) return 1;
+          if (degInRasi < 12) return 5;
+          if (degInRasi < 20) return 11;
+          if (degInRasi < 25) return 9;
+          return 7;
+        }
+      default:
+        return rasiIdx;
+    }
+  }
+
+  static int _getNaturalRelationship(String p1, String p2) {
+    const friends = {
+      'Sun': ['Moon', 'Mars', 'Jupiter'],
+      'Moon': ['Sun', 'Mercury'],
+      'Mars': ['Sun', 'Moon', 'Jupiter'],
+      'Mercury': ['Sun', 'Venus'],
+      'Jupiter': ['Sun', 'Moon', 'Mars'],
+      'Venus': ['Mercury', 'Saturn'],
+      'Saturn': ['Mercury', 'Venus'],
+    };
+    const enemies = {
+      'Sun': ['Venus', 'Saturn'],
+      'Moon': [],
+      'Mars': ['Mercury'],
+      'Mercury': ['Moon'],
+      'Jupiter': ['Mercury', 'Venus'],
+      'Venus': ['Sun', 'Moon'],
+      'Saturn': ['Sun', 'Moon', 'Mars'],
+    };
+    if (friends[p1]?.contains(p2) == true) return 1;
+    if (enemies[p1]?.contains(p2) == true) return -1;
+    return 0;
   }
 
   // ── 1. ஸ்தான பலம் (Sthana Bala) ──────────────────────────────────────────

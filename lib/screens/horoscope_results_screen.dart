@@ -15,6 +15,8 @@ import '../services/full_report_pdf_service.dart';
 import '../services/settings_service.dart';
 import '../services/astro_translation_service.dart';
 import '../services/palangal_service.dart';
+import '../services/shadbala_service.dart';
+import '../services/astro_special_calculations_service.dart';
 import 'dart:io' show Platform;
 import 'package:astrology_flutter/l10n/app_localizations.dart';
 
@@ -958,7 +960,8 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           
           // 2. Bhukti Section
           if (_selectedDasa != null) ...[
-            const SizedBox(height: 20),
+            _buildDasaNalvarCard(_selectedDasa!['lord']?.toString() ?? ''),
+            const SizedBox(height: 16),
             _buildDasaSection(AppLocalizations.of(context)!.bukthi, _selectedDasa!['subPeriods'] ?? [], _selectedBukthi, (selected) {
               setState(() {
                 if (_selectedBukthi == selected) {
@@ -1304,6 +1307,10 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                     dateRangeStr,
                     style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Colors.blue),
                   ),
+                  if (_selectedDasa != null) ...[
+                    const SizedBox(height: 14),
+                    _buildDasaNalvarCard(_selectedDasa!['lord']?.toString() ?? ''),
+                  ],
                 ],
               ),
             ),
@@ -1829,6 +1836,10 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ── Graphical Visual Charts Matching Reference Image ──────────────
+          _buildShadbalaVisualCharts(shadbala),
+          const SizedBox(height: 16),
+
           // ── Top Strongest Planet Banner ──────────────────────────────────
           if (topPlanet != null) ...[
             Container(
@@ -2116,6 +2127,319 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     );
   }
 
+  // ── Visual Bar Charts Matching Reference Image ──────────────────────────
+  Widget _buildShadbalaVisualCharts(Map<String, dynamic> shadbala) {
+    final vimshopakaList = (shadbala['vimshopaka_bala'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+    final planetMap = shadbala['planets'] as Map<String, dynamic>? ?? {};
+    final bhavaList = (shadbala['bhava_bala'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+
+    const List<String> pOrder7 = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
+    const Map<String, String> shortTamil7 = {
+      'Sun': 'சூரி', 'Moon': 'சந்', 'Mars': 'செவ்', 'Mercury': 'புத',
+      'Jupiter': 'குரு', 'Venus': 'சுக்', 'Saturn': 'சனி'
+    };
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF6EE), // Elegant light parchment/ivory
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF5D1204).withOpacity(0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Column(
+        children: [
+          // ── 1. VIMSHOPAKA BALA - SHADVARGA (9 Planets) ──
+          if (vimshopakaList.isNotEmpty) ...[
+            _buildVimshopakaBarChart(vimshopakaList),
+            const SizedBox(height: 6),
+            const Text(
+              "VIMSHOPAKA BALA - SHADVARGA",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 22),
+          ],
+
+          // ── 2. SHADBALA (7 Planets) ──
+          _buildShadbalaBarChart(pOrder7, shortTamil7, planetMap),
+          const SizedBox(height: 6),
+          const Text(
+            "SHADBALA",
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 22),
+
+          // ── 3. BHAVA BALA (12 Houses) ──
+          if (bhavaList.isNotEmpty) ...[
+            _buildBhavaBalaBarChart(bhavaList),
+            const SizedBox(height: 6),
+            const Text(
+              "BHAVA BALA",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ── 1. Vimshopaka Bar Chart (9 Bars) ──
+  Widget _buildVimshopakaBarChart(List<Map<String, dynamic>> list) {
+    double maxPct = 0.0;
+    for (var item in list) {
+      double p = (item['percentage'] as num?)?.toDouble() ?? 0.0;
+      if (p > maxPct) maxPct = p;
+    }
+    if (maxPct <= 0) maxPct = 20.0;
+
+    return SizedBox(
+      height: 110,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: list.map((item) {
+          double pct = (item['percentage'] as num?)?.toDouble() ?? 0.0;
+          bool isGreen = item['is_green'] == true;
+          double barHeight = (pct / maxPct) * 60.0 + 25.0;
+
+          return Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  height: barHeight,
+                  margin: const EdgeInsets.symmetric(horizontal: 1.0),
+                  decoration: BoxDecoration(
+                    color: isGreen ? const Color(0xFF007E33) : const Color(0xFFD32F2F),
+                    border: Border.all(color: Colors.black, width: 1.2),
+                  ),
+                  alignment: Alignment.topCenter,
+                  padding: const EdgeInsets.only(top: 4),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      item['percentage_str'] ?? "${pct.toStringAsFixed(2)}%",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 9.5,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    item['label'] ?? '',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ── 2. Shadbala Bar Chart (7 Bars) ──
+  Widget _buildShadbalaBarChart(
+    List<String> pOrder,
+    Map<String, String> shortTamil,
+    Map<String, dynamic> planetMap,
+  ) {
+    double maxRupas = 0.0;
+    for (var p in pOrder) {
+      double r = (planetMap[p]?['total_rupas'] as num?)?.toDouble() ?? 0.0;
+      if (r > maxRupas) maxRupas = r;
+    }
+    if (maxRupas <= 0) maxRupas = 9.0;
+
+    return SizedBox(
+      height: 135,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: pOrder.map((p) {
+          final pData = planetMap[p] as Map<String, dynamic>? ?? {};
+          double rupas = (pData['total_rupas'] as num?)?.toDouble() ?? 5.0;
+          double ratio = (pData['ratio'] as num?)?.toDouble() ?? 1.0;
+          int rank = (pData['rank'] as num?)?.toInt() ?? 1;
+          String roman = ShadbalaService.toRoman(rank);
+          double barHeight = (rupas / maxRupas) * 58.0 + 35.0;
+
+          return Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    roman,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Container(
+                  height: barHeight,
+                  margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF005A28), // Deep Green
+                    border: Border.all(color: Colors.black, width: 1.2),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 3.0),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            "${ratio.toStringAsFixed(2)}%",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 9.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 3.0),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            rupas.toStringAsFixed(2),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    shortTamil[p] ?? p,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ── 3. Bhava Bala Bar Chart (12 Bars) ──
+  Widget _buildBhavaBalaBarChart(List<Map<String, dynamic>> bhavaList) {
+    double maxRupas = 0.0;
+    for (var b in bhavaList) {
+      double r = (b['rupas'] as num?)?.toDouble() ?? 0.0;
+      if (r > maxRupas) maxRupas = r;
+    }
+    if (maxRupas <= 0) maxRupas = 10.0;
+
+    return SizedBox(
+      height: 125,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: bhavaList.map((item) {
+          double rupas = (item['rupas'] as num?)?.toDouble() ?? 5.0;
+          String roman = item['roman_rank'] ?? '';
+          double barHeight = (rupas / maxRupas) * 55.0 + 30.0;
+
+          return Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    roman,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 9.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Container(
+                  height: barHeight,
+                  margin: const EdgeInsets.symmetric(horizontal: 0.8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.black, width: 1.2),
+                  ),
+                  alignment: Alignment.center,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      item['rupas_str'] ?? rupas.toStringAsFixed(2),
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 9.5,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    item['house_label'] ?? '',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _buildWideVivaramView() {final l10n = AppLocalizations.of(context)!;
     final pancha = widget.results['panchangam'] ?? {};
     final matching = widget.results['matching_attrs'] ?? {};
@@ -2235,6 +2559,8 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                 _buildKalaNatpuPagaiAgeCard(),
                 const SizedBox(height: 20),
                 _buildSpecialStarsAndTharaisCard(),
+                const SizedBox(height: 20),
+                _buildDasaNalvarMasterTableCard(),
               ],
             ),
           ),
@@ -2330,6 +2656,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       _buildAvasthasAndParivarthanaCard(),
       _buildSpecialStarsAndTharaisCard(),
       _buildUpagrahasCard(),
+      _buildDasaNalvarMasterTableCard(),
     ];
 
     return SingleChildScrollView(
@@ -3020,57 +3347,257 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
         "jupiter": "Jupiter", "venus": "Venus", "saturn": "Saturn", "rahu": "Rahu", "ketu": "Ketu", "maanthi": "Maanthi"
     };
 
+    final langCode = Localizations.localeOf(context).languageCode;
+    final String karmaWord = langCode == 'hi' ? 'कर्म' : (langCode == 'en' ? 'Karma' : 'கர்மா');
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: const Color(0xFFB58D3D), width: 1.5),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Table(
-          border: TableBorder.all(color: const Color(0xFFB58D3D).withOpacity(0.3), width: 0.8),
-          columnWidths: const {
-            0: FlexColumnWidth(1.8),
-            1: FlexColumnWidth(1.5),
-            2: FlexColumnWidth(2.5),
-            3: FlexColumnWidth(1.5),
-            4: FlexColumnWidth(1.5),
-          },
-          children: [
-            // Header
-            TableRow(
-              decoration: BoxDecoration(color: Color(0xFF5D1204)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: const Color(0xFFB58D3D), width: 1.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Table(
+              border: TableBorder.all(color: const Color(0xFFB58D3D).withOpacity(0.3), width: 0.8),
+              columnWidths: const {
+                0: FlexColumnWidth(1.6),
+                1: FlexColumnWidth(1.4),
+                2: FlexColumnWidth(2.2),
+                3: FlexColumnWidth(1.1),
+                4: FlexColumnWidth(1.2),
+                5: FlexColumnWidth(1.3),
+              },
               children: [
-                TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 4), child: Text(l10n.planet, textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)))),
-                TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 4), child: Text(AstroTranslationService.translate(context, "பாகை"), textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)))),
-                TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 4), child: Text(AstroTranslationService.translate(context, "நட்சத்திரம்-பாதம்"), textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)))),
-                TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 4), child: Text(AstroTranslationService.translate(context, "ந.நா"), textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)))),
-                TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 4), child: Text(AstroTranslationService.translate(context, "நிலை"), textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)))),
+                // Header
+                TableRow(
+                  decoration: const BoxDecoration(color: Color(0xFF5D1204)),
+                  children: [
+                    TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.planet, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                    TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(AstroTranslationService.translate(context, "பாகை"), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                    TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(AstroTranslationService.translate(context, "நட்சத்திரம்-பாதம்"), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                    TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(AstroTranslationService.translate(context, "ந.நா"), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                    TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(karmaWord, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFFFD54F), fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                    TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(AstroTranslationService.translate(context, "நிலை"), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                  ],
+                ),
+                // Rows
+                ...sortedKeys.map((key) {
+                  final p = data[key];
+                  if (p == null) return const TableRow(children: [SizedBox(), SizedBox(), SizedBox(), SizedBox(), SizedBox(), SizedBox()]);
+                  
+                  final lords = p['lords'] ?? {};
+                  final String rasi = p['rasi'] ?? "";
+                  final String dignity = KPService.getPlanetDignity(rawPlanetNames[key]!, rasi);
+                  final String rawNak = p['nakshatra']?.toString() ?? '';
+                  final String karmaPlanetKey = AstroSpecialCalculationsService.getDnaPlanetFromNakshatra(rawNak);
+                  final String karmaShort = AstroTranslationService.translate(context, KPService.TAMIL_PLANET_SHORT[karmaPlanetKey] ?? karmaPlanetKey, isPlanet: true);
+
+                  return TableRow(
+                    children: [
+                      _buildTableCell(planetTamilNames[key] ?? key, isPlanet: true),
+                      _buildTableCell(KPService.formatAbsoluteDegrees(p['longitude'])),
+                      _buildTableCell("${p['nakshatra']}-${p['pada']}"),
+                      _buildTableCell(KPService.TAMIL_PLANET_SHORT[lords['nakLord']] ?? lords['nakLord'] ?? "-", isPlanet: true),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF5D1204).withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.5), width: 0.8),
+                            ),
+                            child: Text(
+                              karmaShort,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Color(0xFF5D1204),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      _buildTableCell(dignity),
+                    ],
+                  );
+                }).toList(),
               ],
             ),
-            // Rows
-            ...sortedKeys.map((key) {
+          ),
+          const SizedBox(height: 16),
+          _buildKarmaNakshatraCard(data),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKarmaNakshatraCard(Map<String, dynamic> data) {
+    final langCode = Localizations.localeOf(context).languageCode;
+    final String karmaWord = langCode == 'hi' ? 'कर्म' : (langCode == 'en' ? 'Karma' : 'கர்மா');
+    final String cardTitle = langCode == 'hi' 
+        ? 'कर्म नक्षत्र विवरण' 
+        : (langCode == 'en' ? 'Karma Nakshatra Registry' : 'கர்மா நட்சத்திர பதிவுகள்');
+    final String cardSubtitle = langCode == 'hi'
+        ? 'ग्रहों के स्थित नक्षत्र के माध्यम से आने वाले कर्म प्रभाव:'
+        : (langCode == 'en' ? 'Karmic influences through the occupied Nakshatras:' : 'கிரகங்கள் நின்ற நட்சத்திரம் வழியே தொடரும் கர்ம ஆதிக்கங்கள்:');
+    final String refGuideTitle = langCode == 'hi'
+        ? 'सभी कर्म नक्षत्र तालिका (Reference Guide)'
+        : (langCode == 'en' ? 'All Karma Nakshatras Table (Reference Guide)' : 'அனைத்து கர்மா நட்சத்திர அட்டவணை (Reference Guide)');
+
+    const List<String> sortedKeys = ["lagna", "sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu", "ketu"];
+    final Map<String, String> planetTamil = {
+      "lagna": "லக்னம்", "sun": "சூரியன்", "moon": "சந்திரன்", "mars": "செவ்வாய்", "mercury": "புதன்", 
+      "jupiter": "குரு", "venus": "சுக்கிரன்", "saturn": "சனி", "rahu": "ராகு", "ketu": "கேது"
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF6EE),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFB58D3D), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.hub_rounded, color: Color(0xFF5D1204), size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  cardTitle,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Color(0xFF5D1204),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            cardSubtitle,
+            style: TextStyle(fontSize: 11.5, color: Colors.grey.shade700),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: sortedKeys.map((key) {
               final p = data[key];
-              if (p == null) return TableRow(children: [SizedBox(), SizedBox(), SizedBox(), SizedBox(), SizedBox()]);
+              if (p == null) return const SizedBox();
+              final String rawNak = p['nakshatra']?.toString() ?? '-';
+              final int pada = p['pada'] ?? 1;
+              final String translatedNak = AstroTranslationService.translate(context, rawNak);
+              final String pNameTamil = planetTamil[key] ?? key;
+              final String translatedPlanet = AstroTranslationService.translate(context, pNameTamil, isPlanet: true);
               
-              final lords = p['lords'] ?? {};
-              final String rasi = p['rasi'] ?? "";
-              final String dignity = KPService.getPlanetDignity(rawPlanetNames[key]!, rasi);
-              
-              return TableRow(
-                children: [
-                  _buildTableCell(planetTamilNames[key] ?? key, isPlanet: true),
-                  _buildTableCell(KPService.formatAbsoluteDegrees(p['longitude'])),
-                  _buildTableCell("${p['nakshatra']}-${p['pada']}"),
-                  _buildTableCell(KPService.TAMIL_PLANET_SHORT[lords['nakLord']] ?? lords['nakLord'] ?? "-", isPlanet: true),
-                  _buildTableCell(dignity),
-                ],
+              final String karmaPlanetKey = AstroSpecialCalculationsService.getDnaPlanetFromNakshatra(rawNak);
+              final String karmaPlanetFull = AstroTranslationService.translate(context, KPService.TAMIL_PLANETS[karmaPlanetKey] ?? karmaPlanetKey, isPlanet: true);
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.4), width: 1),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "$translatedPlanet: ",
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF5D1204)),
+                    ),
+                    Text(
+                      "$translatedNak-$pada ",
+                      style: const TextStyle(fontSize: 11.5, color: Colors.black87),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE65100).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        "➜ $karmaPlanetFull $karmaWord",
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: Color(0xFFE65100)),
+                      ),
+                    ),
+                  ],
+                ),
               );
             }).toList(),
-          ],
-        ),
+          ),
+          const SizedBox(height: 14),
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(top: 8),
+              title: Text(
+                refGuideTitle,
+                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF8D6E63)),
+              ),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    children: AstroSpecialCalculationsService.KARMA_MASTER_TABLE.entries.map((e) {
+                      final pTamil = KPService.TAMIL_PLANETS[e.key] ?? e.key;
+                      final pTranslated = AstroTranslationService.translate(context, pTamil, isPlanet: true);
+                      final starsTranslated = e.value.map((s) => AstroTranslationService.translate(context, s)).join(", ");
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 90,
+                              child: Text(
+                                "• $pTranslated:",
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF5D1204)),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                starsTranslated,
+                                style: const TextStyle(fontSize: 12, color: Colors.black87),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -3581,5 +4108,249 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
         setState(() => _isGenerating = false);
       }
     }
+  }
+
+  // ── தசா நாதனின் நால்வர் (போதகன், வேதகன், பாசகன், காரகன்) ────────────
+  Widget _buildDasaNalvarCard(String dasaLord) {
+    final nalvar = AstroSpecialCalculationsService.getDasaNalvar(dasaLord);
+    if (nalvar == null) return const SizedBox();
+
+    final bodhaka = nalvar['bodhaka'] as Map<String, dynamic>;
+    final vedhaka = nalvar['vedhaka'] as Map<String, dynamic>;
+    final pachaka = nalvar['pachaka'] as Map<String, dynamic>;
+    final karaka = nalvar['karaka'] as Map<String, dynamic>;
+    final String dasaTamil = nalvar['dasa_tamil'] ?? "$dasaLord தசை";
+
+    return Container(
+      margin: const EdgeInsets.only(top: 4, bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF6EE),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFB58D3D), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.stars_rounded, color: Color(0xFF5D1204), size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "$dasaTamil - நால்வர் (துணைவர்கள்)",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Color(0xFF5D1204),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _buildNalvarChip(
+                  title: "போதகன்",
+                  desc: "நற்பலன் தருபவர்",
+                  planet: bodhaka['full_tamil'],
+                  color: const Color(0xFF2E7D32),
+                  bgColor: const Color(0xFFE8F5E9),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildNalvarChip(
+                  title: "வேதகன்",
+                  desc: "தடை தருபவர்",
+                  planet: vedhaka['full_tamil'],
+                  color: const Color(0xFFC62828),
+                  bgColor: const Color(0xFFFFEBEE),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: _buildNalvarChip(
+                  title: "பாசகன்",
+                  desc: "அனுபவிக்க வைப்பவர்",
+                  planet: pachaka['full_tamil'],
+                  color: const Color(0xFFE65100),
+                  bgColor: const Color(0xFFFFF3E0),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildNalvarChip(
+                  title: "காரகன்",
+                  desc: "நிலைநிறுத்துபவர்",
+                  planet: karaka['full_tamil'],
+                  color: const Color(0xFF1565C0),
+                  bgColor: const Color(0xFFE3F2FD),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNalvarChip({
+    required String title,
+    required String desc,
+    required String planet,
+    required Color color,
+    required Color bgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.5), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            planet,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w900,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            desc,
+            style: TextStyle(
+              color: Colors.grey.shade700,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDasaNalvarMasterTableCard() {
+    final list = AstroSpecialCalculationsService.getAllDasaNalvarMasterList();
+
+    return _buildDetailCard("தசா நாதனின் நால்வர் (போதகன், வேதகன், பாசகன், காரகன்)", [
+      Container(
+        margin: const EdgeInsets.only(top: 4, bottom: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFB58D3D), width: 1.2),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Table(
+          border: TableBorder.all(color: const Color(0xFFB58D3D).withOpacity(0.3), width: 0.8),
+          columnWidths: const {
+            0: FlexColumnWidth(1.4),
+            1: FlexColumnWidth(1.2),
+            2: FlexColumnWidth(1.2),
+            3: FlexColumnWidth(1.2),
+            4: FlexColumnWidth(1.2),
+          },
+          children: [
+            TableRow(
+              decoration: const BoxDecoration(color: Color(0xFF5D1204)),
+              children: const [
+                TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 8, horizontal: 2), child: Text("தசை", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11.5)))),
+                TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 8, horizontal: 2), child: Text("போதகன்", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFFFD54F), fontWeight: FontWeight.bold, fontSize: 11.5)))),
+                TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 8, horizontal: 2), child: Text("வேதகன்", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFFF8A80), fontWeight: FontWeight.bold, fontSize: 11.5)))),
+                TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 8, horizontal: 2), child: Text("பாசகன்", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFFFD180), fontWeight: FontWeight.bold, fontSize: 11.5)))),
+                TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 8, horizontal: 2), child: Text("காரகன்", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF80D8FF), fontWeight: FontWeight.bold, fontSize: 11.5)))),
+              ],
+            ),
+            ...list.map((row) {
+              final b = row['bodhaka'] as Map<String, dynamic>;
+              final v = row['vedhaka'] as Map<String, dynamic>;
+              final p = row['pachaka'] as Map<String, dynamic>;
+              final k = row['karaka'] as Map<String, dynamic>;
+
+              return TableRow(
+                decoration: const BoxDecoration(color: Color(0xFFFAF6EE)),
+                children: [
+                  TableCell(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      child: Text(
+                        "• ${row['dasa_tamil']}",
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5, color: Color(0xFF5D1204)),
+                      ),
+                    ),
+                  ),
+                  TableCell(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+                      child: Text(
+                        "${b['full_tamil']}",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: Color(0xFF2E7D32)),
+                      ),
+                    ),
+                  ),
+                  TableCell(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+                      child: Text(
+                        "${v['full_tamil']}",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: Color(0xFFC62828)),
+                      ),
+                    ),
+                  ),
+                  TableCell(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+                      child: Text(
+                        "${p['full_tamil']}",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: Color(0xFFE65100)),
+                      ),
+                    ),
+                  ),
+                  TableCell(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+                      child: Text(
+                        "${k['full_tamil']}",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: Color(0xFF1565C0)),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ],
+        ),
+      ),
+    ]);
   }
 }

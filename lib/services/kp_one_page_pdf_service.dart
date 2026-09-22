@@ -163,7 +163,7 @@ class KpOnePagePdfService {
     final thithiStr = pan['tithi']?.toString() ?? "-";
     final pakshamStr = pan['paksham']?.toString() ?? "-";
     final rasiStr = KPService.TAMIL_SIGNS[moonDetails['lords']?['sign']] ?? KPService.TAMIL_SIGNS[moonDetails['rasi']] ?? moonDetails['rasi'] ?? pan['rasi'] ?? "-";
-    final suniyaStr = pan['suniya_rasi']?.toString() ?? "-";
+    final suniyaStr = KPService.formatSuniyaRasiWithBhava(pan['suniya_rasi']?.toString(), results['planet_details']?['lagna'], langCode: langCode);
 
     // Ruling Planets
     String rulingDay = "-"; String rulingMoon = "-"; String rulingMoonStar = "-"; String rulingLagna = "-"; String rulingLagnaStar = "-";

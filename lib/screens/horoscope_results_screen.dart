@@ -1627,9 +1627,9 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
             if (footer != null)
               TableRow(
                 children: [
-                   _buildSmallTableCell("", isPlanet: true),
+                   _buildSmallTableCell(l10n.totalLabel, isBold: true, customColor: const Color(0xFF5D1204)),
                    ...footer.map((val) => _buildSmallTableCell(val.toString(), isBold: true, customColor: const Color(0xFFE65100))).toList(),
-                   if (showMoththam) _buildSmallTableCell("", isBold: true),
+                   if (showMoththam) _buildSmallTableCell(footer.fold<int>(0, (s, e) => s + ((e as int?) ?? 0)).toString(), isBold: true, customColor: const Color(0xFFE65100)),
                 ],
               ),
           ],
@@ -1697,13 +1697,16 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     String translatedText = AstroTranslationService.translate(context, text, isPlanet: isPlanet);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
-      child: Text(
-        translatedText,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: customColor ?? (isPlanet ? Colors.red.shade700 : (isBold ? Colors.black : Colors.black87)),
-          fontWeight: (isPlanet || isBold) ? FontWeight.bold : FontWeight.w500,
-          fontSize: 11.5,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          translatedText,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: customColor ?? (isPlanet ? Colors.red.shade700 : (isBold ? Colors.black : Colors.black87)),
+            fontWeight: (isPlanet || isBold) ? FontWeight.bold : FontWeight.w500,
+            fontSize: 11.5,
+          ),
         ),
       ),
     );
@@ -1830,6 +1833,55 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     final topPlanet = shadbala['top_planet'] as Map<String, dynamic>?;
     final sthanaMap = shadbala['sthana_bala_details'] as Map<String, dynamic>? ?? {};
     final kaalaMap = shadbala['kaala_bala_details'] as Map<String, dynamic>? ?? {};
+    final langCode = Localizations.localeOf(context).languageCode;
+
+    // Multilingual Strings
+    final String topPlanetTitle = langCode == 'hi'
+        ? 'सर्वाधिक षड्बल प्राप्त ग्रह (Rank #1)'
+        : (langCode == 'en' ? 'Highest Shadbala Planet (Rank #1)' : 'அதிக ஷட்பலம் பெற்ற கிரகம் (Rank #1)');
+
+    final String rupasWord = langCode == 'hi' ? 'रूप' : (langCode == 'en' ? 'Rupas' : 'ரூபங்கள்');
+    final String rupaWord = langCode == 'hi' ? 'रूप' : (langCode == 'en' ? 'Rupa' : 'ரூபம்');
+    final String reqWord = langCode == 'hi' ? 'आवश्यकता' : (langCode == 'en' ? 'Req' : 'தேவை');
+    final String statusWord = langCode == 'hi' ? 'स्थिति' : (langCode == 'en' ? 'Status' : 'நிலை');
+
+    final String rankingCardTitle = langCode == 'hi'
+        ? 'ग्रहों की षड्बल रैंकिंग और अनुपात'
+        : (langCode == 'en' ? 'Planetary Shadbala Ranking & Ratio' : 'கிரகங்களின் ஷட்பல தரவரிசை & விகிதம்');
+
+    final String table6Title = langCode == 'hi'
+        ? 'षड्बल 6 प्रकार के बल विस्तृत तालिका (विरूपा में)'
+        : (langCode == 'en' ? '6-Fold Shadbala Breakdown Table (In Virupas)' : '6 வகை பலங்கள் விரிவான அட்டவணை (விரூபங்களில்)');
+
+    final List<String> table6Cols = langCode == 'hi'
+        ? ["ग्रह", "स्थान", "दिग्बल", "काल", "चेष्टा", "नैसर्गिक", "दृग", "कुल (विरूपा)", "रूप"]
+        : (langCode == 'en'
+            ? ["Planet", "Sthana", "Digbala", "Kaala", "Cheshta", "Naisargika", "Drik", "Total (Virupas)", "Rupas"]
+            : ["கிரகம்", "ஸ்தான", "திக்பலம்", "கால", "சேஷ்டா", "நைசர்கிக", "த்ரிக்", "மொத்தம் (Virupas)", "ரூபங்கள் (Rupas)"]);
+
+    final String sthanaCardTitle = langCode == 'hi'
+        ? '1. स्थान बल उप-घटक'
+        : (langCode == 'en' ? '1. Sthana Bala Sub-Components' : '1. ஸ்தான பல உட்பிரிவுகள் (Sthana Bala Sub-Components)');
+
+    final List<String> sthanaCols = langCode == 'hi'
+        ? ["ग्रह", "उच्च बल", "सप्तवर्गज", "ओज-युग्म", "केन्द्रादि", "द्रेष्काण", "कुल स्थान बल"]
+        : (langCode == 'en'
+            ? ["Planet", "Uchha", "Saptavargaja", "Ojhayugma", "Kendradi", "Drekkana", "Total Sthana"]
+            : ["கிரகம்", "உச்சா பலம்", "சப்தவர்க்கஜ", "ஓஜ-யுக்ம", "கேந்திராதி", "த்ரேக்காண", "மொத்த ஸ்தான பலம்"]);
+
+    final String kaalaCardTitle = langCode == 'hi'
+        ? '2. काल बल उप-घटक'
+        : (langCode == 'en' ? '2. Kaala Bala Sub-Components' : '2. கால பல உட்பிரிவுகள் (Kaala Bala Sub-Components)');
+
+    final List<String> kaalaCols = langCode == 'hi'
+        ? ["ग्रह", "नतोन्नत", "पक्ष बल", "त्रिभाग", "अयन बल", "कुल काल बल"]
+        : (langCode == 'en'
+            ? ["Planet", "Nathonnatha", "Paksha", "Tribhaga", "Ayana", "Total Kaala"]
+            : ["கிரகம்", "நதோன்னத (பகல்/இரவு)", "பக்ஷ பலம்", "த்ரிபாக", "அயன பலம்", "மொத்த கால பலம்"]);
+
+    final String notesCardTitle = langCode == 'hi'
+        ? 'षड्बल संबंधी ज्योतिषीय नियम'
+        : (langCode == 'en' ? 'Astrological Notes on Shadbala' : 'ஷட்பலம் பற்றிய ஜோதிடக் குறிப்புகள்');
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -1878,16 +1930,16 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "அதிக ஷட்பலம் பெற்ற கிரகம் (Rank #1)",
+                          topPlanetTitle,
                           style: TextStyle(color: Colors.amber.shade200, fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          "${topPlanet['planet_tamil']} (${(topPlanet['total_rupas'] as double).toStringAsFixed(2)} ரூபங்கள் - ${((topPlanet['ratio'] as double) * 100).toStringAsFixed(0)}%)",
+                          "${AstroTranslationService.translate(context, topPlanet['planet_tamil'] ?? topPlanet['planet'] ?? '', isPlanet: true)} (${(topPlanet['total_rupas'] as double).toStringAsFixed(2)} $rupasWord - ${((topPlanet['ratio'] as double) * 100).toStringAsFixed(0)}%)",
                           style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900),
                         ),
                         Text(
-                          "தேவை: ${(topPlanet['required_rupas'] as double).toStringAsFixed(1)} ரூபம் | நிலை: ${topPlanet['status']}",
+                          "$reqWord: ${(topPlanet['required_rupas'] as double).toStringAsFixed(1)} $rupaWord | $statusWord: ${topPlanet['status']}",
                           style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 11.5),
                         ),
                       ],
@@ -1900,7 +1952,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           ],
 
           // ── Planetary Strength Summary & Ranking ──────────────────────────
-          _buildDetailCard("கிரகங்களின் ஷட்பல தரவரிசை & விகிதம்", [
+          _buildDetailCard(rankingCardTitle, [
             ...summaryList.map((p) {
               final rank = p['rank'] ?? 0;
               final rupa = (p['total_rupas'] as double?) ?? 0.0;
@@ -1914,6 +1966,13 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
               else if (rank == 2) badgeColor = const Color(0xFFC0C0C0); // Silver
               else if (rank == 3) badgeColor = const Color(0xFFCD7F32); // Bronze
               else badgeColor = const Color(0xFFB58D3D).withOpacity(0.3);
+
+              final String pDisplay = AstroTranslationService.translate(context, p['planet_tamil'] ?? p['planet'] ?? '', isPlanet: true);
+              final String reqInfo = langCode == 'hi'
+                  ? 'आवश्यकता: ${reqRupa.toStringAsFixed(1)} रूप | प्राप्त: ${rupa.toStringAsFixed(2)} रूप (${(p['total_virupas'] as double).toStringAsFixed(1)} विरूपा)'
+                  : (langCode == 'en'
+                      ? 'Req: ${reqRupa.toStringAsFixed(1)} Rupas | Obtained: ${rupa.toStringAsFixed(2)} Rupas (${(p['total_virupas'] as double).toStringAsFixed(1)} Virupas)'
+                      : 'தேவை: ${reqRupa.toStringAsFixed(1)} ரூபம் | பெற்றது: ${rupa.toStringAsFixed(2)} ரூபம் (${(p['total_virupas'] as double).toStringAsFixed(1)} விரூபங்கள்)');
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -1953,11 +2012,11 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                p['planet_tamil'] ?? p['planet'],
+                                pDisplay,
                                 style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF5D1204)),
                               ),
                               Text(
-                                "தேவை: ${reqRupa.toStringAsFixed(1)} ரூபம் | பெற்றது: ${rupa.toStringAsFixed(2)} ரூபம் (${(p['total_virupas'] as double).toStringAsFixed(1)} விரூபங்கள்)",
+                                reqInfo,
                                 style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
                               ),
                             ],
@@ -2001,7 +2060,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           const SizedBox(height: 20),
 
           // ── 6-Fold Detailed Balas Table (In Virupas) ───────────────────────
-          _buildDetailCard("6 வகை பலங்கள் விரிவான அட்டவணை (விரூபங்களில்)", [
+          _buildDetailCard(table6Title, [
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
@@ -2010,21 +2069,12 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                 horizontalMargin: 8,
                 headingTextStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF5D1204)),
                 dataTextStyle: const TextStyle(fontSize: 12, color: Colors.black87),
-                columns: const [
-                  DataColumn(label: Text("கிரகம்")),
-                  DataColumn(label: Text("ஸ்தான")),
-                  DataColumn(label: Text("திக்பலம்")),
-                  DataColumn(label: Text("கால")),
-                  DataColumn(label: Text("சேஷ்டா")),
-                  DataColumn(label: Text("நைசர்கிக")),
-                  DataColumn(label: Text("த்ரிக்")),
-                  DataColumn(label: Text("மொத்தம் (Virupas)")),
-                  DataColumn(label: Text("ரூபங்கள் (Rupas)")),
-                ],
+                columns: table6Cols.map((c) => DataColumn(label: Text(c))).toList(),
                 rows: summaryList.map((p) {
+                  final String pDisplay = AstroTranslationService.translate(context, p['planet_tamil'] ?? p['planet'] ?? '', isPlanet: true);
                   return DataRow(
                     cells: [
-                      DataCell(Text(p['planet_tamil'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D1204)))),
+                      DataCell(Text(pDisplay, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D1204)))),
                       DataCell(Text((p['sthana_bala'] as double).toStringAsFixed(1))),
                       DataCell(Text((p['dig_bala'] as double).toStringAsFixed(1))),
                       DataCell(Text((p['kaala_bala'] as double).toStringAsFixed(1))),
@@ -2042,7 +2092,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           const SizedBox(height: 20),
 
           // ── Sthana Bala Sub-Breakdown ───────────────────────────────────────
-          _buildDetailCard("1. ஸ்தான பல உட்பிரிவுகள் (Sthana Bala Sub-Components)", [
+          _buildDetailCard(sthanaCardTitle, [
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
@@ -2051,20 +2101,13 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                 horizontalMargin: 8,
                 headingTextStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF5D1204)),
                 dataTextStyle: const TextStyle(fontSize: 12, color: Colors.black87),
-                columns: const [
-                  DataColumn(label: Text("கிரகம்")),
-                  DataColumn(label: Text("உச்சா பலம்")),
-                  DataColumn(label: Text("சப்தவர்க்கஜ")),
-                  DataColumn(label: Text("ஓஜ-யுக்ம")),
-                  DataColumn(label: Text("கேந்திராதி")),
-                  DataColumn(label: Text("த்ரேக்காண")),
-                  DataColumn(label: Text("மொத்த ஸ்தான பலம்")),
-                ],
+                columns: sthanaCols.map((c) => DataColumn(label: Text(c))).toList(),
                 rows: summaryList.map((p) {
                   final s = sthanaMap[p['planet']] ?? {};
+                  final String pDisplay = AstroTranslationService.translate(context, p['planet_tamil'] ?? p['planet'] ?? '', isPlanet: true);
                   return DataRow(
                     cells: [
-                      DataCell(Text(p['planet_tamil'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D1204)))),
+                      DataCell(Text(pDisplay, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D1204)))),
                       DataCell(Text(((s['uchha_bala'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(1))),
                       DataCell(Text(((s['saptavargaja_bala'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(1))),
                       DataCell(Text(((s['ojhayugma_bala'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(1))),
@@ -2080,7 +2123,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           const SizedBox(height: 20),
 
           // ── Kaala Bala Sub-Breakdown ─────────────────────────────────────────
-          _buildDetailCard("2. கால பல உட்பிரிவுகள் (Kaala Bala Sub-Components)", [
+          _buildDetailCard(kaalaCardTitle, [
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
@@ -2089,19 +2132,13 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                 horizontalMargin: 8,
                 headingTextStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF5D1204)),
                 dataTextStyle: const TextStyle(fontSize: 12, color: Colors.black87),
-                columns: const [
-                  DataColumn(label: Text("கிரகம்")),
-                  DataColumn(label: Text("நதோன்னத (பகல்/இரவு)")),
-                  DataColumn(label: Text("பக்ஷ பலம்")),
-                  DataColumn(label: Text("த்ரிபாக")),
-                  DataColumn(label: Text("அயன பலம்")),
-                  DataColumn(label: Text("மொத்த கால பலம்")),
-                ],
+                columns: kaalaCols.map((c) => DataColumn(label: Text(c))).toList(),
                 rows: summaryList.map((p) {
                   final k = kaalaMap[p['planet']] ?? {};
+                  final String pDisplay = AstroTranslationService.translate(context, p['planet_tamil'] ?? p['planet'] ?? '', isPlanet: true);
                   return DataRow(
                     cells: [
-                      DataCell(Text(p['planet_tamil'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D1204)))),
+                      DataCell(Text(pDisplay, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D1204)))),
                       DataCell(Text(((k['nathonnatha_bala'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(1))),
                       DataCell(Text(((k['paksha_bala'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(1))),
                       DataCell(Text(((k['tribhaga_bala'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(1))),
@@ -2116,10 +2153,20 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           const SizedBox(height: 20),
 
           // ── Information & Rules Card ───────────────────────────────────────
-          _buildDetailCard("ஷட்பலம் பற்றிய ஜோதிடக் குறிப்புகள்", [
-            _buildDetailRow("கணித அளவு", "1 ரூபம் (Rupa) = 60 விரூபங்கள் (Virupas)"),
-            _buildDetailRow("குறைந்தபட்ச தேவை", "புதன்: 7.0 | சூரியன், குரு: 6.5 | சந்திரன்: 6.0 | சுக்கிரன்: 5.5 | செவ்வாய், சனி: 5.0 ரூபங்கள்"),
-            _buildDetailRow("பலன் நிர்ணயம்", "1.0-க்கு மேல் விகிதம் பெற்ற கிரகங்களின் தசா-புக்திகள் நற்பலன்களையும் காரகத்துவ உயர்வுகளையும் தரும்."),
+          _buildDetailCard(notesCardTitle, [
+            if (langCode == 'hi') ...[
+              _buildDetailRow("माप की इकाई", "1 रूप = 60 विरूपा"),
+              _buildDetailRow("न्यूनतम आवश्यकता", "बुध: 7.0 | सूर्य, गुरु: 6.5 | चंद्र: 6.0 | शुक्र: 5.5 | मंगल, शनि: 5.0 रूप"),
+              _buildDetailRow("फल निर्धारण", "1.0 (100%) से अधिक अनुपात वाले ग्रह अपनी दशा-भुक्ति में शुभ फल प्रदान करते हैं।"),
+            ] else if (langCode == 'en') ...[
+              _buildDetailRow("Unit of Measurement", "1 Rupa = 60 Virupas"),
+              _buildDetailRow("Minimum Requirement", "Mercury: 7.0 | Sun, Jupiter: 6.5 | Moon: 6.0 | Venus: 5.5 | Mars, Saturn: 5.0 Rupas"),
+              _buildDetailRow("Interpretation", "Planets with a ratio above 1.0 (100%) deliver auspicious results and enhance their signification during their Dasa-Bhukti periods."),
+            ] else ...[
+              _buildDetailRow("கணித அளவு", "1 ரூபம் (Rupa) = 60 விரூபங்கள் (Virupas)"),
+              _buildDetailRow("குறைந்தபட்ச தேவை", "புதன்: 7.0 | சூரியன், குரு: 6.5 | சந்திரன்: 6.0 | சுக்கிரன்: 5.5 | செவ்வாய், சனி: 5.0 ரூபங்கள்"),
+              _buildDetailRow("பலன் நிர்ணயம்", "1.0-க்கு மேல் விகிதம் பெற்ற கிரகங்களின் தசா-புக்திகள் நற்பலன்களையும் காரகத்துவ உயர்வுகளையும் தரும்."),
+            ],
           ]),
           const SizedBox(height: 40),
         ],
@@ -2129,15 +2176,41 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
 
   // ── Visual Bar Charts Matching Reference Image ──────────────────────────
   Widget _buildShadbalaVisualCharts(Map<String, dynamic> shadbala) {
+    final langCode = Localizations.localeOf(context).languageCode;
     final vimshopakaList = (shadbala['vimshopaka_bala'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
     final planetMap = shadbala['planets'] as Map<String, dynamic>? ?? {};
     final bhavaList = (shadbala['bhava_bala'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
 
     const List<String> pOrder7 = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
-    const Map<String, String> shortTamil7 = {
+    
+    const Map<String, String> shortTamil = {
       'Sun': 'சூரி', 'Moon': 'சந்', 'Mars': 'செவ்', 'Mercury': 'புத',
-      'Jupiter': 'குரு', 'Venus': 'சுக்', 'Saturn': 'சனி'
+      'Jupiter': 'குரு', 'Venus': 'சுக்', 'Saturn': 'சனி', 'Rahu': 'ராகு', 'Ketu': 'கேது'
     };
+    const Map<String, String> shortEnglish = {
+      'Sun': 'Sun', 'Moon': 'Moon', 'Mars': 'Mars', 'Mercury': 'Merc',
+      'Jupiter': 'Jup', 'Venus': 'Ven', 'Saturn': 'Sat', 'Rahu': 'Rahu', 'Ketu': 'Ketu'
+    };
+    const Map<String, String> shortHindi = {
+      'Sun': 'सूर्य', 'Moon': 'चंद्र', 'Mars': 'मंगल', 'Mercury': 'बुध',
+      'Jupiter': 'गुरु', 'Venus': 'शुक्र', 'Saturn': 'शनि', 'Rahu': 'राहु', 'Ketu': 'केतु'
+    };
+
+    final Map<String, String> shortPlanets = langCode == 'hi'
+        ? shortHindi
+        : (langCode == 'en' ? shortEnglish : shortTamil);
+
+    final String vimshopakaTitle = langCode == 'hi'
+        ? 'विंशोपक बल - षड्वर्ग'
+        : (langCode == 'en' ? 'VIMSHOPAKA BALA - SHADVARGA' : 'விம்சோபக பலம் - ஷட்வர்க்கம்');
+
+    final String shadbalaTitle = langCode == 'hi'
+        ? 'षड्बल'
+        : (langCode == 'en' ? 'SHADBALA' : 'ஷட்பலம்');
+
+    final String bhavaBalaTitle = langCode == 'hi'
+        ? 'भाव बल'
+        : (langCode == 'en' ? 'BHAVA BALA' : 'பாவ பலம்');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -2154,11 +2227,11 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
         children: [
           // ── 1. VIMSHOPAKA BALA - SHADVARGA (9 Planets) ──
           if (vimshopakaList.isNotEmpty) ...[
-            _buildVimshopakaBarChart(vimshopakaList),
+            _buildVimshopakaBarChart(vimshopakaList, shortPlanets),
             const SizedBox(height: 6),
-            const Text(
-              "VIMSHOPAKA BALA - SHADVARGA",
-              style: TextStyle(
+            Text(
+              vimshopakaTitle,
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.5,
@@ -2169,11 +2242,11 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           ],
 
           // ── 2. SHADBALA (7 Planets) ──
-          _buildShadbalaBarChart(pOrder7, shortTamil7, planetMap),
+          _buildShadbalaBarChart(pOrder7, shortPlanets, planetMap),
           const SizedBox(height: 6),
-          const Text(
-            "SHADBALA",
-            style: TextStyle(
+          Text(
+            shadbalaTitle,
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.5,
@@ -2186,9 +2259,9 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           if (bhavaList.isNotEmpty) ...[
             _buildBhavaBalaBarChart(bhavaList),
             const SizedBox(height: 6),
-            const Text(
-              "BHAVA BALA",
-              style: TextStyle(
+            Text(
+              bhavaBalaTitle,
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.5,
@@ -2202,7 +2275,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
   }
 
   // ── 1. Vimshopaka Bar Chart (9 Bars) ──
-  Widget _buildVimshopakaBarChart(List<Map<String, dynamic>> list) {
+  Widget _buildVimshopakaBarChart(List<Map<String, dynamic>> list, Map<String, String> shortPlanets) {
     double maxPct = 0.0;
     for (var item in list) {
       double p = (item['percentage'] as num?)?.toDouble() ?? 0.0;
@@ -2218,6 +2291,8 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           double pct = (item['percentage'] as num?)?.toDouble() ?? 0.0;
           bool isGreen = item['is_green'] == true;
           double barHeight = (pct / maxPct) * 60.0 + 25.0;
+          final String pKey = item['planet'] ?? '';
+          final String displayLabel = shortPlanets[pKey] ?? item['label'] ?? pKey;
 
           return Expanded(
             child: Column(
@@ -2248,7 +2323,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    item['label'] ?? '',
+                    displayLabel,
                     style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
@@ -2509,7 +2584,9 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                 const SizedBox(height: 20),
                 _buildYogiAvayogiCard(),
                 const SizedBox(height: 20),
-                _buildAvasthasAndParivarthanaCard(),
+                _buildPlanetaryAvasthasCard(),
+                const SizedBox(height: 20),
+                _buildParivarthanaCard(),
                 const SizedBox(height: 20),
                 _buildUpagrahasCard(),
               ],
@@ -2653,7 +2730,8 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       if (widget.results['kala_pagai']?['warnings'] != null && (widget.results['kala_pagai']['warnings'] as List).isNotEmpty)
         _buildKalaPagaiCard(),
       _buildKalaNatpuPagaiAgeCard(),
-      _buildAvasthasAndParivarthanaCard(),
+      _buildPlanetaryAvasthasCard(),
+      _buildParivarthanaCard(),
       _buildSpecialStarsAndTharaisCard(),
       _buildUpagrahasCard(),
       _buildDasaNalvarMasterTableCard(),
@@ -2988,22 +3066,180 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     );
   }
 
-  Widget _buildAvasthasAndParivarthanaCard() {
+  Widget _buildPlanetaryAvasthasCard() {
     final avasthas = widget.results['planetary_avasthas'] as Map<String, dynamic>? ?? {};
+    final List detailedList = avasthas['detailed_list'] as List? ?? [];
+    if (detailedList.isEmpty) return const SizedBox();
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.4), width: 1.0),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: const BoxDecoration(color: Color(0xFF5D1204)),
+            child: Row(
+              children: const [
+                Icon(Icons.auto_awesome, color: Colors.amber, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "கிரக அவஸ்தைகள் (Planetary Avasthas)",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            color: const Color(0xFFFAF6EE),
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              children: detailedList.map((item) {
+                final String pTamil = item['planet_tamil'] ?? item['planet'] ?? '';
+                final String rasiTamil = item['rasi_tamil'] ?? '';
+                final String degStr = item['deg_str'] ?? '';
+                final String baladi = item['baladi_avastha'] ?? '';
+                final String baladiPower = item['baladi_power'] ?? '';
+                final String deeptadi = item['deeptadi_avastha'] ?? '';
+                final String jagradadi = item['jagradadi_avastha'] ?? '';
+                final String dignity = item['status'] ?? 'சமம்';
+                final bool hasDigbala = item['has_digbala'] == true;
+
+                Color dignityColor = const Color(0xFF5D1204);
+                Color dignityBg = Colors.transparent;
+                if (dignity == "உச்சம்") {
+                  dignityColor = Colors.green.shade800;
+                  dignityBg = Colors.green.shade50;
+                } else if (dignity == "ஆட்சி") {
+                  dignityColor = Colors.teal.shade800;
+                  dignityBg = Colors.teal.shade50;
+                } else if (dignity == "நீசம்") {
+                  dignityColor = Colors.red.shade800;
+                  dignityBg = Colors.red.shade50;
+                } else if (dignity == "பகை") {
+                  dignityColor = Colors.deepOrange.shade800;
+                  dignityBg = Colors.orange.shade50;
+                }
+
+                return Container(
+                  margin: const EdgeInsets.symmetric(vertical: 5),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.25), width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                pTamil,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5, color: Color(0xFF5D1204)),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "• $rasiTamil ($degStr)",
+                                style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                          Wrap(
+                            spacing: 6,
+                            children: [
+                              if (dignity != "சமம்")
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: dignityBg,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: dignityColor.withOpacity(0.5)),
+                                  ),
+                                  child: Text(
+                                    dignity,
+                                    style: TextStyle(color: dignityColor, fontSize: 11.5, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              if (hasDigbala)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE8F5E9),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: Colors.green),
+                                  ),
+                                  child: const Text(
+                                    "திக்பலம்",
+                                    style: TextStyle(color: Color(0xFF1B5E20), fontSize: 11.5, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 12, color: Color(0xFFFAF0DC)),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 4,
+                        children: [
+                          _buildAvasthaChip("பாலதி", baladi, power: baladiPower),
+                          _buildAvasthaChip("தீப்தாதி", deeptadi),
+                          _buildAvasthaChip("ஜாக்ரதாதி", jagradadi),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvasthaChip(String label, String value, {String? power}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "$label: ",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF8D6E63)),
+          ),
+          Text(
+            power != null && power.isNotEmpty ? "$value ($power)" : value,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5, color: Color(0xFF2C1810)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildParivarthanaCard() {
     final parivarthana = widget.results['parivarthana'] as Map<String, dynamic>?;
 
     List<Widget> rows = [];
-    avasthas.forEach((planet, info) {
-      if (info['status'] != "சமம்" || info['has_digbala'] == true) {
-        String pTamil = KPService.TAMIL_PLANETS[planet] ?? planet;
-        String statusDisplay = info['status'];
-        if (info['has_digbala'] == true) {
-          statusDisplay = statusDisplay == "சமம்" ? "திக்பலம்" : "$statusDisplay (திக்பலம்)";
-        }
-        rows.add(_buildDetailRow("$pTamil நிலை", statusDisplay, isPlanet: true));
-      }
-    });
-
     if (parivarthana != null && parivarthana['has_parivarthana'] == true) {
       final rasiP = parivarthana['rasi_parivarthana'] as List? ?? [];
       for (var rp in rasiP) {
@@ -3017,11 +3253,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       rows.add(_buildDetailRow("பரிவர்த்தனை", "இல்லை"));
     }
 
-    if (rows.isEmpty) {
-      rows.add(const Text("குறிப்பிடத்தக்க பரிவர்த்தனை அல்லது உச்ச/நீச அமைப்புகள் இல்லை"));
-    }
-
-    return _buildDetailCard("கிரக நிலைகள் & பரிவர்த்தனை யோகங்கள்", rows);
+    return _buildDetailCard("பரிவர்த்தனை யோகங்கள்", rows);
   }
 
   Widget _buildSpecialStarsAndTharaisCard() {
@@ -3075,9 +3307,13 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
 
     // Karma nakshatras
     if (karma != null) {
+      final karmaNak = karma['karma_nakshatra'] as String?;
+      if (karmaNak != null && karmaNak.isNotEmpty) {
+        rows.add(_buildDetailRow("கர்ம நட்சத்திரம் (10-வது நட்சத்திரம்)", karmaNak));
+      }
       final pKarma = karma['planets_in_karma'] as List? ?? [];
       for (var pk in pKarma) {
-        rows.add(_buildDetailRow("${pk['planet_tamil']} (${pk['nakshatra']})", pk['role'] ?? 'கரும நட்சத்திரம்'));
+        rows.add(_buildDetailRow("${pk['planet_tamil']} (${pk['nakshatra']})", pk['role'] ?? 'கர்ம நட்சத்திரம்'));
       }
     }
 
@@ -3085,7 +3321,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       rows.add(const Text("அனைத்து கிரகங்களும் சுப தாரைகளில் அமைந்துள்ளன"));
     }
 
-    return _buildDetailCard("வைநாசிகம், புஷ்கரம், தாரைகள் & கரும நட்சத்திரங்கள்", rows);
+    return _buildDetailCard("வைநாசிகம், புஷ்கரம், தாரைகள் & கர்ம நட்சத்திரங்கள்", rows);
   }
 
   Widget _buildUpagrahasCard() {
@@ -3302,7 +3538,14 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           const Divider(height: 1, color: Color(0xFFB58D3D)),
           _buildStatusRow("நடப்பு புத்தி இருப்பு", _calculateCurrentBhuktiBalance(activeBukthi, yearLength)),
           const Divider(height: 1, color: Color(0xFFB58D3D)),
-          _buildStatusRow("திதி சூன்ய ராசிகள்", widget.results['panchangam']?['suniya_rasi'] ?? "-"),
+          _buildStatusRow(
+            "திதி சூன்ய ராசிகள்",
+            KPService.formatSuniyaRasiWithBhava(
+              widget.results['panchangam']?['suniya_rasi'],
+              widget.results['planet_details']?['lagna'],
+              langCode: Localizations.localeOf(context).languageCode,
+            ),
+          ),
         ],
       ),
     );
@@ -3348,7 +3591,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     };
 
     final langCode = Localizations.localeOf(context).languageCode;
-    final String karmaWord = langCode == 'hi' ? 'कर्म' : (langCode == 'en' ? 'Karma' : 'கர்மா');
+    final String karmaWord = langCode == 'hi' ? 'कर्म' : (langCode == 'en' ? 'Karma' : 'மரபு');
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
@@ -3442,16 +3685,16 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
 
   Widget _buildKarmaNakshatraCard(Map<String, dynamic> data) {
     final langCode = Localizations.localeOf(context).languageCode;
-    final String karmaWord = langCode == 'hi' ? 'कर्म' : (langCode == 'en' ? 'Karma' : 'கர்மா');
+    final String karmaWord = langCode == 'hi' ? 'कर्म' : (langCode == 'en' ? 'Karma' : 'மரபு');
     final String cardTitle = langCode == 'hi' 
         ? 'कर्म नक्षत्र विवरण' 
-        : (langCode == 'en' ? 'Karma Nakshatra Registry' : 'கர்மா நட்சத்திர பதிவுகள்');
+        : (langCode == 'en' ? 'Karma Nakshatra Registry' : 'மரபு நட்சத்திர பதிவுகள்');
     final String cardSubtitle = langCode == 'hi'
         ? 'ग्रहों के स्थित नक्षत्र के माध्यम से आने वाले कर्म प्रभाव:'
-        : (langCode == 'en' ? 'Karmic influences through the occupied Nakshatras:' : 'கிரகங்கள் நின்ற நட்சத்திரம் வழியே தொடரும் கர்ம ஆதிக்கங்கள்:');
+        : (langCode == 'en' ? 'Karmic influences through the occupied Nakshatras:' : 'கிரகங்கள் நின்ற நட்சத்திரம் வழியே தொடரும் மரபு ஆதிக்கங்கள்:');
     final String refGuideTitle = langCode == 'hi'
         ? 'सभी कर्म नक्षत्र तालिका (Reference Guide)'
-        : (langCode == 'en' ? 'All Karma Nakshatras Table (Reference Guide)' : 'அனைத்து கர்மா நட்சத்திர அட்டவணை (Reference Guide)');
+        : (langCode == 'en' ? 'All Karma Nakshatras Table (Reference Guide)' : 'அனைத்து மரபு நட்சத்திர அட்டவணை (Reference Guide)');
 
     const List<String> sortedKeys = ["lagna", "sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu", "ketu"];
     final Map<String, String> planetTamil = {
@@ -3729,7 +3972,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           isTall: true,
         ),
         _buildPalangalCard(
-          "கர்ணம்", 
+          l10n.karanaLabel, 
           PalangalService.getDetailedKaranaPalan(pancha['karana']?.toString()),
           Icons.category_rounded,
           color: Colors.teal.shade700,

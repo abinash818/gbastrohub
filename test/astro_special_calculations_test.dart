@@ -2,9 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:astrology_flutter/services/astro_special_calculations_service.dart';
 import 'package:astrology_flutter/services/kp_service.dart';
 import 'package:astrology_flutter/services/astro_utils.dart';
+import 'package:astrology_flutter/astro_engine/astro_engine.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    await AstroEngine.init();
+  });
 
   group('AstroSpecialCalculationsService Tests', () {
     test('Indu Lagna calculation matches classical rules', () {
@@ -273,6 +277,76 @@ void main() {
       expect(vainasika['vainasika_pada'], equals(4));
       expect(vainasika['vainasika_rasi_tamil'], equals('மகரம்'));
       expect(vainasika['vainasika_nak_lord_tamil'], equals('சந்திரன்'));
+    });
+
+    test('Karma Nakshatras correctly identifies 10th star as Karma and 1st as Janma Tharai', () {
+      // Pooradam case (index 19)
+      // 1st: Pooradam (Janma Tharai)
+      // 10th: Bharani (Karma Nakshatra)
+      // 19th: Pooram (Adhana Nakshatra)
+      double moonLon = 255.0; // Pooradam
+      Map<String, double> planetLons = {
+        'Moon': 255.0,    // Pooradam (diff 1 -> Janma Tharai)
+        'Mars': 20.0,     // Bharani (diff 10 -> Karma Nakshatra)
+        'Sun': 140.0,     // Pooram (diff 19 -> Adhana Nakshatra)
+        'Ketu': 125.0,    // Magam (diff 18 -> NOT karma nakshatra)
+        'Mercury': 170.0, // Hastham (diff 21 -> NOT karma nakshatra)
+      };
+
+      final karmaRes = AstroSpecialCalculationsService.checkKarmaNakshatras(moonLon, planetLons);
+      expect(karmaRes['janma_nakshatra'], equals('பூராடம்'));
+      expect(karmaRes['karma_nakshatra'], equals('பரணி'));
+      expect(karmaRes['adhana_nakshatra'], equals('பூரம்'));
+
+      final pkList = karmaRes['planets_in_karma'] as List<Map<String, dynamic>>;
+      expect(pkList.length, equals(3));
+
+      final moonPk = pkList.firstWhere((p) => p['planet'] == 'Moon');
+      expect(moonPk['nakshatra'], equals('பூராடம்'));
+      expect(moonPk['role'], equals('ஜென்ம தாரை'));
+
+      final marsPk = pkList.firstWhere((p) => p['planet'] == 'Mars');
+      expect(marsPk['nakshatra'], equals('பரணி'));
+      expect(marsPk['role'], equals('கர்ம நட்சத்திரம்'));
+
+      final sunPk = pkList.firstWhere((p) => p['planet'] == 'Sun');
+      expect(sunPk['nakshatra'], equals('பூரம்'));
+      expect(sunPk['role'], equals('ஆதான நட்சத்திரம்'));
+
+      // Ensure Ketu in Magam is NOT included
+      expect(pkList.any((p) => p['planet'] == 'Ketu'), isFalse);
+    });
+
+    test('calculateAstronomicalTamilDate accurately computes month, date, and 60-year cycle', () {
+      final engine = AstroEngine();
+
+      // 1. Panguni 31 to Chithirai 1 (2024)
+      var p31 = KPService.calculateAstronomicalTamilDate(DateTime(2024, 4, 13, 10, 0), engine);
+      expect('${p31['month_tamil']} ${p31['date']}', equals('பங்குனி 31'));
+      expect(p31['year_tamil'], equals('ஸ்ரீ சோபகிருது'));
+
+      var c1 = KPService.calculateAstronomicalTamilDate(DateTime(2024, 4, 14, 10, 0), engine);
+      expect('${c1['month_tamil']} ${c1['date']}', equals('சித்திரை 1'));
+      expect(c1['year_tamil'], equals('ஸ்ரீ குரோதி'));
+
+      // 2. Aadi 32 days in 2024
+      var aadi32 = KPService.calculateAstronomicalTamilDate(DateTime(2024, 8, 16, 10, 0), engine);
+      expect('${aadi32['month_tamil']} ${aadi32['date']}', equals('ஆடி 32'));
+
+      var aavani1 = KPService.calculateAstronomicalTamilDate(DateTime(2024, 8, 17, 10, 0), engine);
+      expect('${aavani1['month_tamil']} ${aavani1['date']}', equals('ஆவணி 1'));
+
+      // 3. Purattasi 1 and Purattasi 5 in 2024
+      var pur1 = KPService.calculateAstronomicalTamilDate(DateTime(2024, 9, 17, 10, 0), engine);
+      expect('${pur1['month_tamil']} ${pur1['date']}', equals('புரட்டாசி 1'));
+
+      var pur5 = KPService.calculateAstronomicalTamilDate(DateTime(2024, 9, 21, 10, 0), engine);
+      expect('${pur5['month_tamil']} ${pur5['date']}', equals('புரட்டாசி 5'));
+
+      // 4. 2026 Purattasi 5
+      var pur5_2026 = KPService.calculateAstronomicalTamilDate(DateTime(2026, 9, 21, 10, 0), engine);
+      expect('${pur5_2026['month_tamil']} ${pur5_2026['date']}', equals('புரட்டாசி 5'));
+      expect(pur5_2026['year_tamil'], equals('ஸ்ரீ பராபவ'));
     });
 
     test('Kala Pagai 9 pairs correctly detected', () {

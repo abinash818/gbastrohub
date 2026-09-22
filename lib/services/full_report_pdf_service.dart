@@ -889,7 +889,7 @@ class FullReportPdfService {
                 {"title": "ராசி பலன்", "content": PalangalService.getDetailedRasiPalan(moon['rasi'])},
                 {"title": "நட்சத்திர பலன்", "content": PalangalService.getDetailedNakshatraPalan(moon['nakshatra'], moon['pada'])},
                 {"title": "யோகம்", "content": PalangalService.getDetailedYogaPalan(pancha['yoga'])},
-                {"title": "கர்ணம்", "content": PalangalService.getDetailedKaranaPalan(pancha['karana']?.toString())},
+                {"title": "கரணம்", "content": PalangalService.getDetailedKaranaPalan(pancha['karana']?.toString())},
                 {"title": "கிழமை", "content": PalangalService.getDetailedWeekdayPalan(pancha['vara'])},
                 {"title": "திதி", "content": PalangalService.getDetailedThithiPalan(pancha['tithi'])},
                 {"title": "தசா புத்தி பலன்", "content": dasaPalanText},

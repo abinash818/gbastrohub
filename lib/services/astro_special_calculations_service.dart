@@ -591,10 +591,11 @@ class AstroSpecialCalculationsService {
     };
   }
 
-  /// 3.2 உச்சம், நீசம், ஆட்சி, திக்பலம், நிஷ்பலம்
+  /// 3.2 கிரக அவஸ்தைகள் (Planetary Avasthas: Baladi, Deeptadi, Jagradadi, Dignity & Digbala)
   static Map<String, dynamic> calculatePlanetaryAvasthas(Map<String, double> planetLons, double lagnaLon) {
     int lagnaRasi = (lagnaLon / 30).floor() % 12;
     Map<String, dynamic> avasthas = {};
+    List<Map<String, dynamic>> detailedList = [];
 
     const Map<String, int> uchamRasis = {
       'Sun': 0, 'Moon': 1, 'Mars': 9, 'Mercury': 5, 'Jupiter': 3, 'Venus': 11, 'Saturn': 6, 'Rahu': 1, 'Ketu': 7
@@ -606,8 +607,30 @@ class AstroSpecialCalculationsService {
       'Sun': [4], 'Moon': [3], 'Mars': [0, 7], 'Mercury': [2, 5],
       'Jupiter': [8, 11], 'Venus': [1, 6], 'Saturn': [9, 10], 'Rahu': [10], 'Ketu': [7]
     };
+    const Map<String, List<int>> natpuRasis = {
+      'Sun': [0, 3, 7, 8, 11],
+      'Moon': [2, 4, 5],
+      'Mars': [3, 4, 8, 11],
+      'Mercury': [0, 1, 4, 6, 7],
+      'Jupiter': [0, 3, 4, 7],
+      'Venus': [2, 5, 9, 10],
+      'Saturn': [1, 2, 5, 6],
+      'Rahu': [1, 2, 5, 6],
+      'Ketu': [0, 7, 8, 11],
+    };
+    const Map<String, List<int>> pagaiRasis = {
+      'Sun': [1, 5, 6, 9, 10],
+      'Moon': [7, 9, 10],
+      'Mars': [2, 5],
+      'Mercury': [3],
+      'Jupiter': [2, 5, 6],
+      'Venus': [4, 7],
+      'Saturn': [0, 3, 4, 7],
+      'Rahu': [0, 3, 4],
+      'Ketu': [1, 2, 5, 6],
+    };
 
-    // திக்பலம்: 1st house (Lagna) - Merc, Jup; 4th house - Moon, Ven; 7th house - Sat; 10th house - Sun, Mars
+    // திக்பலம்: 1st house - Merc, Jup; 4th house - Moon, Ven; 7th house - Sat; 10th house - Sun, Mars
     const Map<String, int> digbalaHouses = {
       'Mercury': 1, 'Jupiter': 1,
       'Moon': 4, 'Venus': 4,
@@ -615,10 +638,17 @@ class AstroSpecialCalculationsService {
       'Sun': 10, 'Mars': 10
     };
 
-    planetLons.forEach((planet, lon) {
-      int rasi = (lon / 30).floor() % 12;
-      int houseFromLagna = ((rasi - lagnaRasi + 12) % 12) + 1;
+    const List<String> pOrder = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
 
+    for (var planet in pOrder) {
+      if (!planetLons.containsKey(planet)) continue;
+      double lon = planetLons[planet]!;
+      int rasi = (lon / 30).floor() % 12;
+      double degInSign = lon % 30.0;
+      int houseFromLagna = ((rasi - lagnaRasi + 12) % 12) + 1;
+      bool isOddSign = (rasi % 2 == 0); // 0=Aries (Odd), 1=Taurus (Even)...
+
+      // 1. Dignity Status
       String status = "சமம்";
       if (uchamRasis[planet] == rasi) {
         status = "உச்சம்";
@@ -626,19 +656,135 @@ class AstroSpecialCalculationsService {
         status = "நீசம்";
       } else if (aatchiRasis[planet]?.contains(rasi) ?? false) {
         status = "ஆட்சி";
+      } else if (natpuRasis[planet]?.contains(rasi) ?? false) {
+        status = "நட்பு";
+      } else if (pagaiRasis[planet]?.contains(rasi) ?? false) {
+        status = "பகை";
+      }
+
+      // 2. Baladi Avastha (5 States: Bala, Kumara, Yuva, Vriddha, Mrita)
+      String baladiAvastha = "";
+      String baladiAvasthaEn = "";
+      String baladiPower = "";
+      if (isOddSign) {
+        if (degInSign < 6.0) {
+          baladiAvastha = "பால அவஸ்தை (குழந்தை)";
+          baladiAvasthaEn = "Bala (Infant)";
+          baladiPower = "25%";
+        } else if (degInSign < 12.0) {
+          baladiAvastha = "குமார அவஸ்தை (வாலிபம்)";
+          baladiAvasthaEn = "Kumara (Youth)";
+          baladiPower = "50%";
+        } else if (degInSign < 18.0) {
+          baladiAvastha = "யுவ அவஸ்தை (முழு பலம்)";
+          baladiAvasthaEn = "Yuva (Adult)";
+          baladiPower = "100%";
+        } else if (degInSign < 24.0) {
+          baladiAvastha = "விருத்த அவஸ்தை (முதியவர்)";
+          baladiAvasthaEn = "Vriddha (Old)";
+          baladiPower = "15%";
+        } else {
+          baladiAvastha = "மிருத அவஸ்தை (மரண நிலை)";
+          baladiAvasthaEn = "Mrita (Dead)";
+          baladiPower = "0%";
+        }
+      } else {
+        // Even Sign (Reverse Order)
+        if (degInSign < 6.0) {
+          baladiAvastha = "மிருத அவஸ்தை (மரண நிலை)";
+          baladiAvasthaEn = "Mrita (Dead)";
+          baladiPower = "0%";
+        } else if (degInSign < 12.0) {
+          baladiAvastha = "விருத்த அவஸ்தை (முதியவர்)";
+          baladiAvasthaEn = "Vriddha (Old)";
+          baladiPower = "15%";
+        } else if (degInSign < 18.0) {
+          baladiAvastha = "யுவ அவஸ்தை (முழு பலம்)";
+          baladiAvasthaEn = "Yuva (Adult)";
+          baladiPower = "100%";
+        } else if (degInSign < 24.0) {
+          baladiAvastha = "குமார அவஸ்தை (வாலிபம்)";
+          baladiAvasthaEn = "Kumara (Youth)";
+          baladiPower = "50%";
+        } else {
+          baladiAvastha = "பால அவஸ்தை (குழந்தை)";
+          baladiAvasthaEn = "Bala (Infant)";
+          baladiPower = "25%";
+        }
+      }
+
+      // 3. Deeptadi Avastha (9 States)
+      bool isCombust = false;
+      if (planet != 'Sun' && planet != 'Rahu' && planet != 'Ketu' && planetLons.containsKey('Sun')) {
+        double diffSun = (lon - planetLons['Sun']!).abs();
+        if (diffSun > 180) diffSun = 360 - diffSun;
+        if (planet == 'Moon' && diffSun <= 12.0) isCombust = true;
+        else if (planet == 'Mars' && diffSun <= 17.0) isCombust = true;
+        else if (planet == 'Mercury' && diffSun <= 14.0) isCombust = true;
+        else if (planet == 'Jupiter' && diffSun <= 11.0) isCombust = true;
+        else if (planet == 'Venus' && diffSun <= 10.0) isCombust = true;
+        else if (planet == 'Saturn' && diffSun <= 15.0) isCombust = true;
+      }
+
+      String deeptadiAvastha = "சாந்த அவஸ்தை (அமைதி)";
+      String deeptadiAvasthaEn = "Shanta (Peaceful)";
+      if (isCombust) {
+        deeptadiAvastha = "கோப அவஸ்தை (அஸ்தமனம்)";
+        deeptadiAvasthaEn = "Kopa (Combust)";
+      } else if (status == "உச்சம்") {
+        deeptadiAvastha = "தீப்த அவஸ்தை (உச்சம்)";
+        deeptadiAvasthaEn = "Deepta (Exalted)";
+      } else if (status == "ஆட்சி") {
+        deeptadiAvastha = "சுவஸ்த அவஸ்தை (ஆட்சி)";
+        deeptadiAvasthaEn = "Swastha (Own)";
+      } else if (status == "நட்பு") {
+        deeptadiAvastha = "முதித அவஸ்தை (நட்பு)";
+        deeptadiAvasthaEn = "Mudita (Friend)";
+      } else if (status == "பகை") {
+        deeptadiAvastha = "தீன அவஸ்தை (பகை)";
+        deeptadiAvasthaEn = "Deena (Enemy)";
+      } else if (status == "நீசம்") {
+        deeptadiAvastha = "கல அவஸ்தை (நீசம்)";
+        deeptadiAvasthaEn = "Khala (Debilitated)";
+      }
+
+      // 4. Jagradadi Avastha (3 States: Jagrat, Swapna, Sushupti)
+      String jagradadiAvastha = "ஸ்வப்ன நிலை (கனவு - 50%)";
+      String jagradadiAvasthaEn = "Swapna (Dream - 50%)";
+      if (status == "உச்சம்" || status == "ஆட்சி") {
+        jagradadiAvastha = "ஜாக்ரத் நிலை (விழிப்பு - 100%)";
+        jagradadiAvasthaEn = "Jagrat (Awake - 100%)";
+      } else if (status == "பகை" || status == "நீசம்" || isCombust) {
+        jagradadiAvastha = "சுஷுப்தி நிலை (உறக்கம் - 0%)";
+        jagradadiAvasthaEn = "Sushupti (Asleep - 0%)";
       }
 
       bool hasDigbala = digbalaHouses[planet] == houseFromLagna;
 
-      avasthas[planet] = {
+      final pMap = {
+        'planet': planet,
+        'planet_tamil': KPService.TAMIL_PLANETS[planet] ?? planet,
+        'deg_str': KPService.formatDegrees(degInSign),
         'status': status,
         'has_digbala': hasDigbala,
         'digbala_text': hasDigbala ? "திக்பலம் உள்ளது" : "",
         'house': houseFromLagna,
         'rasi_tamil': TAMIL_SIGNS[SIGNS[rasi]],
+        'is_odd_sign': isOddSign,
+        'baladi_avastha': baladiAvastha,
+        'baladi_avastha_en': baladiAvasthaEn,
+        'baladi_power': baladiPower,
+        'deeptadi_avastha': deeptadiAvastha,
+        'deeptadi_avastha_en': deeptadiAvasthaEn,
+        'jagradadi_avastha': jagradadiAvastha,
+        'jagradadi_avastha_en': jagradadiAvasthaEn,
       };
-    });
 
+      avasthas[planet] = pMap;
+      detailedList.add(pMap);
+    }
+
+    avasthas['detailed_list'] = detailedList;
     return avasthas;
   }
 
@@ -741,18 +887,16 @@ class AstroSpecialCalculationsService {
     return result;
   }
 
-  /// 3.5 கரும நட்சத்திரங்கள் (Karma Nakshatras)
+  /// 3.5 கர்ம நட்சத்திரங்கள் (Karma Nakshatras)
   static Map<String, dynamic> checkKarmaNakshatras(double moonLon, Map<String, double> planetLons) {
     int janmaNakIdx = (moonLon / (360.0 / 27.0)).floor() % 27;
+    int karmaNakIdx = (janmaNakIdx + 9) % 27; // 10-வது நட்சத்திரம்: கர்ம நட்சத்திரம்
+    int adhanaNakIdx = (janmaNakIdx + 18) % 27; // 19-வது நட்சத்திரம்: ஆதான நட்சத்திரம்
+
     Set<int> karmaIndices = {
       janmaNakIdx,
-      (janmaNakIdx + 9) % 27,
-      (janmaNakIdx + 18) % 27,
-      (janmaNakIdx + 6) % 27,
-      (janmaNakIdx + 15) % 27,
-      (janmaNakIdx + 24) % 27,
-      (janmaNakIdx + 17) % 27,
-      (janmaNakIdx + 26) % 27,
+      karmaNakIdx,
+      adhanaNakIdx,
     };
 
     List<Map<String, dynamic>> planetsInKarma = [];
@@ -760,25 +904,31 @@ class AstroSpecialCalculationsService {
       int pNak = (lon / (360.0 / 27.0)).floor() % 27;
       if (karmaIndices.contains(pNak)) {
         int diff = (pNak - janmaNakIdx + 27) % 27 + 1;
-        String role = "கரும நட்சத்திரம்";
-        if (diff == 1) role = "ஜென்ம நட்சத்திரம்";
-        else if (diff == 10) role = "அனுஜென்ம நட்சத்திரம்";
-        else if (diff == 19) role = "திரிஜென்ம / கர்ம நட்சத்திரம்";
-        else if (diff == 7) role = "நைதன / வதை நட்சத்திரம்";
-        else if (diff == 16) role = "சங்காதக நட்சத்திரம்";
-        else if (diff == 25) role = "மானச நட்சத்திரம்";
+        String role = "";
+        if (diff == 1) {
+          role = "ஜென்ம தாரை";
+        } else if (diff == 10) {
+          role = "கர்ம நட்சத்திரம்";
+        } else if (diff == 19) {
+          role = "ஆதான நட்சத்திரம்";
+        }
 
-        planetsInKarma.add({
-          'planet': planet,
-          'planet_tamil': KPService.TAMIL_PLANETS[planet] ?? planet,
-          'nakshatra': TAMIL_NAKSHATRAS[pNak],
-          'role': role,
-        });
+        if (role.isNotEmpty) {
+          planetsInKarma.add({
+            'planet': planet,
+            'planet_tamil': KPService.TAMIL_PLANETS[planet] ?? planet,
+            'nakshatra': TAMIL_NAKSHATRAS[pNak],
+            'role': role,
+            'diff': diff,
+          });
+        }
       }
     });
 
     return {
       'janma_nakshatra': TAMIL_NAKSHATRAS[janmaNakIdx],
+      'karma_nakshatra': TAMIL_NAKSHATRAS[karmaNakIdx],
+      'adhana_nakshatra': TAMIL_NAKSHATRAS[adhanaNakIdx],
       'planets_in_karma': planetsInKarma,
     };
   }

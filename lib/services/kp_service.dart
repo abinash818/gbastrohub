@@ -568,7 +568,7 @@ class KPService {
       } catch (_) {}
     }
     finalResults['nazhigai'] = _calculateNazhigai(pancha['sunrise'], dt);
-    finalResults['hora'] = _calculateHora(pancha['sunrise'], dt, astroDate.weekday);
+    finalResults['hora'] = _calculateHora(pancha['sunrise'], dt, astroDate.weekday, sunset: pancha['sunset']);
     finalResults['special_yoga'] = _getAmirthaYoga(astroDate.weekday, star);
     
     // Matching Attributes
@@ -1428,8 +1428,11 @@ class KPService {
     }
     String dayLord = planetLords[weekday];
     String vara = weekLords[weekday];
-    int tMonthIdx = (sun / 30).floor(); int tDate = (sun % 30).floor() + 1;
-    int yearOff = dt.year - 1987; if (dt.month < 4 || (dt.month == 4 && dt.day < 14)) yearOff -= 1;
+
+    final tCalendar = calculateAstronomicalTamilDate(dt, engine, sunriseStr: sunrise, sunsetStr: sunset);
+    String tamilMonth = tCalendar['month_tamil'] as String;
+    int tDate = tCalendar['date'] as int;
+    String tamilYear = tCalendar['year_tamil'] as String;
     
     // Correct Karana Calculation
     int kIndex = (diff / 6).floor(); // 0 to 59
@@ -1472,8 +1475,8 @@ class KPService {
       'sunset': sunset,
       'vara': vara,
       'day_lord': dayLord,
-      'tamil_month': TAMIL_MONTHS[tMonthIdx % 12],
-      'tamil_year': TAMIL_YEARS_60[yearOff % 60],
+      'tamil_month': tamilMonth,
+      'tamil_year': tamilYear,
       'tamil_date': tDate,
       'diff': diff,
       'suniya_rasi': _calculateThithiSuniya(tithiName)
@@ -1501,6 +1504,183 @@ class KPService {
       'Amavasya': '-'
     };
     return suniyaMap[tithi] ?? "-";
+  }
+
+  /// Formats Thithi Suniya Rasis with their house/bhava numbers relative to Lagna.
+  /// Example output: "தனுசு (2-ஆம் பாவம்), மீனம் (5-ஆம் பாவம்)"
+  static String formatSuniyaRasiWithBhava(String? suniyaStr, dynamic lagnaInput, {String langCode = 'ta'}) {
+    if (suniyaStr == null || suniyaStr.trim().isEmpty || suniyaStr.trim() == "-") {
+      return "-";
+    }
+
+    int lagnaIdx = -1;
+    if (lagnaInput is double || lagnaInput is int || lagnaInput is num) {
+      double l = (lagnaInput as num).toDouble();
+      lagnaIdx = (l / 30).floor() % 12;
+    } else if (lagnaInput is String) {
+      lagnaIdx = _getRasiIndex(lagnaInput);
+    } else if (lagnaInput is Map) {
+      final lon = lagnaInput['longitude'];
+      if (lon is num) {
+        lagnaIdx = (lon.toDouble() / 30).floor() % 12;
+      } else {
+        lagnaIdx = _getRasiIndex(lagnaInput['rasi']?.toString() ?? '');
+      }
+    }
+
+    final parts = suniyaStr.split(',');
+    List<String> formatted = [];
+
+    for (var p in parts) {
+      String rasiName = p.trim();
+      if (rasiName.isEmpty) continue;
+      int rIdx = _getRasiIndex(rasiName);
+      if (rIdx != -1 && lagnaIdx != -1) {
+        int bhava = ((rIdx - lagnaIdx + 12) % 12) + 1;
+        if (langCode == 'hi') {
+          formatted.add("$rasiName ($bhava भाव)");
+        } else if (langCode == 'en') {
+          formatted.add("$rasiName (House $bhava)");
+        } else {
+          formatted.add("$rasiName ($bhava-ஆம் பாவம்)");
+        }
+      } else {
+        formatted.add(rasiName);
+      }
+    }
+
+    return formatted.isEmpty ? suniyaStr : formatted.join(', ');
+  }
+
+  static int _getRasiIndex(String name) {
+    String n = name.trim().toLowerCase();
+    if (n.startsWith('மேஷ') || n.contains('aries')) return 0;
+    if (n.startsWith('ரிஷ') || n.contains('taurus')) return 1;
+    if (n.startsWith('மிது') || n.contains('gemini')) return 2;
+    if (n.startsWith('கட') || n.contains('cancer')) return 3;
+    if (n.startsWith('சிம்') || n.contains('leo')) return 4;
+    if (n.startsWith('கன்') || n.contains('virgo')) return 5;
+    if (n.startsWith('துலா') || n.contains('libra')) return 6;
+    if (n.startsWith('விரு') || n.contains('scorpio')) return 7;
+    if (n.startsWith('தனு') || n.contains('sagittarius')) return 8;
+    if (n.startsWith('மக') || n.contains('capricorn')) return 9;
+    if (n.startsWith('கும்') || n.contains('aquarius')) return 10;
+    if (n.startsWith('மீன') || n.contains('pisces')) return 11;
+    return -1;
+  }
+
+  /// Astronomically calculates the accurate Tamil Month, Date, and Year based on Sun transit (Sankranti).
+  static Map<String, dynamic> calculateAstronomicalTamilDate(
+    DateTime dt,
+    AstroEngine engine, {
+    String? sunriseStr,
+    String? sunsetStr,
+  }) {
+    DateTime effectiveDate = DateTime(dt.year, dt.month, dt.day);
+    int sH = 6, sM = 0;
+    if (sunriseStr != null && sunriseStr != "-") {
+      try {
+        List<String> parts = sunriseStr.split(" ")[0].split(":");
+        sH = int.parse(parts[0]);
+        sM = int.parse(parts[1]);
+        if (sunriseStr.contains("PM") && sH < 12) sH += 12;
+        if (sunriseStr.contains("AM") && sH == 12) sH = 0;
+      } catch (_) {}
+    }
+    // Tamil calendar day begins at sunrise
+    if (dt.hour < sH || (dt.hour == sH && dt.minute < sM)) {
+      effectiveDate = effectiveDate.subtract(const Duration(days: 1));
+    }
+
+    DateTime midday = DateTime(effectiveDate.year, effectiveDate.month, effectiveDate.day, 12, 0);
+    double sunLon = engine.calculatePlanetLongitude(midday, 0); // 0 = Sun
+    int tMonthIdx = (sunLon / 30.0).floor() % 12;
+    double sankrantiDeg = tMonthIdx * 30.0;
+
+    DateTime low = midday.subtract(const Duration(days: 35));
+    DateTime high = midday;
+
+    DateTime curr = midday;
+    while (true) {
+      double lonVal = engine.calculatePlanetLongitude(curr, 0);
+      double diff = (lonVal - sankrantiDeg + 360.0) % 360.0;
+      if (diff > 180.0) {
+        low = curr;
+        high = curr.add(const Duration(days: 1));
+        break;
+      }
+      curr = curr.subtract(const Duration(days: 1));
+      if (midday.difference(curr).inDays > 35) {
+        low = curr;
+        high = midday;
+        break;
+      }
+    }
+
+    // Binary search for exact transit minute
+    for (int i = 0; i < 16; i++) {
+      int midMillis = (low.millisecondsSinceEpoch + high.millisecondsSinceEpoch) ~/ 2;
+      DateTime midDt = DateTime.fromMillisecondsSinceEpoch(midMillis);
+      double midLon = engine.calculatePlanetLongitude(midDt, 0);
+      double diff = (midLon - sankrantiDeg + 360.0) % 360.0;
+      if (diff < 180.0) {
+        high = midDt;
+      } else {
+        low = midDt;
+      }
+    }
+
+    DateTime transitDt = high;
+
+    // Tamil Sankranti rule:
+    // If transit occurs before sunset (default 18:15 IST), Day 1 is the transit date.
+    // If transit occurs after sunset, Day 1 is the next date.
+    int setH = 18, setM = 15;
+    if (sunsetStr != null && sunsetStr != "-") {
+      try {
+        List<String> parts = sunsetStr.split(" ")[0].split(":");
+        setH = int.parse(parts[0]);
+        setM = int.parse(parts[1]);
+        if (sunsetStr.contains("PM") && setH < 12) setH += 12;
+        if (sunsetStr.contains("AM") && setH == 12) setH = 0;
+      } catch (_) {}
+    }
+
+    DateTime day1Date = DateTime(transitDt.year, transitDt.month, transitDt.day);
+    if (transitDt.hour > setH || (transitDt.hour == setH && transitDt.minute >= setM)) {
+      day1Date = day1Date.add(const Duration(days: 1));
+    }
+
+    int tDate = effectiveDate.difference(day1Date).inDays + 1;
+    if (tDate <= 0) tDate = 1;
+    if (tDate > 32) tDate = 32;
+
+    // Tamil Year Calculation
+    int calYear = effectiveDate.year;
+    int tamilYearNum;
+    if (tMonthIdx == 0) {
+      if (effectiveDate.isBefore(day1Date)) {
+        tamilYearNum = calYear - 1;
+      } else {
+        tamilYearNum = calYear;
+      }
+    } else if (tMonthIdx >= 1 && tMonthIdx <= 8) {
+      tamilYearNum = calYear;
+    } else {
+      tamilYearNum = calYear - 1;
+    }
+
+    int yearOff = (tamilYearNum - 1987) % 60;
+    if (yearOff < 0) yearOff += 60;
+    String tamilYearName = TAMIL_YEARS_60[yearOff];
+
+    return {
+      'month_index': tMonthIdx,
+      'month_tamil': TAMIL_MONTHS[tMonthIdx],
+      'date': tDate,
+      'year_num': tamilYearNum,
+      'year_tamil': tamilYearName,
+    };
   }
 
 
@@ -1648,25 +1828,85 @@ class KPService {
     return engList[idx];
   }
 
-  static String _calculateHora(String sunrise, DateTime birthDt, int weekday) {
+  static String _calculateHora(String sunrise, DateTime birthDt, int weekday, {String? sunset}) {
     try {
-      final parts = sunrise.split(':');
-      if (parts.length < 2) return "-";
-      final riseH = int.parse(parts[0]);
-      final riseM = int.parse(parts[1].split(' ')[0]);
-      final riseTime = DateTime(birthDt.year, birthDt.month, birthDt.day, riseH, riseM);
-      double diffHours = birthDt.difference(riseTime).inMinutes / 60.0;
-      if (diffHours < 0) diffHours += 24;
-      int horaIdx = diffHours.floor() % 24;
-      const dayStartLords = [0, 3, 6, 2, 5, 1, 4];
-      int startLordIdx = dayStartLords[weekday % 7];
-      const horaPlanets = ['Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter', 'Mars'];
-      final startPlanet = _engPlanetFromIdx(startLordIdx);
-      int currentIdxInCycle = horaPlanets.indexOf(startPlanet);
-      int targetPlanetIdx = (currentIdxInCycle + horaIdx) % 7;
-      final targetPlanet = horaPlanets[targetPlanetIdx];
+      DateTime? parseTimeStr(String? str) {
+        if (str == null || str.isEmpty || str == "-") return null;
+        final p = str.trim().split(' ');
+        final hms = p[0].split(':');
+        int h = int.parse(hms[0]);
+        int m = int.parse(hms[1]);
+        int s = hms.length > 2 ? int.parse(hms[2]) : 0;
+        if (p.length > 1) {
+          final ampm = p[1].toUpperCase();
+          if (ampm == "PM" && h < 12) h += 12;
+          if (ampm == "AM" && h == 12) h = 0;
+        }
+        return DateTime(birthDt.year, birthDt.month, birthDt.day, h, m, s);
+      }
+
+      DateTime? riseTime = parseTimeStr(sunrise);
+      if (riseTime == null) return "-";
+      DateTime? setTime = parseTimeStr(sunset);
+
+      int horaIdx = 0;
+      if (setTime != null) {
+        if (!birthDt.isBefore(riseTime) && birthDt.isBefore(setTime)) {
+          // Daytime (0 to 11)
+          double dayMins = setTime.difference(riseTime).inMinutes.toDouble();
+          if (dayMins <= 0) dayMins = 720.0;
+          double horaiSlotMins = dayMins / 12.0;
+          double elapsedMins = birthDt.difference(riseTime).inMinutes.toDouble();
+          horaIdx = (elapsedMins / horaiSlotMins).floor().clamp(0, 11);
+        } else if (!birthDt.isBefore(setTime)) {
+          // Nighttime after sunset (12 to 23)
+          DateTime nextRise = riseTime.add(const Duration(days: 1));
+          double nightMins = nextRise.difference(setTime).inMinutes.toDouble();
+          if (nightMins <= 0) nightMins = 720.0;
+          double horaiSlotMins = nightMins / 12.0;
+          double elapsedMins = birthDt.difference(setTime).inMinutes.toDouble();
+          horaIdx = 12 + (elapsedMins / horaiSlotMins).floor().clamp(0, 11);
+        } else {
+          // Nighttime before sunrise (12 to 23)
+          DateTime prevSet = setTime.subtract(const Duration(days: 1));
+          double nightMins = riseTime.difference(prevSet).inMinutes.toDouble();
+          if (nightMins <= 0) nightMins = 720.0;
+          double horaiSlotMins = nightMins / 12.0;
+          double elapsedMins = birthDt.difference(prevSet).inMinutes.toDouble();
+          horaIdx = 12 + (elapsedMins / horaiSlotMins).floor().clamp(0, 11);
+        }
+      } else {
+        double diffHours = birthDt.difference(riseTime).inMinutes / 60.0;
+        if (diffHours < 0) diffHours += 24;
+        horaIdx = diffHours.floor() % 24;
+      }
+
+      // 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
+      const horaLordsByDay = [
+        'Sun',     // Sunday
+        'Moon',    // Monday
+        'Mars',    // Tuesday
+        'Mercury', // Wednesday
+        'Jupiter', // Thursday
+        'Venus',   // Friday
+        'Saturn',  // Saturday
+      ];
+
+      const horaCycle = [
+        'Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter', 'Mars'
+      ];
+
+      int dayIdx = (weekday == 7) ? 0 : weekday % 7;
+      String firstHoraPlanet = horaLordsByDay[dayIdx];
+      int startCycleIdx = horaCycle.indexOf(firstHoraPlanet);
+
+      int targetPlanetIdx = (startCycleIdx + horaIdx) % 7;
+      final targetPlanet = horaCycle[targetPlanetIdx];
+
       return TAMIL_PLANETS[targetPlanet] ?? targetPlanet;
-    } catch (e) { return "-"; }
+    } catch (e) {
+      return "-";
+    }
   }
 
   static String _engPlanetFromIdx(int idx) {

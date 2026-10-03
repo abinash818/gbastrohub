@@ -165,9 +165,10 @@ class DashboardScreen extends StatelessWidget {
                           _buildPremiumButton(
                             context, 
                             "வாஸ்து", 
-                            "மனை அடி சாஸ்திரம் & குழிக்கணக்கு",
+                            "மனை அடி சாஸ்திரம் & GP வாஸ்து",
                             "assets/images/vastu_planet.png",
-                            '/vaasthu',
+                            null,
+                            isVaasthuTrigger: true,
                             customIcon: Icons.foundation_rounded,
                           ),
                           _buildPremiumButton(
@@ -218,7 +219,7 @@ class DashboardScreen extends StatelessWidget {
     String subtitle,
     String? imagePath, 
     String? route, 
-    {bool isKp = false, bool isNadi = false, bool isAboutTrigger = false, String? featureKey, IconData? customIcon}
+    {bool isKp = false, bool isNadi = false, bool isAboutTrigger = false, bool isVaasthuTrigger = false, String? featureKey, IconData? customIcon}
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -244,6 +245,10 @@ class DashboardScreen extends StatelessWidget {
             onTap: () {
               if (isAboutTrigger) {
                 _showAboutUsDialog(context);
+                return;
+              }
+              if (isVaasthuTrigger) {
+                _showVaasthuSelectionModal(context);
                 return;
               }
               if (featureKey != null && !AccessService().hasAccess(featureKey)) {
@@ -474,6 +479,201 @@ class DashboardScreen extends StatelessWidget {
                 child: Text(AppLocalizations.of(context)!.close, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold)),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Premium Modal Bottom Sheet for Vastu Mode Selection (பாரம்பரியம் vs GP)
+  void _showVaasthuSelectionModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        decoration: const BoxDecoration(
+          color: Color(0xFFFAF6EE),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 20,
+              offset: Offset(0, -4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFB58D3D).withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.foundation_rounded, color: Color(0xFF5D1204), size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    'வாஸ்து முறை தேர்வு',
+                    style: GoogleFonts.cinzel(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF5D1204),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'நீங்கள் பயன்படுத்த விரும்பும் முறையைத் தேர்வு செய்யவும்',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF7A6855),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Option 1: பாரம்பரியம்
+              _buildVaasthuOptionCard(
+                context: ctx,
+                title: 'பாரம்பரியம்',
+                subtitle: 'மனை அடி சாஸ்திரம் & குழிக்கணக்கு (11 பொருத்தங்கள்)',
+                badge: 'Traditional',
+                icon: Icons.temple_hindu_rounded,
+                iconColor: const Color(0xFFB45309),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.pushNamed(context, '/vaasthu');
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Option 2: GP
+              _buildVaasthuOptionCard(
+                context: ctx,
+                title: 'GP',
+                subtitle: 'GP வாஸ்து விதிகள் & சிறப்புக் கணிதம்',
+                badge: 'GP Vastu',
+                icon: Icons.architecture_rounded,
+                iconColor: const Color(0xFF5D1204),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.pushNamed(context, '/gp_vaasthu');
+                },
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVaasthuOptionCard({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required String badge,
+    required IconData icon,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.3), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF5D1204).withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFAF6EE),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 28),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            title,
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF5D1204),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF5D1204).withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              badge,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF5D1204),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: Color(0xFFB58D3D),
+                ),
+              ],
+            ),
           ),
         ),
       ),

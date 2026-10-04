@@ -511,6 +511,62 @@ class GpGunaItem {
   });
 }
 
+class GpNamaYogaItem {
+  final int number; // 1 to 27
+  final String name; // விஷ்கம்பம் .. வைதிருதி
+  final String effect;
+  final bool isGood;
+  final String status;
+  final String iconEmoji;
+
+  const GpNamaYogaItem({
+    required this.number,
+    required this.name,
+    required this.effect,
+    required this.isGood,
+    required this.status,
+    required this.iconEmoji,
+  });
+}
+
+class GpDikpalakarItem {
+  final int number; // 1 to 8
+  final String name; // இந்திரன் .. ஈசானியம்
+  final String direction; // கிழக்கு .. வடகிழக்கு
+  final String effect;
+  final bool isGood;
+  final String status;
+  final String iconEmoji;
+
+  const GpDikpalakarItem({
+    required this.number,
+    required this.name,
+    required this.direction,
+    required this.effect,
+    required this.isGood,
+    required this.status,
+    required this.iconEmoji,
+  });
+}
+
+class GpAthidevathaiItem {
+  final int number; // 1 to 8
+  final String name; // இந்திரன் .. ஈசானியம்
+  final String effect;
+  final bool isGood;
+  final String status;
+  final String iconEmoji;
+
+  const GpAthidevathaiItem({
+    required this.number,
+    required this.name,
+    required this.effect,
+    required this.isGood,
+    required this.status,
+    required this.iconEmoji,
+  });
+}
+
 class GpKuzhiResult {
   final GpVaasthuRegion region;
   final double length1Ft;
@@ -649,6 +705,21 @@ class GpKuzhiResult {
   final int gunaNumber;
   final GpGunaItem guna;
 
+  // 23. Nama Yoga Phalan (நாம யோகப் பலன்)
+  final int namaYogaNumber;
+  final int namaYogaTotal;
+  final GpNamaYogaItem namaYoga;
+
+  // 24. Ashta Dikpalakar Phalan (அஷ்டதிக்கு பாலகர் பலன்)
+  final int dikpalakarNumber;
+  final int dikpalakarTotal;
+  final GpDikpalakarItem dikpalakar;
+
+  // 25. Athidevathai Phalan (அதிதேவதை பலன்)
+  final int athidevathaiNumber;
+  final int athidevathaiTotal;
+  final GpAthidevathaiItem athidevathai;
+
   const GpKuzhiResult({
     required this.region,
     required this.length1Ft,
@@ -738,6 +809,15 @@ class GpKuzhiResult {
     required this.panchaka,
     required this.gunaNumber,
     required this.guna,
+    required this.namaYogaNumber,
+    required this.namaYogaTotal,
+    required this.namaYoga,
+    required this.dikpalakarNumber,
+    required this.dikpalakarTotal,
+    required this.dikpalakar,
+    required this.athidevathaiNumber,
+    required this.athidevathaiTotal,
+    required this.athidevathai,
   });
 }
 
@@ -1297,21 +1377,21 @@ class GpVaasthuService {
     ),
     GpVaasthuNakshatraItem(
       number: 15,
-      name: 'விசாகம்',
-      effect: 'செல்வம் விரையம் உண்டாகும்',
-      isGood: false,
-      status: 'அதமம் (விரையம்)',
-      gana: 'ராட்சச கணம்',
-      iconEmoji: '💸',
-    ),
-    GpVaasthuNakshatraItem(
-      number: 16,
       name: 'சுவாதி',
       effect: 'அதிக சிரமம் - மிகுந்த சுகம் / அதிக சிரமம்',
       isGood: true,
       status: 'மத்திமம் (சுகம்/சிரமம்)',
       gana: 'தேவ கணம்',
       iconEmoji: '⚖️',
+    ),
+    GpVaasthuNakshatraItem(
+      number: 16,
+      name: 'விசாகம்',
+      effect: 'செல்வம் விரையம் உண்டாகும்',
+      isGood: false,
+      status: 'அதமம் (விரையம்)',
+      gana: 'ராட்சச கணம்',
+      iconEmoji: '💸',
     ),
     GpVaasthuNakshatraItem(
       number: 17,
@@ -2121,10 +2201,10 @@ class GpVaasthuService {
     ['சி', 'சி', 'சி', 'ம', 'சி', 'அ', 'ம'],
     // 14. சித்திரை
     ['சி', 'பி', 'சி', 'சி', 'சி', 'சி', 'ம'],
-    // 15. விசாகம்
-    ['ம', 'ம', 'ம', 'சி', 'சி', 'சி', 'சி'],
-    // 16. சுவாதி
+    // 15. சுவாதி
     ['சி', 'அ', 'சி', 'சி', 'அ', 'சி', 'சி'],
+    // 16. விசாகம்
+    ['ம', 'ம', 'ம', 'சி', 'சி', 'சி', 'சி'],
     // 17. அனுஷம்
     ['ம', 'சி', 'சி', 'சி', 'சி', 'சி', 'சி'],
     // 18. கேட்டை
@@ -2726,6 +2806,394 @@ class GpVaasthuService {
     return gunaList[rem - 1];
   }
 
+  /// All 27 Nama Yogas (23. நாம யோக பலன்கள்)
+  static const List<GpNamaYogaItem> namaYogaList = [
+    GpNamaYogaItem(
+      number: 1,
+      name: 'விஷ்கம்பம்',
+      effect: 'அதர்மம் / தீமை உண்டாகும்',
+      isGood: false,
+      status: 'அதமம் (தீமை)',
+      iconEmoji: '❌',
+    ),
+    GpNamaYogaItem(
+      number: 2,
+      name: 'பிரீதி',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '✨',
+    ),
+    GpNamaYogaItem(
+      number: 3,
+      name: 'ஆயுஷ்மான்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '🌱',
+    ),
+    GpNamaYogaItem(
+      number: 4,
+      name: 'சௌபாக்கியம்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '👑',
+    ),
+    GpNamaYogaItem(
+      number: 5,
+      name: 'சோபனம்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '🌟',
+    ),
+    GpNamaYogaItem(
+      number: 6,
+      name: 'அதிகண்டம்',
+      effect: 'அதர்மம் / தீமை உண்டாகும்',
+      isGood: false,
+      status: 'அதமம் (தீமை)',
+      iconEmoji: '⚠️',
+    ),
+    GpNamaYogaItem(
+      number: 7,
+      name: 'சுகர்மம்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '🎯',
+    ),
+    GpNamaYogaItem(
+      number: 8,
+      name: 'திருதி',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '💎',
+    ),
+    GpNamaYogaItem(
+      number: 9,
+      name: 'சூலம்',
+      effect: 'அதர்மம் / தீமை உண்டாகும்',
+      isGood: false,
+      status: 'அதமம் (தீமை)',
+      iconEmoji: '⚡',
+    ),
+    GpNamaYogaItem(
+      number: 10,
+      name: 'கண்டம்',
+      effect: 'அதர்மம் / தீமை உண்டாகும்',
+      isGood: false,
+      status: 'அதமம் (தீமை)',
+      iconEmoji: '⛔',
+    ),
+    GpNamaYogaItem(
+      number: 11,
+      name: 'விருத்தி',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '📈',
+    ),
+    GpNamaYogaItem(
+      number: 12,
+      name: 'துருவம்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '🏛️',
+    ),
+    GpNamaYogaItem(
+      number: 13,
+      name: 'வியாகாதம்',
+      effect: 'அதர்மம் / தீமை உண்டாகும்',
+      isGood: false,
+      status: 'அதமம் (தீமை)',
+      iconEmoji: '🌪️',
+    ),
+    GpNamaYogaItem(
+      number: 14,
+      name: 'ஹர்ஷணம்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '😊',
+    ),
+    GpNamaYogaItem(
+      number: 15,
+      name: 'வஜ்ரம்',
+      effect: 'அதர்மம் / தீமை உண்டாகும்',
+      isGood: false,
+      status: 'அதமம் (தீமை)',
+      iconEmoji: '🔨',
+    ),
+    GpNamaYogaItem(
+      number: 16,
+      name: 'சித்தி',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '🏆',
+    ),
+    GpNamaYogaItem(
+      number: 17,
+      name: 'வியதீபாதம்',
+      effect: 'அதர்மம் / தீமை உண்டாகும்',
+      isGood: false,
+      status: 'அதமம் (தீமை)',
+      iconEmoji: '🔥',
+    ),
+    GpNamaYogaItem(
+      number: 18,
+      name: 'வரியான்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '🌈',
+    ),
+    GpNamaYogaItem(
+      number: 19,
+      name: 'பரிகம்',
+      effect: 'மத்திமம் / சுபம் உண்டாகும்',
+      isGood: true,
+      status: 'மத்திமம் (சுபம்)',
+      iconEmoji: '⚖️',
+    ),
+    GpNamaYogaItem(
+      number: 20,
+      name: 'சிவம்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '🕉️',
+    ),
+    GpNamaYogaItem(
+      number: 21,
+      name: 'சித்தம்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '💡',
+    ),
+    GpNamaYogaItem(
+      number: 22,
+      name: 'சாத்தியம்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '🏅',
+    ),
+    GpNamaYogaItem(
+      number: 23,
+      name: 'சுபம்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '🪷',
+    ),
+    GpNamaYogaItem(
+      number: 24,
+      name: 'சுப்ரம்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '🕊️',
+    ),
+    GpNamaYogaItem(
+      number: 25,
+      name: 'பிராமியம்',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '🌸',
+    ),
+    GpNamaYogaItem(
+      number: 26,
+      name: 'மஹேந்திரம் (ஐந்திரம்)',
+      effect: 'உத்தமம் / நன்மை உண்டாகும்',
+      isGood: true,
+      status: 'உத்தமம் (நன்மை)',
+      iconEmoji: '👑',
+    ),
+    GpNamaYogaItem(
+      number: 27,
+      name: 'வைதிருதி',
+      effect: 'அதர்மம் / தீமை உண்டாகும்',
+      isGood: false,
+      status: 'அதமம் (தீமை)',
+      iconEmoji: '☠️',
+    ),
+  ];
+
+  /// 23. Get Nama Yoga from Ayadi Number ((ஆயாதி எண் * 4) % 27; மீதம் 0 என்றால் 27)
+  static GpNamaYogaItem getNamaYogaByAyadi(int ayadiNumber) {
+    final int total = ayadiNumber * 4;
+    int rem = total % 27;
+    if (rem == 0) rem = 27;
+    return namaYogaList[rem - 1];
+  }
+
+  /// All 8 Ashta Dikpalakas (24. அஷ்டதிக்கு பாலகர் பலன்கள்)
+  static const List<GpDikpalakarItem> dikpalakarList = [
+    GpDikpalakarItem(
+      number: 1,
+      name: 'இந்திரன்',
+      direction: 'கிழக்கு',
+      effect: 'யோகம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (யோகம்)',
+      iconEmoji: '👑',
+    ),
+    GpDikpalakarItem(
+      number: 2,
+      name: 'அக்கினி',
+      direction: 'தென்கிழக்கு',
+      effect: 'வாதை உண்டாகும்',
+      isGood: false,
+      status: 'தீமை (வாதை)',
+      iconEmoji: '🔥',
+    ),
+    GpDikpalakarItem(
+      number: 3,
+      name: 'எமன்',
+      direction: 'தெற்கு',
+      effect: 'மரணம் உண்டாகும்',
+      isGood: false,
+      status: 'தீமை (மரணம்)',
+      iconEmoji: '⚠️',
+    ),
+    GpDikpalakarItem(
+      number: 4,
+      name: 'நிருதி',
+      direction: 'தென்மேற்கு',
+      effect: 'சுகம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (சுகம்)',
+      iconEmoji: '✨',
+    ),
+    GpDikpalakarItem(
+      number: 5,
+      name: 'வருணன்',
+      direction: 'மேற்கு',
+      effect: 'இன்பம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (இன்பம்)',
+      iconEmoji: '🌊',
+    ),
+    GpDikpalakarItem(
+      number: 6,
+      name: 'வாயு',
+      direction: 'வடமேற்கு',
+      effect: 'தனம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (தனம்)',
+      iconEmoji: '💨',
+    ),
+    GpDikpalakarItem(
+      number: 7,
+      name: 'குபேரன்',
+      direction: 'வடக்கு',
+      effect: 'செல்வம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (செல்வம்)',
+      iconEmoji: '💰',
+    ),
+    GpDikpalakarItem(
+      number: 8,
+      name: 'ஈசானியம்',
+      direction: 'வடகிழக்கு',
+      effect: 'சந்தோஷம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (சந்தோஷம்)',
+      iconEmoji: '🕉️',
+    ),
+  ];
+
+  /// 24. Get Ashta Dikpalakar from Ayadi Number ((ஆயாதி எண் * 9) % 8; மீதம் 0 என்றால் 8)
+  static GpDikpalakarItem getDikpalakarByAyadi(int ayadiNumber) {
+    final int total = ayadiNumber * 9;
+    int rem = total % 8;
+    if (rem == 0) rem = 8;
+    return dikpalakarList[rem - 1];
+  }
+
+  /// All 8 Athidevathas (25. அதிதேவதை பலன்கள்)
+  static const List<GpAthidevathaiItem> athidevathaiList = [
+    GpAthidevathaiItem(
+      number: 1,
+      name: 'இந்திரன்',
+      effect: 'யோகம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (யோகம்)',
+      iconEmoji: '👑',
+    ),
+    GpAthidevathaiItem(
+      number: 2,
+      name: 'அக்கினி',
+      effect: 'அவஸ்தை உண்டாகும்',
+      isGood: false,
+      status: 'தீமை (அவஸ்தை)',
+      iconEmoji: '🔥',
+    ),
+    GpAthidevathaiItem(
+      number: 3,
+      name: 'எமன்',
+      effect: 'மரணம் உண்டாகும்',
+      isGood: false,
+      status: 'தீமை (மரணம்)',
+      iconEmoji: '⚠️',
+    ),
+    GpAthidevathaiItem(
+      number: 4,
+      name: 'நிருதி',
+      effect: 'சந்தோசம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (சந்தோசம்)',
+      iconEmoji: '✨',
+    ),
+    GpAthidevathaiItem(
+      number: 5,
+      name: 'வருணன்',
+      effect: 'இன்பம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (இன்பம்)',
+      iconEmoji: '🌊',
+    ),
+    GpAthidevathaiItem(
+      number: 6,
+      name: 'வாயு',
+      effect: 'தனம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (தனம்)',
+      iconEmoji: '💨',
+    ),
+    GpAthidevathaiItem(
+      number: 7,
+      name: 'குபேரன்',
+      effect: 'இலாபம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (இலாபம்)',
+      iconEmoji: '💰',
+    ),
+    GpAthidevathaiItem(
+      number: 8,
+      name: 'ஈசானியம்',
+      effect: 'சகல சௌக்கியம் உண்டாகும்',
+      isGood: true,
+      status: 'சுபம் (சௌக்கியம்)',
+      iconEmoji: '🕉️',
+    ),
+  ];
+
+  /// 25. Get Athidevathai from Age Number ((வயது எண் * 5) % 8; மீதம் 0 என்றால் 8)
+  static GpAthidevathaiItem getAthidevathaiByAge(int ageNumber) {
+    final int total = ageNumber * 5;
+    int rem = total % 8;
+    if (rem == 0) rem = 8;
+    return athidevathaiList[rem - 1];
+  }
+
   /// Calculate GP Kuzhikanakku and all Vaasthu Poruthams
   static GpKuzhiResult calculateKuzhi({
     required GpVaasthuRegion region,
@@ -2917,6 +3385,24 @@ class GpVaasthuService {
     if (gunaNum == 0) gunaNum = 3;
     final GpGunaItem guna = gunaList[gunaNum - 1];
 
+    // 23. Nama Yoga Phalan (நாம யோகப் பலன்: (ஆயாதி எண் * 4) % 27; மீதம் 0 என்றால் 27)
+    final int namaYogaTotal = roundedAyadi * 4;
+    int namaYogaNum = namaYogaTotal % 27;
+    if (namaYogaNum == 0) namaYogaNum = 27;
+    final GpNamaYogaItem namaYoga = namaYogaList[namaYogaNum - 1];
+
+    // 24. Ashta Dikpalakar Phalan (அஷ்டதிக்கு பாலகர் பலன்: (ஆயாதி எண் * 9) % 8; மீதம் 0 என்றால் 8)
+    final int dikpalakarTotal = roundedAyadi * 9;
+    int dikpalakarNum = dikpalakarTotal % 8;
+    if (dikpalakarNum == 0) dikpalakarNum = 8;
+    final GpDikpalakarItem dikpalakar = dikpalakarList[dikpalakarNum - 1];
+
+    // 25. Athidevathai Phalan (அதிதேவதை பலன்: (வயது எண் * 5) % 8; மீதம் 0 என்றால் 8)
+    final int athidevathaiTotal = ageNum * 5;
+    int athidevathaiNum = athidevathaiTotal % 8;
+    if (athidevathaiNum == 0) athidevathaiNum = 8;
+    final GpAthidevathaiItem athidevathai = athidevathaiList[athidevathaiNum - 1];
+
     return GpKuzhiResult(
       region: region,
       length1Ft: l1Ft,
@@ -3006,6 +3492,15 @@ class GpVaasthuService {
       panchaka: panchaka,
       gunaNumber: gunaNum,
       guna: guna,
+      namaYogaNumber: namaYogaNum,
+      namaYogaTotal: namaYogaTotal,
+      namaYoga: namaYoga,
+      dikpalakarNumber: dikpalakarNum,
+      dikpalakarTotal: dikpalakarTotal,
+      dikpalakar: dikpalakar,
+      athidevathaiNumber: athidevathaiNum,
+      athidevathaiTotal: athidevathaiTotal,
+      athidevathai: athidevathai,
     );
   }
 }

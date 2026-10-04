@@ -139,9 +139,9 @@ void main() {
     });
 
     test('16. Nethiram test', () {
-      // Vaaram = 5 (வியாழன்/குரு) -> Start star = 5 * 3 = 15 (விசாகம்)
+      // Vaaram = 5 (வியாழன்/குரு) -> Start star = 5 * 3 = 15 (சுவாதி)
       // Nakshatram = 10 (மகம்)
-      // Range 1 (9 stars): 15-23 (விசாகம் to அவிட்டம்) -> No 10
+      // Range 1 (9 stars): 15-23 (சுவாதி to அவிட்டம்) -> No 10
       // Range 2 (12 stars): 24-8 (சதயம் to பூசம்) -> No 10
       // Range 3 (6 stars): 9-14 (ஆயில்யம் to சித்திரை) -> Contains 10 (மகம்)
       // Result: 0 - கண் (அதமம் / தீமை)
@@ -150,7 +150,7 @@ void main() {
       expect(nethiram.isGood, false);
       expect(nethiram.status.contains('அதமம்'), true);
       expect(nethiram.startStarNumber, 15);
-      expect(nethiram.startStarName.contains('விசாகம்'), true);
+      expect(nethiram.startStarName.contains('சுவாதி'), true);
 
       // Verify overall Kuzhi calculation has nethiram populated
       final res = GpVaasthuService.calculateKuzhi(
@@ -403,6 +403,114 @@ void main() {
       expect(res.guna.number, 3);
       expect(res.gunaNumber, 3);
       expect(res.guna.name, 'உடல் ஆரோக்கியம்');
+    });
+
+    test('24. Nama Yoga test', () {
+      // User example: Ayadi = 1763 -> 1763 * 4 = 7052 -> 7052 - 7047 = 5 (சோபனம் - உத்தமம் / நன்மை)
+      final yoga5 = GpVaasthuService.getNamaYogaByAyadi(1763);
+      expect(yoga5.number, 5);
+      expect(yoga5.name, 'சோபனம்');
+      expect(yoga5.effect.contains('நன்மை'), true);
+      expect(yoga5.isGood, true);
+      expect(yoga5.status.contains('உத்தமம்'), true);
+
+      // Ayadi = 1 -> 1 * 4 = 4 (சௌபாக்கியம் - உத்தமம் / நன்மை)
+      final yoga4 = GpVaasthuService.getNamaYogaByAyadi(1);
+      expect(yoga4.number, 4);
+      expect(yoga4.name, 'சௌபாக்கியம்');
+      expect(yoga4.isGood, true);
+
+      // Remainder = 0 -> 27 (வைதிருதி - அதமம் / தீமை)
+      final yoga27 = GpVaasthuService.getNamaYogaByAyadi(27);
+      expect(yoga27.number, 27);
+      expect(yoga27.name, 'வைதிருதி');
+      expect(yoga27.isGood, false);
+      expect(yoga27.status.contains('அதமம்'), true);
+
+      // Full calculation check (Ayadi = 1763 in overall result)
+      final res = GpVaasthuService.calculateKuzhi(
+        region: GpVaasthuRegion.madurai,
+        l1Ft: 30,
+        w1Ft: 20,
+      );
+      // For 30x20 in Madurai: Ayadi = 900 -> 900 * 4 = 3600 % 27 = 9 (சூலம்)
+      expect(res.namaYogaNumber, 9);
+      expect(res.namaYoga.name, 'சூலம்');
+      expect(res.namaYoga.isGood, false);
+    });
+
+    test('25. Ashta Dikpalakar test', () {
+      // User example: Ayadi = 1763 -> 1763 * 9 = 15867 -> 15867 - 15864 = 3 (எமன் – மரணம்)
+      final dik3 = GpVaasthuService.getDikpalakarByAyadi(1763);
+      expect(dik3.number, 3);
+      expect(dik3.name, 'எமன்');
+      expect(dik3.direction, 'தெற்கு');
+      expect(dik3.effect.contains('மரணம்'), true);
+      expect(dik3.isGood, false);
+      expect(dik3.status.contains('தீமை'), true);
+
+      // Ayadi = 1 -> 1 * 9 = 9 % 8 = 1 (இந்திரன் – யோகம்)
+      final dik1 = GpVaasthuService.getDikpalakarByAyadi(1);
+      expect(dik1.number, 1);
+      expect(dik1.name, 'இந்திரன்');
+      expect(dik1.direction, 'கிழக்கு');
+      expect(dik1.isGood, true);
+
+      // Remainder = 0 -> 8 (ஈசானியம் – சந்தோஷம்)
+      final dik8 = GpVaasthuService.getDikpalakarByAyadi(8);
+      expect(dik8.number, 8);
+      expect(dik8.name, 'ஈசானியம்');
+      expect(dik8.direction, 'வடகிழக்கு');
+      expect(dik8.isGood, true);
+      expect(dik8.status.contains('சுபம்'), true);
+
+      // Full calculation check (Ayadi = 900 in Madurai 30x20 -> 900 * 9 = 8100 % 8 = 4 (நிருதி - சுகம்))
+      final res = GpVaasthuService.calculateKuzhi(
+        region: GpVaasthuRegion.madurai,
+        l1Ft: 30,
+        w1Ft: 20,
+      );
+      expect(res.dikpalakarNumber, 4);
+      expect(res.dikpalakar.name, 'நிருதி');
+      expect(res.dikpalakar.direction, 'தென்மேற்கு');
+      expect(res.dikpalakar.isGood, true);
+    });
+
+    test('26. Athidevathai test', () {
+      // User example: Ayadi = 1763 -> Age = 1 -> 1 * 5 = 5 -> 5 % 8 = 5 (வருணன் – இன்பம் உண்டாகும்)
+      final athi5 = GpVaasthuService.getAthidevathaiByAge(1);
+      expect(athi5.number, 5);
+      expect(athi5.name, 'வருணன்');
+      expect(athi5.effect, 'இன்பம் உண்டாகும்');
+      expect(athi5.isGood, true);
+      expect(athi5.status.contains('சுபம்'), true);
+
+      // Age = 2 -> 2 * 5 = 10 -> 10 % 8 = 2 (அக்கினி – அவஸ்தை உண்டாகும்)
+      final athi2 = GpVaasthuService.getAthidevathaiByAge(2);
+      expect(athi2.number, 2);
+      expect(athi2.name, 'அக்கினி');
+      expect(athi2.effect, 'அவஸ்தை உண்டாகும்');
+      expect(athi2.isGood, false);
+
+      // Age = 8 -> 8 * 5 = 40 -> 40 % 8 = 0 -> 8 (ஈசானியம் – சகல சௌக்கியம் உண்டாகும்)
+      final athi8 = GpVaasthuService.getAthidevathaiByAge(8);
+      expect(athi8.number, 8);
+      expect(athi8.name, 'ஈசானியம்');
+      expect(athi8.effect, 'சகல சௌக்கியம் உண்டாகும்');
+      expect(athi8.isGood, true);
+
+      // Full calculation check with Ayadi = 1763 in Madurai (or check properties of calculateKuzhi)
+      final res = GpVaasthuService.calculateKuzhi(
+        region: GpVaasthuRegion.madurai,
+        l1Ft: 30,
+        w1Ft: 20,
+      );
+      // For 30x20 in Madurai: Ayadi = 900 -> Age = (900 * 27) % 100 = 24300 % 100 = 0 -> age 100 (or % 100).
+      // 100 * 5 = 500 % 8 = 4 (நிருதி – சந்தோசம் உண்டாகும்)
+      expect(res.athidevathaiNumber, 4);
+      expect(res.athidevathai.name, 'நிருதி');
+      expect(res.athidevathai.effect, 'சந்தோசம் உண்டாகும்');
+      expect(res.athidevathai.isGood, true);
     });
   });
 }

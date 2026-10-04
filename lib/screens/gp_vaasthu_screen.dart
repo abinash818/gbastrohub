@@ -255,6 +255,18 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 _buildGunaResultCard(_result!),
                 const SizedBox(height: 16),
 
+                // 23. Nama Yoga Phalan Result Card (நாம யோகப் பலன்)
+                _buildNamaYogaResultCard(_result!),
+                const SizedBox(height: 16),
+
+                // 24. Ashta Dikpalakar Phalan Result Card (அஷ்டதிக்கு பாலகர் பலன்)
+                _buildDikpalakarResultCard(_result!),
+                const SizedBox(height: 16),
+
+                // 25. Athidevathai Phalan Result Card (அதிதேவதை பலன்)
+                _buildAthidevathaiResultCard(_result!),
+                const SizedBox(height: 16),
+
                 // Kuzhi Result Card
                 _buildResultCard(_result!),
                 const SizedBox(height: 18),
@@ -328,6 +340,15 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 const SizedBox(height: 18),
 
                 _buildAllGunasReferenceCard(),
+                const SizedBox(height: 18),
+
+                _buildAllNamaYogasReferenceCard(),
+                const SizedBox(height: 18),
+
+                _buildAllDikpalakarsReferenceCard(),
+                const SizedBox(height: 18),
+
+                _buildAllAthidevathaisReferenceCard(),
                 const SizedBox(height: 18),
 
                 // Step-by-Step Formula Explanation
@@ -5082,7 +5103,461 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
     );
   }
 
-  // 23. Highlighted Result Card with Rounded Kuzhi
+  // 23. Highlighted Nama Yoga Result Card (23. நாம யோகப் பலன்)
+  Widget _buildNamaYogaResultCard(GpKuzhiResult res) {
+    final namaYoga = res.namaYoga;
+    final isGood = namaYoga.isGood;
+    final int multiple27 = res.namaYogaNumber == 27 ? (res.namaYogaTotal - 27) : ((res.namaYogaTotal ~/ 27) * 27);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828)).withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(namaYoga.iconEmoji, style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'நாம யோகப் பலன் (Nama Yoga Phalan)',
+                  style: GoogleFonts.outfit(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF5D1204),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: isGood ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828)),
+                ),
+                child: Text(
+                  namaYoga.status,
+                  style: TextStyle(
+                    color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isGood
+                    ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
+                    : [const Color(0xFFB71C1C), const Color(0xFFD32F2F)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${res.namaYogaNumber}',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${res.namaYogaNumber} – ${namaYoga.name}',
+                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        namaYoga.effect,
+                        style: const TextStyle(fontSize: 13, color: Color(0xFFFFE082), fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF6EE),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                    const SizedBox(width: 6),
+                    const Expanded(
+                      child: Text(
+                        'நாம யோகப் பலன் கணிதம்: (ஆயாதி எண் × 4) % 27',
+                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text('• ஆயாதி எண் × 4 = ${res.roundedAyadi} × 4 = ${res.namaYogaTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                Text('• 27 இன் மடங்கு கழிவு = ${res.namaYogaTotal} - $multiple27 = ${res.namaYogaNumber} (${namaYoga.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                const SizedBox(height: 4),
+                Text('➔ (${res.namaYogaNumber}) ${namaYoga.name} — ${namaYoga.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 24. Highlighted Ashta Dikpalakar Result Card (24. அஷ்டதிக்கு பாலகர் பலன்)
+  Widget _buildDikpalakarResultCard(GpKuzhiResult res) {
+    final dikpalakar = res.dikpalakar;
+    final isGood = dikpalakar.isGood;
+    final int multiple8 = res.dikpalakarNumber == 8 ? (res.dikpalakarTotal - 8) : ((res.dikpalakarTotal ~/ 8) * 8);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828)).withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(dikpalakar.iconEmoji, style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'அஷ்டதிக்கு பாலகர் பலன் (Ashta Dikpalakar)',
+                  style: GoogleFonts.outfit(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF5D1204),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: isGood ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828)),
+                ),
+                child: Text(
+                  dikpalakar.status,
+                  style: TextStyle(
+                    color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isGood
+                    ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
+                    : [const Color(0xFFB71C1C), const Color(0xFFD32F2F)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${res.dikpalakarNumber}',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${res.dikpalakarNumber} – ${dikpalakar.name} (${dikpalakar.direction})',
+                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        dikpalakar.effect,
+                        style: const TextStyle(fontSize: 13, color: Color(0xFFFFE082), fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF6EE),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                    const SizedBox(width: 6),
+                    const Expanded(
+                      child: Text(
+                        'அஷ்டதிக்கு பாலகர் பலன் கணிதம்: (ஆயாதி எண் × 9) % 8',
+                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text('• ஆயாதி எண் × 9 = ${res.roundedAyadi} × 9 = ${res.dikpalakarTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                Text('• 8 இன் மடங்கு கழிவு = ${res.dikpalakarTotal} - $multiple8 = ${res.dikpalakarNumber} (${dikpalakar.name} - ${dikpalakar.direction})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                const SizedBox(height: 4),
+                Text('➔ (${res.dikpalakarNumber}) ${dikpalakar.name} — ${dikpalakar.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 25. Highlighted Athidevathai Result Card (25. அதிதேவதை பலன்)
+  Widget _buildAthidevathaiResultCard(GpKuzhiResult res) {
+    final athidevathai = res.athidevathai;
+    final isGood = athidevathai.isGood;
+    final int multiple8 = res.athidevathaiNumber == 8 ? (res.athidevathaiTotal - 8) : ((res.athidevathaiTotal ~/ 8) * 8);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828)).withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(athidevathai.iconEmoji, style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'அதிதேவதை பலன் (Athidevathai Phalan)',
+                  style: GoogleFonts.outfit(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF5D1204),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: isGood ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828)),
+                ),
+                child: Text(
+                  athidevathai.status,
+                  style: TextStyle(
+                    color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isGood
+                    ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
+                    : [const Color(0xFFB71C1C), const Color(0xFFD32F2F)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${res.athidevathaiNumber}',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${res.athidevathaiNumber} – ${athidevathai.name}',
+                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        athidevathai.effect,
+                        style: const TextStyle(fontSize: 13, color: Color(0xFFFFE082), fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF6EE),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                    const SizedBox(width: 6),
+                    const Expanded(
+                      child: Text(
+                        'அதிதேவதை பலன் கணிதம்: (மனையின் வயது × 5) % 8',
+                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text('• மனையின் வயது எண் = ${res.ageNumber}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                Text('• வயது × 5 = ${res.ageNumber} × 5 = ${res.athidevathaiTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                Text('• 8 இன் மடங்கு கழிவு = ${res.athidevathaiTotal} - $multiple8 = ${res.athidevathaiNumber} (${athidevathai.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                const SizedBox(height: 4),
+                Text('➔ (${res.athidevathaiNumber}) ${athidevathai.name} — ${athidevathai.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 26. Highlighted Result Card with Rounded Kuzhi
   Widget _buildResultCard(GpKuzhiResult res) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -7697,7 +8172,196 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
     );
   }
 
-  // 31. Comprehensive Step-by-Step Formula Explanation Card
+  // 31. Nama Yoga Reference Guide Card
+  Widget _buildAllNamaYogasReferenceCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.3), width: 1.2),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          initiallyExpanded: false,
+          leading: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF5D1204), size: 20),
+          title: Text(
+            '23. நாம யோகப் பலன் சாஸ்திர அட்டவணை (27 Nama Yogas)',
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5, color: const Color(0xFF5D1204)),
+          ),
+          children: [
+            const Divider(height: 16),
+            ...GpVaasthuService.namaYogaList.map((y) {
+              final isCurrent = _result != null && _result!.namaYogaNumber == y.number;
+              final Color color = y.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isCurrent ? color.withValues(alpha: 0.08) : const Color(0xFFFAF6EE),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: isCurrent ? color : const Color(0xFFB58D3D).withValues(alpha: 0.2), width: isCurrent ? 1.5 : 1.0),
+                ),
+                child: Row(
+                  children: [
+                    Text('${y.number}.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5, color: color)),
+                    const SizedBox(width: 6),
+                    Text(y.iconEmoji, style: const TextStyle(fontSize: 16)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(y.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF5D1204))),
+                          Text(y.effect, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(color: y.isGood ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE), borderRadius: BorderRadius.circular(6), border: Border.all(color: color)),
+                      child: Text(y.status, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 32. Ashta Dikpalakar Reference Guide Card
+  Widget _buildAllDikpalakarsReferenceCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.3), width: 1.2),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          initiallyExpanded: false,
+          leading: const Icon(Icons.explore_rounded, color: Color(0xFF5D1204), size: 20),
+          title: Text(
+            '24. அஷ்டதிக்கு பாலகர் சாஸ்திர அட்டவணை (8 Dikpalakas)',
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5, color: const Color(0xFF5D1204)),
+          ),
+          children: [
+            const Divider(height: 16),
+            ...GpVaasthuService.dikpalakarList.map((d) {
+              final isCurrent = _result != null && _result!.dikpalakarNumber == d.number;
+              final Color color = d.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isCurrent ? color.withValues(alpha: 0.08) : const Color(0xFFFAF6EE),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: isCurrent ? color : const Color(0xFFB58D3D).withValues(alpha: 0.2), width: isCurrent ? 1.5 : 1.0),
+                ),
+                child: Row(
+                  children: [
+                    Text('${d.number}.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5, color: color)),
+                    const SizedBox(width: 6),
+                    Text(d.iconEmoji, style: const TextStyle(fontSize: 16)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${d.name} (${d.direction})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF5D1204))),
+                          Text(d.effect, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(color: d.isGood ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE), borderRadius: BorderRadius.circular(6), border: Border.all(color: color)),
+                      child: Text(d.status, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 33. Athidevathai Reference Guide Card
+  Widget _buildAllAthidevathaisReferenceCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.3), width: 1.2),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          initiallyExpanded: false,
+          leading: const Icon(Icons.shield_outlined, color: Color(0xFF5D1204), size: 20),
+          title: Text(
+            '25. அதிதேவதை பலன் சாஸ்திர அட்டவணை (8 Athidevathas)',
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5, color: const Color(0xFF5D1204)),
+          ),
+          children: [
+            const Divider(height: 16),
+            ...GpVaasthuService.athidevathaiList.map((a) {
+              final isCurrent = _result != null && _result!.athidevathaiNumber == a.number;
+              final Color color = a.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isCurrent ? color.withValues(alpha: 0.08) : const Color(0xFFFAF6EE),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: isCurrent ? color : const Color(0xFFB58D3D).withValues(alpha: 0.2), width: isCurrent ? 1.5 : 1.0),
+                ),
+                child: Row(
+                  children: [
+                    Text('${a.number}.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5, color: color)),
+                    const SizedBox(width: 6),
+                    Text(a.iconEmoji, style: const TextStyle(fontSize: 16)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(a.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF5D1204))),
+                          Text(a.effect, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(color: a.isGood ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE), borderRadius: BorderRadius.circular(6), border: Border.all(color: color)),
+                      child: Text(a.status, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 34. Comprehensive Step-by-Step Formula Explanation Card
   Widget _buildFormulaExplanationCard(GpKuzhiResult res) {
     final int multiple8 = res.yoniNumber == 8 ? (res.yoniTotal - 8) : ((res.yoniTotal ~/ 8) * 8);
     final int multiple12 = res.aadhayamNumber == 12 ? (res.aadhayamTotal - 12) : ((res.aadhayamTotal ~/ 12) * 12);
@@ -7716,6 +8380,9 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
     final int multiple11Karana = res.karanaNumber == 11 ? (res.karanaTotal - 11) : ((res.karanaTotal ~/ 11) * 11);
     final int multiple8AshtaLakshmi = res.ashtaLakshmiNumber == 8 ? (res.ashtaLakshmiTotal - 8) : ((res.ashtaLakshmiTotal ~/ 8) * 8);
     final int multiple3Guna = res.gunaNumber == 3 ? (res.roundedAyadi - 3) : ((res.roundedAyadi ~/ 3) * 3);
+    final int multiple27NamaYoga = res.namaYogaNumber == 27 ? (res.namaYogaTotal - 27) : ((res.namaYogaTotal ~/ 27) * 27);
+    final int multiple8Dikpalakar = res.dikpalakarNumber == 8 ? (res.dikpalakarTotal - 8) : ((res.dikpalakarTotal ~/ 8) * 8);
+    final int multiple8Athidevathai = res.athidevathaiNumber == 8 ? (res.athidevathaiTotal - 8) : ((res.athidevathaiTotal ~/ 8) * 8);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -7897,7 +8564,25 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 Text('• பலன்: (${res.gunaNumber}) ${res.guna.name} — ${res.guna.effect} [${res.guna.status}]', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: res.guna.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
 
                 const Divider(height: 16),
-                const Text('【 24. குழிக்கணக்கு கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                const Text('【 24. நாம யோகப் பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                const SizedBox(height: 4),
+                Text('• ${res.roundedAyadi} × 4 = ${res.namaYogaTotal} | கழிவு $multiple27NamaYoga = ${res.namaYogaNumber} (${res.namaYoga.name})', style: const TextStyle(fontSize: 11.5, color: Color(0xFF5D1204))),
+                Text('• பலன்: (${res.namaYogaNumber}) ${res.namaYoga.name} — ${res.namaYoga.effect} [${res.namaYoga.status}]', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: res.namaYoga.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+
+                const Divider(height: 16),
+                const Text('【 25. அஷ்டதிக்கு பாலகர் பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                const SizedBox(height: 4),
+                Text('• ${res.roundedAyadi} × 9 = ${res.dikpalakarTotal} | கழிவு $multiple8Dikpalakar = ${res.dikpalakarNumber} (${res.dikpalakar.name}) | திசை: ${res.dikpalakar.direction}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF5D1204))),
+                Text('• பலன்: (${res.dikpalakarNumber}) ${res.dikpalakar.name} — ${res.dikpalakar.effect} [${res.dikpalakar.status}]', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: res.dikpalakar.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+
+                const Divider(height: 16),
+                const Text('【 26. அதிதேவதை பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                const SizedBox(height: 4),
+                Text('• மனையின் வயது: ${res.ageNumber} ➔ ${res.ageNumber} × 5 = ${res.athidevathaiTotal} | கழிவு $multiple8Athidevathai = ${res.athidevathaiNumber} (${res.athidevathai.name})', style: const TextStyle(fontSize: 11.5, color: Color(0xFF5D1204))),
+                Text('• பலன்: (${res.athidevathaiNumber}) ${res.athidevathai.name} — ${res.athidevathai.effect} [${res.athidevathai.status}]', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: res.athidevathai.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+
+                const Divider(height: 16),
+                const Text('【 27. குழிக்கணக்கு கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
                 const SizedBox(height: 4),
                 Text('• மொத்த சுற்றளவு (வெளிப்புறம்) = ${res.sqft.toStringAsFixed(2)} ச.அடி | ச.அங்குலம் = ${res.sqInches.toStringAsFixed(2)}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF5D1204))),
                 Text('• துல்லிய குழி = ${res.sqInches.toStringAsFixed(2)} ÷ ${res.divisor} = ${res.kuzhiExact} குழி ➔ முடிவு: ${res.roundedKuzhi} குழிகள்', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFFB45309))),

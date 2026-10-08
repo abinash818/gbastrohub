@@ -2,6 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/gp_vaasthu_service.dart';
 
+class _PoruthamTableRowItem {
+  final int sNo;
+  final String name;
+  final String value;
+  final String status; // 'உ', 'ம', 'அ'
+  final String statusText; // 'உத்தமம்', 'மத்திமம்', 'அதமம்'
+  final bool isGood;
+  final String symbol; // '✓', '✗'
+
+  const _PoruthamTableRowItem({
+    required this.sNo,
+    required this.name,
+    required this.value,
+    required this.status,
+    required this.statusText,
+    required this.isGood,
+    required this.symbol,
+  });
+}
+
 class GpVaasthuScreen extends StatefulWidget {
   final bool isPopup;
   const GpVaasthuScreen({super.key, this.isPopup = false});
@@ -28,6 +48,8 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
 
   int _selectedOwnerNakshatra = 1; // Default to Ashwini
   int _selectedOwnerRasi = 1; // Default to Mesham
+  int _selectedResultTab = 0; // 0: பொருத்தப் பட்டியல் (26 பலன்கள்), 1: விரிவான பலன்கள்
+  static const bool _showCalculationDetails = false; // Hide formula breakdowns in detailed view for clean live UI
 
   GpKuzhiResult? _result;
 
@@ -98,7 +120,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
         title: Column(
           children: [
             Text(
-              'GP வாஸ்து கணிதம்',
+              'GB 26 பொருத்தங்கள்',
               style: GoogleFonts.cinzel(
                 color: const Color(0xFFFFE082),
                 fontSize: 17,
@@ -107,7 +129,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ),
             ),
             const Text(
-              'ஆயாதி எண், 22 வாஸ்து பலன்கள் & குழிக்கணக்கு',
+              'ஆயாதி எண், 26 வாஸ்து பொருத்தங்கள் & குழிக்கணக்கு',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 10.5,
@@ -163,196 +185,216 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 _buildAyadiResultCard(_result!),
                 const SizedBox(height: 16),
 
-                // 1. Garbham Result Card (கெர்ப்ப பலன்)
-                _buildGarbhamResultCard(_result!),
+                // View Mode Tab Switcher: 📋 பொருத்தப் பட்டியல் (26) vs 📑 விரிவான பலன்கள்
+                _buildResultViewTabSwitcher(),
                 const SizedBox(height: 16),
 
-                // 2. Yoni Result Card (யோனிப் பலன்)
-                _buildYoniResultCard(_result!),
-                const SizedBox(height: 16),
+                if (_selectedResultTab == 0) ...[
+                  // 1. 26 Porutham Table Card (as in notebook)
+                  _buildPorutham26TableCard(_result!),
+                  const SizedBox(height: 18),
 
-                // 3. Aadhayam Result Card (ஆதாயப் பலன்)
-                _buildAadhayamResultCard(_result!),
-                const SizedBox(height: 16),
+                  // Kuzhi Result Card
+                  _buildResultCard(_result!),
+                  const SizedBox(height: 18),
 
-                // 4. Virayam Result Card (விரையப் பலன்)
-                _buildVirayamResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 4 Regional Methods Comparison Table
+                  _buildComparisonCard(),
+                ] else ...[
+                  // 1. Garbham Result Card (கெர்ப்ப பலன்)
+                  _buildGarbhamResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // Aadhayam vs Virayam Comparison Verdict Card
-                _buildAadhayamVirayamComparisonCard(_result!),
-                const SizedBox(height: 16),
+                  // 2. Yoni Result Card (யோனிப் பலன்)
+                  _buildYoniResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 5. Vaara Result Card (வாரப்பலன்)
-                _buildVaaraResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 3. Aadhayam Result Card (ஆதாயப் பலன்)
+                  _buildAadhayamResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 6. Amsa Result Card (அம்ச பலன்)
-                _buildAmsaResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 4. Virayam Result Card (விரையப் பலன்)
+                  _buildVirayamResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 7. Nakshatra & 11. Gana Result Card (நட்சத்திர பலன் & கணப் பலன்)
-                _buildNakshatraAndGanaResultCard(_result!),
-                const SizedBox(height: 16),
+                  // Aadhayam vs Virayam Comparison Verdict Card
+                  _buildAadhayamVirayamComparisonCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 8. Vamsam Result Card (வம்சம் பலன்)
-                _buildVamsamResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 5. Vaara Result Card (வாரப்பலன்)
+                  _buildVaaraResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 9. Thithi Result Card (திதிப் பலன் - மரபு 1 & 2)
-                _buildThithiResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 6. Amsa Result Card (அம்ச பலன்)
+                  _buildAmsaResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 10. Rasi Result Card (இராசி பலன்)
-                _buildRasiResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 7. Nakshatra & 11. Gana Result Card (நட்சத்திர பலன் & கணப் பலன்)
+                  _buildNakshatraAndGanaResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 10 (கூடுதல்). Age Result Card (வயது பலன்)
-                _buildAgeResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 8. Vamsam Result Card (வம்சம் பலன்)
+                  _buildVamsamResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 12. Purusha Rasi Result Card (புருஷ இராசி பலன்)
-                _buildPurushaRasiResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 9. Thithi Result Card (திதிப் பலன் - மரபு 1 & 2)
+                  _buildThithiResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 13. Boothams Result Card (பூதம் பலன் - முறை 1 & 2)
-                _buildBoothamsResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 10. Rasi Result Card (இராசி பலன்)
+                  _buildRasiResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 14. Soothiram Result Card (சூத்திரம் பலன்)
-                _buildSoothiramResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 10 (கூடுதல்). Age Result Card (வயது பலன்)
+                  _buildAgeResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 15. Nethiram Result Card (நேத்திர பலன்)
-                _buildNethiramResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 12. Purusha Rasi Result Card (புருஷ இராசி பலன்)
+                  _buildPurushaRasiResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 16. Amirthathi Yoga Result Card (அமிர்தாதி யோக பலன்)
-                _buildAmirthathiYogaResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 13. Boothams Result Card (பூதம் பலன் - முறை 1 & 2)
+                  _buildBoothamsResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 17. Thara Phalan Result Card (தாரா பலன்)
-                _buildTharaPhalanResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 14. Soothiram Result Card (சூத்திரம் பலன்)
+                  _buildSoothiramResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 18. Karana Phalan Result Card (கரணப் பலன்)
-                _buildKaranaResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 15. Nethiram Result Card (நேத்திர பலன்)
+                  _buildNethiramResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 19. Chandra Phalan Result Card (சந்திர பலன்)
-                _buildChandraPhalanResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 16. Amirthathi Yoga Result Card (அமிர்தாதி யோக பலன்)
+                  _buildAmirthathiYogaResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 20. Ashta Lakshmi Phalan Result Card (அஷ்டலட்சுமி பலன்)
-                _buildAshtaLakshmiResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 17. Thara Phalan Result Card (தாரா பலன்)
+                  _buildTharaPhalanResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 21. Panchaka Phalan & Pariharam Result Card (பஞ்சகப் பலன் & பரிகாரம்)
-                _buildPanchakaResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 18. Karana Phalan Result Card (கரணப் பலன்)
+                  _buildKaranaResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 22. Guna Phalan Result Card (குணப் பலன்)
-                _buildGunaResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 19. Chandra Phalan Result Card (சந்திர பலன்)
+                  _buildChandraPhalanResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 23. Nama Yoga Phalan Result Card (நாம யோகப் பலன்)
-                _buildNamaYogaResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 20. Ashta Lakshmi Phalan Result Card (அஷ்டலட்சுமி பலன்)
+                  _buildAshtaLakshmiResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 24. Ashta Dikpalakar Phalan Result Card (அஷ்டதிக்கு பாலகர் பலன்)
-                _buildDikpalakarResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 21. Panchaka Phalan & Pariharam Result Card (பஞ்சகப் பலன் & பரிகாரம்)
+                  _buildPanchakaResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 25. Athidevathai Phalan Result Card (அதிதேவதை பலன்)
-                _buildAthidevathaiResultCard(_result!),
-                const SizedBox(height: 16),
+                  // 22. Guna Phalan Result Card (குணப் பலன்)
+                  _buildGunaResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // Kuzhi Result Card
-                _buildResultCard(_result!),
-                const SizedBox(height: 18),
+                  // 23. Nama Yoga Phalan Result Card (நாம யோகப் பலன்)
+                  _buildNamaYogaResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // 4 Regional Methods Comparison Table
-                _buildComparisonCard(),
-                const SizedBox(height: 18),
+                  // 24. Ashta Dikpalakar Phalan Result Card (அஷ்டதிக்கு பாலகர் பலன்)
+                  _buildDikpalakarResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                // Reference Guides:
-                _buildAllGarbhamsReferenceCard(),
-                const SizedBox(height: 18),
+                  // 25. Athidevathai Phalan Result Card (அதிதேவதை பலன்)
+                  _buildAthidevathaiResultCard(_result!),
+                  const SizedBox(height: 16),
 
-                _buildAllYonisReferenceCard(),
-                const SizedBox(height: 18),
+                  // Kuzhi Result Card
+                  _buildResultCard(_result!),
+                  const SizedBox(height: 18),
 
-                _buildAllAadhayamsReferenceCard(),
-                const SizedBox(height: 18),
+                  // 4 Regional Methods Comparison Table
+                  _buildComparisonCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllVirayamsReferenceCard(),
-                const SizedBox(height: 18),
+                  // Reference Guides:
+                  _buildAllGarbhamsReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllVaarasReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllYonisReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllAmsasReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllAadhayamsReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllNakshatrasAndGanasReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllVirayamsReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllVamsamsReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllVaarasReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllThithisReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllAmsasReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllRasisReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllNakshatrasAndGanasReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllAgesReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllVamsamsReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllPurushaRasisReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllThithisReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllBoothamsReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllRasisReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllSoothiramsReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllAgesReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllNethiramsReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllPurushaRasisReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllAmirthathiYogasReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllBoothamsReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllTharaPhalansReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllSoothiramsReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllKaranasReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllNethiramsReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllChandraPhalansReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllAmirthathiYogasReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllAshtaLakshmisReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllTharaPhalansReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllPanchakasReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllKaranasReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllGunasReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllChandraPhalansReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllNamaYogasReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllAshtaLakshmisReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllDikpalakarsReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllPanchakasReferenceCard(),
+                  const SizedBox(height: 18),
 
-                _buildAllAthidevathaisReferenceCard(),
-                const SizedBox(height: 18),
+                  _buildAllGunasReferenceCard(),
+                  const SizedBox(height: 18),
 
-                // Step-by-Step Formula Explanation
-                _buildFormulaExplanationCard(_result!),
+                  _buildAllNamaYogasReferenceCard(),
+                  const SizedBox(height: 18),
+
+                  _buildAllDikpalakarsReferenceCard(),
+                  const SizedBox(height: 18),
+
+                  _buildAllAthidevathaisReferenceCard(),
+                  const SizedBox(height: 18),
+
+                  // Step-by-Step Formula Explanation
+                  if (_showCalculationDetails) ...[
+                    const SizedBox(height: 18),
+                    _buildFormulaExplanationCard(_result!),
+                  ],
+                ],
               ],
               const SizedBox(height: 24),
             ],
@@ -844,6 +886,754 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
     );
   }
 
+  // Helper Item for 26 Porutham Table
+  List<_PoruthamTableRowItem> _get26PoruthamList(GpKuzhiResult res) {
+    final String ownerGana = GpVaasthuService.nakshatraList[res.ownerNakshatra - 1].gana;
+    final Map<String, dynamic> ganaMatch = GpVaasthuService.evaluateGanaMatch(res.nakshatra.gana, ownerGana);
+    final bool isGanaGood = (ganaMatch['isGood'] as bool?) ?? false;
+    final String ganaStatusStr = (ganaMatch['status'] as String?) ?? '';
+
+    _PoruthamTableRowItem item({
+      required int sNo,
+      required String name,
+      required String value,
+      required String status,
+      required String statusText,
+      required bool isGood,
+    }) {
+      final String symbol = status == 'உ' ? '✓' : (status == 'ம' ? '=' : '✗');
+      return _PoruthamTableRowItem(
+        sNo: sNo,
+        name: name,
+        value: value,
+        status: status,
+        statusText: statusText,
+        isGood: isGood,
+        symbol: symbol,
+      );
+    }
+
+    return [
+      item(
+        sNo: 1,
+        name: 'கற்பம்',
+        value: '${res.garbhamNumber} (${res.garbham.name.split(' ')[0]})',
+        status: res.garbham.status.contains('மத்திமம்') ? 'ம' : (res.garbham.isGood ? 'உ' : 'அ'),
+        statusText: res.garbham.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.garbham.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.garbham.isGood,
+      ),
+      item(
+        sNo: 2,
+        name: 'இலாபம்',
+        value: '${res.aadhayamNumber}',
+        status: res.aadhayam.isGood ? 'உ' : 'அ',
+        statusText: res.aadhayam.isGood ? 'உத்தமம்' : 'அதமம்',
+        isGood: res.aadhayam.isGood,
+      ),
+      item(
+        sNo: 3,
+        name: 'செலவு',
+        value: '${res.virayamNumber}',
+        status: res.virayam.status.contains('மத்திமம்') ? 'ம' : (res.virayam.isGood ? 'உ' : 'அ'),
+        statusText: res.virayam.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.virayam.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.virayam.isGood,
+      ),
+      item(
+        sNo: 4,
+        name: 'யோனி',
+        value: '${res.yoniNumber} (${res.yoni.name.split(' ')[0]})',
+        status: res.yoni.status.contains('மத்திமம்') ? 'ம' : (res.yoni.isGood ? 'உ' : 'அ'),
+        statusText: res.yoni.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.yoni.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.yoni.isGood,
+      ),
+      item(
+        sNo: 5,
+        name: 'நட்சத்திரம்',
+        value: '${res.nakshatraNumber} (${res.nakshatra.name})',
+        status: res.nakshatra.status.contains('மத்திமம்') ? 'ம' : (res.nakshatra.isGood ? 'உ' : 'அ'),
+        statusText: res.nakshatra.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.nakshatra.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.nakshatra.isGood,
+      ),
+      item(
+        sNo: 6,
+        name: 'கிழமை',
+        value: '${res.vaara.dayName.split(' ')[0]} (${res.vaaraNumber})',
+        status: res.vaara.status.contains('மத்திமம்') ? 'ம' : (res.vaara.isGood ? 'உ' : 'அ'),
+        statusText: res.vaara.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.vaara.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.vaara.isGood,
+      ),
+      item(
+        sNo: 7,
+        name: 'அம்சம்',
+        value: '${res.amsaNumber} (${res.amsa.effect.replaceAll(' உண்டாகும்', '')})',
+        status: res.amsa.status.contains('மத்திமம்') ? 'ம' : (res.amsa.isGood ? 'உ' : 'அ'),
+        statusText: res.amsa.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.amsa.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.amsa.isGood,
+      ),
+      item(
+        sNo: 8,
+        name: 'வம்சம்',
+        value: '${res.vamsamNumber} (${res.vamsam.name})',
+        status: res.vamsam.status.contains('மத்திமம்') ? 'ம' : (res.vamsam.isGood ? 'உ' : 'அ'),
+        statusText: res.vamsam.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.vamsam.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.vamsam.isGood,
+      ),
+      item(
+        sNo: 9,
+        name: 'திதி',
+        value: '${res.thithi1.name.replaceAll('வ. ', 'வளர்.').replaceAll('தே. ', 'தேய்.')} / ${res.thithi2.name.replaceAll('வ. ', 'வளர்.').replaceAll('தே. ', 'தேய்.')}',
+        status: res.thithi1.status.contains('மத்திமம்') ? 'ம' : (res.thithi1.isGood ? 'உ' : 'அ'),
+        statusText: res.thithi1.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.thithi1.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.thithi1.isGood,
+      ),
+      item(
+        sNo: 10,
+        name: 'இராசி (மனைவி)',
+        value: '${res.rasiNumber} (${res.rasi.name})',
+        status: res.rasi.status.contains('மத்திமம்') ? 'ம' : (res.rasi.isGood ? 'உ' : 'அ'),
+        statusText: res.rasi.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.rasi.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.rasi.isGood,
+      ),
+      item(
+        sNo: 11,
+        name: 'பூதம்',
+        value: '${res.bootham1Number} (${res.bootham1.name.split(' ')[0]})',
+        status: res.bootham1.status.contains('மத்திமம்') ? 'ம' : (res.bootham1.isGood ? 'உ' : 'அ'),
+        statusText: res.bootham1.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.bootham1.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.bootham1.isGood,
+      ),
+      item(
+        sNo: 12,
+        name: 'கணம்',
+        value: res.nakshatra.gana,
+        status: ganaStatusStr.contains('மத்திமம்') ? 'ம' : (ganaStatusStr.contains('உத்தமம்') || isGanaGood ? 'உ' : 'அ'),
+        statusText: ganaStatusStr.contains('மத்திமம்') ? 'மத்திமம்' : (ganaStatusStr.contains('உத்தமம்') || isGanaGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: isGanaGood,
+      ),
+      item(
+        sNo: 13,
+        name: 'நேத்திரம்',
+        value: '${res.nethiram.eyes} கண் (${res.nethiram.title.split(' ')[0]})',
+        status: res.nethiram.eyes == 2 ? 'உ' : (res.nethiram.eyes == 1 ? 'ம' : 'அ'),
+        statusText: res.nethiram.eyes == 2 ? 'உத்தமம்' : (res.nethiram.eyes == 1 ? 'மத்திமம்' : 'அதமம்'),
+        isGood: res.nethiram.eyes > 0,
+      ),
+      item(
+        sNo: 14,
+        name: 'வயது',
+        value: '${res.age.age} (${res.age.status.split(' ')[0]})',
+        status: res.age.age >= 51 ? 'உ' : (res.age.age >= 28 ? 'ம' : 'அ'),
+        statusText: res.age.age >= 51 ? 'உத்தமம்' : (res.age.age >= 28 ? 'மத்திமம்' : 'அதமம்'),
+        isGood: res.age.isGood,
+      ),
+      item(
+        sNo: 15,
+        name: 'தாராபலன்',
+        value: '${res.tharaPhalan.remainder} (${res.tharaPhalan.tharaName})',
+        status: res.tharaPhalan.status.contains('மத்திமம்') ? 'ம' : (res.tharaPhalan.isGood ? 'உ' : 'அ'),
+        statusText: res.tharaPhalan.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.tharaPhalan.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.tharaPhalan.isGood,
+      ),
+      item(
+        sNo: 16,
+        name: 'சூத்திரம்',
+        value: '${res.soothiramNumber} (${res.soothiram.name.split(' ')[0]})',
+        status: res.soothiram.status.contains('மத்திமம்') || res.soothiram.number == 4 ? 'ம' : (res.soothiram.isGood ? 'உ' : 'அ'),
+        statusText: res.soothiram.status.contains('மத்திமம்') || res.soothiram.number == 4 ? 'மத்திமம்' : (res.soothiram.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.soothiram.isGood,
+      ),
+      item(
+        sNo: 17,
+        name: 'நாமயோகம்',
+        value: '${res.namaYogaNumber} (${res.namaYoga.name})',
+        status: res.namaYoga.status.contains('மத்திமம்') ? 'ம' : (res.namaYoga.isGood ? 'உ' : 'அ'),
+        statusText: res.namaYoga.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.namaYoga.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.namaYoga.isGood,
+      ),
+      item(
+        sNo: 18,
+        name: 'பஞ்சகம்',
+        value: '${res.panchaka.number} (${res.panchaka.name})',
+        status: res.panchaka.status.contains('மத்திமம்') ? 'ம' : (res.panchaka.isGood ? 'உ' : 'அ'),
+        statusText: res.panchaka.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.panchaka.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.panchaka.isGood,
+      ),
+      item(
+        sNo: 19,
+        name: 'அமிர்தாதியோகம்',
+        value: '(${res.amirthathiYoga.code}) ${res.amirthathiYoga.name.split(' ')[0]}',
+        status: res.amirthathiYoga.status.contains('மத்திமம்') ? 'ம' : (res.amirthathiYoga.isGood ? 'உ' : 'அ'),
+        statusText: res.amirthathiYoga.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.amirthathiYoga.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.amirthathiYoga.isGood,
+      ),
+      item(
+        sNo: 20,
+        name: 'கரணம்',
+        value: '${res.karanaNumber} (${res.karana.name})',
+        status: res.karana.status.contains('மத்திமம்') ? 'ம' : (res.karana.isGood ? 'உ' : 'அ'),
+        statusText: res.karana.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.karana.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.karana.isGood,
+      ),
+      item(
+        sNo: 21,
+        name: 'சந்திரபலம்',
+        value: '${res.chandraPhalan.number} (${res.chandraPhalan.name})',
+        status: res.chandraPhalan.status.contains('மத்திமம்') ? 'ம' : (res.chandraPhalan.isGood ? 'உ' : 'அ'),
+        statusText: res.chandraPhalan.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.chandraPhalan.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.chandraPhalan.isGood,
+      ),
+      item(
+        sNo: 22,
+        name: 'அ.இலட்சுமி',
+        value: '${res.ashtaLakshmiNumber} (${res.ashtaLakshmi.name})',
+        status: res.ashtaLakshmi.status.contains('மத்திமம்') ? 'ம' : (res.ashtaLakshmi.isGood ? 'உ' : 'அ'),
+        statusText: res.ashtaLakshmi.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.ashtaLakshmi.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.ashtaLakshmi.isGood,
+      ),
+      item(
+        sNo: 23,
+        name: 'அ.திக்.பாலகர்',
+        value: '${res.dikpalakarNumber} (${res.dikpalakar.name.split(' ')[0]})',
+        status: res.dikpalakar.status.contains('மத்திமம்') ? 'ம' : (res.dikpalakar.isGood ? 'உ' : 'அ'),
+        statusText: res.dikpalakar.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.dikpalakar.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.dikpalakar.isGood,
+      ),
+      item(
+        sNo: 24,
+        name: 'அ.திக்.தேவதை',
+        value: '${res.athidevathaiNumber} (${res.athidevathai.name.split(' ')[0]})',
+        status: res.athidevathai.status.contains('மத்திமம்') ? 'ம' : (res.athidevathai.isGood ? 'உ' : 'அ'),
+        statusText: res.athidevathai.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.athidevathai.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.athidevathai.isGood,
+      ),
+      item(
+        sNo: 25,
+        name: 'புருஷ ராசி',
+        value: '${res.purushaRasiNumber} (${res.purushaRasi.name} - ${res.purushaRasi.rasiType.split(' ')[0]})',
+        status: res.purushaRasi.status.contains('மத்திமம்') ? 'ம' : (res.purushaRasi.isGood ? 'உ' : 'அ'),
+        statusText: res.purushaRasi.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.purushaRasi.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.purushaRasi.isGood,
+      ),
+      item(
+        sNo: 26,
+        name: 'குண பலன்',
+        value: '${res.gunaNumber} (${res.guna.name})',
+        status: res.guna.status.contains('மத்திமம்') ? 'ம' : (res.guna.isGood ? 'உ' : 'அ'),
+        statusText: res.guna.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.guna.isGood ? 'உத்தமம்' : 'அதமம்'),
+        isGood: res.guna.isGood,
+      ),
+    ];
+  }
+
+  // Result View Switcher (பொருத்தப் பட்டியல் vs விரிவான பலன்கள்)
+  Widget _buildResultViewTabSwitcher() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF5D1204).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedResultTab = 0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+                decoration: BoxDecoration(
+                  color: _selectedResultTab == 0 ? const Color(0xFF5D1204) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: _selectedResultTab == 0
+                      ? [BoxShadow(color: const Color(0xFF5D1204).withValues(alpha: 0.25), blurRadius: 4, offset: const Offset(0, 2))]
+                      : [],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.checklist_rtl_rounded,
+                      size: 16,
+                      color: _selectedResultTab == 0 ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        'பொருத்தப் பட்டியல் (26)',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: _selectedResultTab == 0 ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedResultTab = 1),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+                decoration: BoxDecoration(
+                  color: _selectedResultTab == 1 ? const Color(0xFF5D1204) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: _selectedResultTab == 1
+                      ? [BoxShadow(color: const Color(0xFF5D1204).withValues(alpha: 0.25), blurRadius: 4, offset: const Offset(0, 2))]
+                      : [],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.dashboard_customize_rounded,
+                      size: 16,
+                      color: _selectedResultTab == 1 ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        'விரிவான பலன்கள்',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: _selectedResultTab == 1 ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 26 Porutham Table Card (வரிசைப்படுத்தப்பட்ட 26 பொருத்தப் பலன்கள் பட்டியல்)
+  Widget _buildPorutham26TableCard(GpKuzhiResult res) {
+    final items = _get26PoruthamList(res);
+    final int uCount = items.where((i) => i.status == 'உ').length;
+    final int mCount = items.where((i) => i.status == 'ம').length;
+    final int aCount = items.where((i) => i.status == 'அ').length;
+
+    final int uPercent = uCount * 4;
+    final int mPercent = mCount * 2;
+    final int aPercent = aCount * 0;
+    final int totalPercent = uPercent + mPercent + aPercent;
+
+    final Color statusColor = totalPercent >= 60
+        ? const Color(0xFF2E7D32)
+        : (totalPercent >= 40 ? const Color(0xFFEF6C00) : const Color(0xFFC62828));
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.35), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF5D1204).withValues(alpha: 0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF2C1810), Color(0xFF5D1204)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.menu_book_rounded, color: Color(0xFFFFE082), size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'வரிசைப்படுத்தப்பட்ட 26 பொருத்தப் பலன்கள்',
+                        style: GoogleFonts.outfit(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFFFE082),
+                        ),
+                      ),
+                      Text(
+                        'ஆயாதி எண்: ${res.roundedAyadi} | மொத்த பலன்கள்: 26',
+                        style: const TextStyle(fontSize: 11, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Table Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+            decoration: BoxDecoration(
+              color: const Color(0xFF5D1204).withValues(alpha: 0.08),
+              border: Border(
+                bottom: BorderSide(color: const Color(0xFFB58D3D).withValues(alpha: 0.3), width: 1),
+              ),
+            ),
+            child: const Row(
+              children: [
+                SizedBox(
+                  width: 28,
+                  child: Text('#', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                ),
+                SizedBox(width: 6),
+                Expanded(
+                  flex: 4,
+                  child: Text('பொருத்தம்', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                ),
+                SizedBox(width: 6),
+                Expanded(
+                  flex: 5,
+                  child: Text('மதிப்பு / விவரம்', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                ),
+                SizedBox(width: 4),
+                SizedBox(
+                  width: 34,
+                  child: Text('நிலை', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                ),
+                SizedBox(width: 4),
+                SizedBox(
+                  width: 32,
+                  child: Text('முடிவு', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                ),
+              ],
+            ),
+          ),
+
+          // 26 Rows
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              final bool isEven = index.isEven;
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isEven ? const Color(0xFFFAF6EE).withValues(alpha: 0.6) : Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: const Color(0xFFB58D3D).withValues(alpha: 0.12), width: 0.8),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // S.No
+                    SizedBox(
+                      width: 28,
+                      child: Center(
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF5D1204).withValues(alpha: 0.08),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.35)),
+                          ),
+                          child: Text(
+                            '${item.sNo}',
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF5D1204),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    // Name
+                    Expanded(
+                      flex: 4,
+                      child: Text(
+                        item.name,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF5D1204),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    // Value & Result
+                    Expanded(
+                      flex: 5,
+                      child: Text(
+                        item.value,
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF3E2723),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    // Status Badge (உ / ம / அ)
+                    SizedBox(
+                      width: 34,
+                      child: Center(
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: item.status == 'உ'
+                                ? const Color(0xFFE8F5E9)
+                                : (item.status == 'ம' ? const Color(0xFFFFF3E0) : const Color(0xFFFFEBEE)),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: item.status == 'உ'
+                                  ? const Color(0xFF2E7D32)
+                                  : (item.status == 'ம' ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            item.status,
+                            style: TextStyle(
+                              color: item.status == 'உ'
+                                  ? const Color(0xFF2E7D32)
+                                  : (item.status == 'ம' ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    // Symbol (✓ / = / ✗)
+                    SizedBox(
+                      width: 32,
+                      child: Center(
+                        child: Text(
+                          item.symbol,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: item.status == 'உ' || item.symbol == '✓'
+                                ? const Color(0xFF2E7D32)
+                                : (item.status == 'ம' || item.symbol == '='
+                                    ? const Color(0xFFEF6C00)
+                                    : const Color(0xFFC62828)),
+                            fontWeight: FontWeight.w900,
+                            fontSize: item.symbol == '=' ? 17 : 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+
+          // Bottom Summary Footer (Notebook style)
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF6EE),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(18),
+                bottomRight: Radius.circular(18),
+              ),
+              border: Border(
+                top: BorderSide(color: const Color(0xFFB58D3D).withValues(alpha: 0.35), width: 1.2),
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.analytics_rounded, color: Color(0xFF5D1204), size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      'மொத்த பொருத்தம் சுருக்கம் (Summary)',
+                      style: GoogleFonts.outfit(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF5D1204),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF2E7D32), width: 1.2),
+                        ),
+                        child: Column(
+                          children: [
+                            const Text('உத்தமம் (உ) ✓', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                            const SizedBox(height: 2),
+                            Text('$uCount', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF2E7D32))),
+                            const SizedBox(height: 1),
+                            Text('$uCount × 4 = $uPercent%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF3E0),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFEF6C00), width: 1.2),
+                        ),
+                        child: Column(
+                          children: [
+                            const Text('மத்திமம் (ம) =', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFFEF6C00))),
+                            const SizedBox(height: 2),
+                            Text('$mCount', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFFEF6C00))),
+                            const SizedBox(height: 1),
+                            Text('$mCount × 2 = $mPercent%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFEF6C00))),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFEBEE),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFC62828), width: 1.2),
+                        ),
+                        child: Column(
+                          children: [
+                            const Text('அதமம் (அ) ✗', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
+                            const SizedBox(height: 2),
+                            Text('$aCount', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFFC62828))),
+                            const SizedBox(height: 1),
+                            Text('$aCount × 0 = 0%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                // Total Percentage Banner
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: totalPercent >= 60
+                          ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
+                          : (totalPercent >= 40 ? [const Color(0xFFE65100), const Color(0xFFEF6C00)] : [const Color(0xFFB71C1C), const Color(0xFFC62828)]),
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: statusColor.withValues(alpha: 0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'மொத்த பொருத்தம் சதவீதம்',
+                                style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                totalPercent >= 60 ? '★ உத்தம சுப மனை' : (totalPercent >= 40 ? '★ மத்திம மனை' : '★ அதம மனை'),
+                                style: const TextStyle(color: Color(0xFFFFE082), fontSize: 13, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                            ),
+                            child: Text(
+                              '$totalPercent%',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'கணக்கீடு: ($uCount × 4%) + ($mCount × 2%) + ($aCount × 0%) = $totalPercent%',
+                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // 3. Highlighted Ayadi Number Result Card (ஆயாதி எண்)
   Widget _buildAyadiResultCard(GpKuzhiResult res) {
     return Container(
@@ -1139,18 +1929,20 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: ${res.roundedAyadi} % 8 = மீதம் ${res.garbhamNumber}',
-              style: const TextStyle(
-                fontSize: 10.5,
-                color: Color(0xFF7A6855),
-                fontStyle: FontStyle.italic,
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: ${res.roundedAyadi} % 8 = மீதம் ${res.garbhamNumber}',
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  color: Color(0xFF7A6855),
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -1333,79 +2125,81 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 10),
 
-          // Formula & Step Details Box
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'யோனிக் கணக்கீடு முறை:',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF7A6855),
+            // Formula & Step Details Box
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'யோனிக் கணக்கீடு முறை:',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF7A6855),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '• ஆயாதி எண் × 3 = ${res.roundedAyadi} × 3 = ${res.yoniTotal}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF5D1204),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• ஆயாதி எண் × 3 = ${res.roundedAyadi} × 3 = ${res.yoniTotal}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF5D1204),
                   ),
-                ),
-                Text(
-                  '• 8 இன் மடங்கு கழிவு = ${res.yoniTotal} - $multiple8 = ${res.yoniNumber}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF5D1204),
+                  Text(
+                    '• 8 இன் மடங்கு கழிவு = ${res.yoniTotal} - $multiple8 = ${res.yoniNumber}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF5D1204),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ (${res.yoniNumber}) ${yoni.name} — ${yoni.effect}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ (${res.yoniNumber}) ${yoni.name} — ${yoni.effect}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: (${res.roundedAyadi} × 3 = ${res.yoniTotal}) % 8 = மீதம் ${res.yoniNumber}',
-              style: const TextStyle(
-                fontSize: 10.5,
-                color: Color(0xFF7A6855),
-                fontStyle: FontStyle.italic,
+                ],
               ),
             ),
-          ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: (${res.roundedAyadi} × 3 = ${res.yoniTotal}) % 8 = மீதம் ${res.yoniNumber}',
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  color: Color(0xFF7A6855),
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1535,79 +2329,81 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 14),
 
-          // Formula & Step Details Box
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'ஆதாயக் கணக்கீடு முறை:',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF7A6855),
+            // Formula & Step Details Box
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'ஆதாயக் கணக்கீடு முறை:',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF7A6855),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '• ஆயாதி எண் × 8 = ${res.roundedAyadi} × 8 = ${res.aadhayamTotal}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF5D1204),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• ஆயாதி எண் × 8 = ${res.roundedAyadi} × 8 = ${res.aadhayamTotal}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF5D1204),
                   ),
-                ),
-                Text(
-                  '• 12 இன் மடங்கு கழிவு = ${res.aadhayamTotal} - $multiple12 = ${res.aadhayamNumber}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF5D1204),
+                  Text(
+                    '• 12 இன் மடங்கு கழிவு = ${res.aadhayamTotal} - $multiple12 = ${res.aadhayamNumber}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF5D1204),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ (${res.aadhayamNumber}) ${aadhayam.effect}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2E7D32),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ (${res.aadhayamNumber}) ${aadhayam.effect}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2E7D32),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: (${res.roundedAyadi} × 8 = ${res.aadhayamTotal}) % 12 = மீதம் ${res.aadhayamNumber}',
-              style: const TextStyle(
-                fontSize: 10.5,
-                color: Color(0xFF7A6855),
-                fontStyle: FontStyle.italic,
+                ],
               ),
             ),
-          ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: (${res.roundedAyadi} × 8 = ${res.aadhayamTotal}) % 12 = மீதம் ${res.aadhayamNumber}',
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  color: Color(0xFF7A6855),
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1748,79 +2544,81 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 14),
 
-          // Formula & Step Details Box
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'விரையக் கணக்கீடு முறை:',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF7A6855),
+            // Formula & Step Details Box
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'விரையக் கணக்கீடு முறை:',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF7A6855),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '• ஆயாதி எண் × 9 = ${res.roundedAyadi} × 9 = ${res.virayamTotal}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF5D1204),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• ஆயாதி எண் × 9 = ${res.roundedAyadi} × 9 = ${res.virayamTotal}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF5D1204),
                   ),
-                ),
-                Text(
-                  '• 10 இன் மடங்கு கழிவு = ${res.virayamTotal} - $multiple10 = ${res.virayamNumber}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF5D1204),
+                  Text(
+                    '• 10 இன் மடங்கு கழிவு = ${res.virayamTotal} - $multiple10 = ${res.virayamNumber}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF5D1204),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ (${res.virayamNumber}) ${virayam.effect}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ (${res.virayamNumber}) ${virayam.effect}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: (${res.roundedAyadi} × 9 = ${res.virayamTotal}) % 10 = மீதம் ${res.virayamNumber}',
-              style: const TextStyle(
-                fontSize: 10.5,
-                color: Color(0xFF7A6855),
-                fontStyle: FontStyle.italic,
+                ],
               ),
             ),
-          ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: (${res.roundedAyadi} × 9 = ${res.virayamTotal}) % 10 = மீதம் ${res.virayamNumber}',
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  color: Color(0xFF7A6855),
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -2083,65 +2881,67 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'வாரப்பலன் கணக்கீடு முறை:',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF7A6855),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'வாரப்பலன் கணக்கீடு முறை:',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF7A6855),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• ஆயாதி எண் × 9 = ${res.roundedAyadi} × 9 = ${res.vaaraTotal}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                Text(
-                  '• 7 இன் மடங்கு கழிவு = ${res.vaaraTotal} - $multiple7 = ${res.vaaraNumber} (${vaara.dayName})',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ (${res.vaaraNumber}) ${vaara.dayName} — ${vaara.effect}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isGood ? const Color(0xFF2E7D32) : (vaara.status.contains('மத்திமம்') ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    '• ஆயாதி எண் × 9 = ${res.roundedAyadi} × 9 = ${res.vaaraTotal}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  Text(
+                    '• 7 இன் மடங்கு கழிவு = ${res.vaaraTotal} - $multiple7 = ${res.vaaraNumber} (${vaara.dayName})',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ (${res.vaaraNumber}) ${vaara.dayName} — ${vaara.effect}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isGood ? const Color(0xFF2E7D32) : (vaara.status.contains('மத்திமம்') ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: (${res.roundedAyadi} × 9 = ${res.vaaraTotal}) % 7 = மீதம் ${res.vaaraNumber}',
-              style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: (${res.roundedAyadi} × 9 = ${res.vaaraTotal}) % 7 = மீதம் ${res.vaaraNumber}',
+                style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -2261,61 +3061,63 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'அம்சக் கணக்கீடு முறை:',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'அம்சக் கணக்கீடு முறை:',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• ஆயாதி எண் × 4 = ${res.roundedAyadi} × 4 = ${res.amsaTotal}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                Text(
-                  '• 9 இன் மடங்கு கழிவு = ${res.amsaTotal} - $multiple9 = ${res.amsaNumber}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ (${res.amsaNumber}) ${amsa.effect}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    '• ஆயாதி எண் × 4 = ${res.roundedAyadi} × 4 = ${res.amsaTotal}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  Text(
+                    '• 9 இன் மடங்கு கழிவு = ${res.amsaTotal} - $multiple9 = ${res.amsaNumber}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ (${res.amsaNumber}) ${amsa.effect}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: (${res.roundedAyadi} × 4 = ${res.amsaTotal}) % 9 = மீதம் ${res.amsaNumber}',
-              style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: (${res.roundedAyadi} × 4 = ${res.amsaTotal}) % 9 = மீதம் ${res.amsaNumber}',
+                style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -2454,53 +3256,55 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'நட்சத்திரக் கணக்கீடு முறை:',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'நட்சத்திரக் கணக்கீடு முறை:',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• ஆயாதி எண் × 8 = ${res.roundedAyadi} × 8 = ${res.nakshatraTotal}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                Text(
-                  '• 27 இன் மடங்கு கழிவு = ${res.nakshatraTotal} - $multiple27 = ${res.nakshatraNumber} (${nak.name})',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ (${res.nakshatraNumber}) ${nak.name} [${nak.gana}] — ${nak.effect}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isGood ? const Color(0xFF2E7D32) : (nak.status.contains('மத்திமம்') ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    '• ஆயாதி எண் × 8 = ${res.roundedAyadi} × 8 = ${res.nakshatraTotal}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  Text(
+                    '• 27 இன் மடங்கு கழிவு = ${res.nakshatraTotal} - $multiple27 = ${res.nakshatraNumber} (${nak.name})',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ (${res.nakshatraNumber}) ${nak.name} [${nak.gana}] — ${nak.effect}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isGood ? const Color(0xFF2E7D32) : (nak.status.contains('மத்திமம்') ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: 14),
 
           // 11. Gana Compatibility Interactive Match Box
@@ -2606,14 +3410,16 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: (${res.roundedAyadi} × 8 = ${res.nakshatraTotal}) % 27 = மீதம் ${res.nakshatraNumber}',
-              style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: (${res.roundedAyadi} × 8 = ${res.nakshatraTotal}) % 27 = மீதம் ${res.nakshatraNumber}',
+                style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -2727,57 +3533,59 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'வம்சக் கணக்கீடு முறை:',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'வம்சக் கணக்கீடு முறை:',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• ஆயாதி எண் × 9 = ${res.roundedAyadi} × 9 = ${res.vamsamTotal}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                Text(
-                  '• 4 இன் மடங்கு கழிவு = ${res.vamsamTotal} - $multiple4 = ${res.vamsamNumber} (${vamsam.name})',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ (${res.vamsamNumber}) ${vamsam.name} — ${vamsam.effect}',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)),
-                ),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '• ஆயாதி எண் × 9 = ${res.roundedAyadi} × 9 = ${res.vamsamTotal}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  Text(
+                    '• 4 இன் மடங்கு கழிவு = ${res.vamsamTotal} - $multiple4 = ${res.vamsamNumber} (${vamsam.name})',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ (${res.vamsamNumber}) ${vamsam.name} — ${vamsam.effect}',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: (${res.roundedAyadi} × 9 = ${res.vamsamTotal}) % 4 = மீதம் ${res.vamsamNumber}',
-              style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: (${res.roundedAyadi} × 9 = ${res.vamsamTotal}) % 4 = மீதம் ${res.vamsamNumber}',
+                style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -2884,10 +3692,11 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text('பலன்: ${t1.effect} (${t1.status})', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                      Text(
-                        'கணக்கீடு: ${res.roundedAyadi} × 4 = ${res.thithi1Total} | கழிவு $multiple30_1 = ${res.thithi1Number}',
-                        style: const TextStyle(color: Colors.white70, fontSize: 10.5),
-                      ),
+                      if (_showCalculationDetails)
+                        Text(
+                          'கணக்கீடு: ${res.roundedAyadi} × 4 = ${res.thithi1Total} | கழிவு $multiple30_1 = ${res.thithi1Number}',
+                          style: const TextStyle(color: Colors.white70, fontSize: 10.5),
+                        ),
                     ],
                   ),
                 ),
@@ -2936,10 +3745,11 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text('பலன்: ${t2.effect} (${t2.status})', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                      Text(
-                        'கணக்கீடு: ${res.roundedAyadi} × 9 = ${res.thithi2Total} | கழிவு $multiple30_2 = ${res.thithi2Number}',
-                        style: const TextStyle(color: Colors.white70, fontSize: 10.5),
-                      ),
+                      if (_showCalculationDetails)
+                        Text(
+                          'கணக்கீடு: ${res.roundedAyadi} × 9 = ${res.thithi2Total} | கழிவு $multiple30_2 = ${res.thithi2Number}',
+                          style: const TextStyle(color: Colors.white70, fontSize: 10.5),
+                        ),
                     ],
                   ),
                 ),
@@ -3067,57 +3877,59 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'இராசிக் கணக்கீடு முறை:',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'இராசிக் கணக்கீடு முறை:',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• ஆயாதி எண் × 4 = ${res.roundedAyadi} × 4 = ${res.rasiTotal}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                Text(
-                  '• 12 இன் மடங்கு கழிவு = ${res.rasiTotal} - $multiple12 = ${res.rasiNumber} (${rasi.name})',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ (${res.rasiNumber}) ${rasi.name} — ${rasi.effect}',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)),
-                ),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '• ஆயாதி எண் × 4 = ${res.roundedAyadi} × 4 = ${res.rasiTotal}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  Text(
+                    '• 12 இன் மடங்கு கழிவு = ${res.rasiTotal} - $multiple12 = ${res.rasiNumber} (${rasi.name})',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ (${res.rasiNumber}) ${rasi.name} — ${rasi.effect}',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: (${res.roundedAyadi} × 4 = ${res.rasiTotal}) % 12 = மீதம் ${res.rasiNumber}',
-              style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: (${res.roundedAyadi} × 4 = ${res.rasiTotal}) % 12 = மீதம் ${res.rasiNumber}',
+                style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -3232,56 +4044,58 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'வயதுக் கணக்கீடு முறை & சாஸ்திர விதிகள்:',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'வயதுக் கணக்கீடு முறை & சாஸ்திர விதிகள்:',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• ஆயாதி எண் × 27 = ${res.roundedAyadi} × 27 = ${res.ageTotal}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                Text(
-                  '• 100 இன் மடங்கு கழிவு = ${res.ageTotal} % 100 = ${res.ageNumber} வயது',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                const Divider(height: 12),
-                const Text('• 1 – 27: சகல பொருத்தங்கள் இருந்தால் நன்மை, இல்லை என்றால் அதர்மம்', style: TextStyle(fontSize: 11, color: Color(0xFF5D1204))),
-                const Text('• 28 – 50: மத்திமம்', style: TextStyle(fontSize: 11, color: Color(0xFF5D1204))),
-                const Text('• 51 – 100: உத்தமம்', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '• ஆயாதி எண் × 27 = ${res.roundedAyadi} × 27 = ${res.ageTotal}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  Text(
+                    '• 100 இன் மடங்கு கழிவு = ${res.ageTotal} % 100 = ${res.ageNumber} வயது',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  const Divider(height: 12),
+                  const Text('• 1 – 27: சகல பொருத்தங்கள் இருந்தால் நன்மை, இல்லை என்றால் அதர்மம்', style: TextStyle(fontSize: 11, color: Color(0xFF5D1204))),
+                  const Text('• 28 – 50: மத்திமம்', style: TextStyle(fontSize: 11, color: Color(0xFF5D1204))),
+                  const Text('• 51 – 100: உத்தமம்', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: (${res.roundedAyadi} × 27 = ${res.ageTotal}) % 100 = மீதம் ${res.ageNumber}',
-              style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: (${res.roundedAyadi} × 27 = ${res.ageTotal}) % 100 = மீதம் ${res.ageNumber}',
+                style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -3403,65 +4217,67 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'புருஷ இராசிக் கணக்கீடு முறை:',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'புருஷ இராசிக் கணக்கீடு முறை:',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• ஆயாதி எண் × 7 = ${res.roundedAyadi} × 7 = ${res.purushaRasiTotal}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                Text(
-                  '• 12 இன் மடங்கு கழிவு = ${res.purushaRasiTotal} - $multiple12 = ${res.purushaRasiNumber} (${purusha.name})',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ (${res.purushaRasiNumber}) ${purusha.rasiType} ${purusha.name} — ${purusha.effect}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                    ],
                   ),
-                ),
-                const Divider(height: 12),
-                const Text('• சர இராசி (1 மே, 4 கட, 7 து, 10 ம): நன்மை', style: TextStyle(fontSize: 11, color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
-                const Text('• ஸ்திர இராசி (2 ரி, 5 சி, 8 வி, 11 கு): தீமை', style: TextStyle(fontSize: 11, color: Color(0xFFC62828), fontWeight: FontWeight.bold)),
-                const Text('• உபய இராசி (3 மி, 6 கன், 9 த, 12 மீ): நன்மை', style: TextStyle(fontSize: 11, color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    '• ஆயாதி எண் × 7 = ${res.roundedAyadi} × 7 = ${res.purushaRasiTotal}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  Text(
+                    '• 12 இன் மடங்கு கழிவு = ${res.purushaRasiTotal} - $multiple12 = ${res.purushaRasiNumber} (${purusha.name})',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ (${res.purushaRasiNumber}) ${purusha.rasiType} ${purusha.name} — ${purusha.effect}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                    ),
+                  ),
+                  const Divider(height: 12),
+                  const Text('• சர இராசி (1 மே, 4 கட, 7 து, 10 ம): நன்மை', style: TextStyle(fontSize: 11, color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
+                  const Text('• ஸ்திர இராசி (2 ரி, 5 சி, 8 வி, 11 கு): தீமை', style: TextStyle(fontSize: 11, color: Color(0xFFC62828), fontWeight: FontWeight.bold)),
+                  const Text('• உபய இராசி (3 மி, 6 கன், 9 த, 12 மீ): நன்மை', style: TextStyle(fontSize: 11, color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: (${res.roundedAyadi} × 7 = ${res.purushaRasiTotal}) % 12 = மீதம் ${res.purushaRasiNumber}',
-              style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: (${res.roundedAyadi} × 7 = ${res.purushaRasiTotal}) % 12 = மீதம் ${res.purushaRasiNumber}',
+                style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -3557,10 +4373,11 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text('பலன்: ${b1.effect} (${b1.status})', style: const TextStyle(color: Color(0xFFFFE082), fontSize: 12, fontWeight: FontWeight.w600)),
-                      Text(
-                        'கணக்கீடு: ${res.roundedAyadi} × 3 = ${res.bootham1Total} | கழிவு $multiple5_1 = ${res.bootham1Number}',
-                        style: const TextStyle(color: Colors.white70, fontSize: 10.5),
-                      ),
+                      if (_showCalculationDetails)
+                        Text(
+                          'கணக்கீடு: ${res.roundedAyadi} × 3 = ${res.bootham1Total} | கழிவு $multiple5_1 = ${res.bootham1Number}',
+                          style: const TextStyle(color: Colors.white70, fontSize: 10.5),
+                        ),
                     ],
                   ),
                 ),
@@ -3598,10 +4415,11 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text('பலன்: ${b2.effect} (${b2.status})', style: const TextStyle(color: Color(0xFFFFE082), fontSize: 12, fontWeight: FontWeight.w600)),
-                      Text(
-                        'கணக்கீடு: ${res.roundedAyadi} × 9 = ${res.bootham2Total} | கழிவு $multiple5_2 = ${res.bootham2Number}',
-                        style: const TextStyle(color: Colors.white70, fontSize: 10.5),
-                      ),
+                      if (_showCalculationDetails)
+                        Text(
+                          'கணக்கீடு: ${res.roundedAyadi} × 9 = ${res.bootham2Total} | கழிவு $multiple5_2 = ${res.bootham2Number}',
+                          style: const TextStyle(color: Colors.white70, fontSize: 10.5),
+                        ),
                     ],
                   ),
                 ),
@@ -3761,67 +4579,69 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'சூத்திரக் கணக்கீடு முறை & சாஸ்திர விதிகள்:',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'சூத்திரக் கணக்கீடு முறை & சாஸ்திர விதிகள்:',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• ஆயாதி எண் × 7 = ${res.roundedAyadi} × 7 = ${res.soothiramTotal}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                Text(
-                  '• 5 இன் மடங்கு கழிவு = ${res.soothiramTotal} - $multiple5 = ${res.soothiramNumber} (${soothiram.name})',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ (${res.soothiramNumber}) ${soothiram.name} — ${soothiram.effect}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isGood ? const Color(0xFF2E7D32) : (soothiram.number == 4 ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
+                    ],
                   ),
-                ),
-                const Divider(height: 12),
-                const Text('• 1. பால சூத்திரம் = உத்தமம்', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
-                const Text('• 2. யௌவன சூத்திரம் = சுபம்', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
-                const Text('• 3. கௌமார சூத்திரம் = நன்மை', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
-                const Text('• 4. விருத்த சூத்திரம் = துன்பம்', style: TextStyle(fontSize: 11, color: Color(0xFFEF6C00))),
-                const Text('• 5. மரண சூத்திரம் = பயம்', style: TextStyle(fontSize: 11, color: Color(0xFFC62828))),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    '• ஆயாதி எண் × 7 = ${res.roundedAyadi} × 7 = ${res.soothiramTotal}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  Text(
+                    '• 5 இன் மடங்கு கழிவு = ${res.soothiramTotal} - $multiple5 = ${res.soothiramNumber} (${soothiram.name})',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ (${res.soothiramNumber}) ${soothiram.name} — ${soothiram.effect}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isGood ? const Color(0xFF2E7D32) : (soothiram.number == 4 ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
+                    ),
+                  ),
+                  const Divider(height: 12),
+                  const Text('• 1. பால சூத்திரம் = உத்தமம்', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                  const Text('• 2. யௌவன சூத்திரம் = சுபம்', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                  const Text('• 3. கௌமார சூத்திரம் = நன்மை', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                  const Text('• 4. விருத்த சூத்திரம் = துன்பம்', style: TextStyle(fontSize: 11, color: Color(0xFFEF6C00))),
+                  const Text('• 5. மரண சூத்திரம் = பயம்', style: TextStyle(fontSize: 11, color: Color(0xFFC62828))),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'கணக்கீடு: (${res.roundedAyadi} × 7 = ${res.soothiramTotal}) % 5 = மீதம் ${res.soothiramNumber}',
-              style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'கணக்கீடு: (${res.roundedAyadi} × 7 = ${res.soothiramTotal}) % 5 = மீதம் ${res.soothiramNumber}',
+                style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -3954,71 +4774,73 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'நேத்திரக் கணக்கீடு முறை & சாஸ்திர விதிகள்:',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'நேத்திரக் கணக்கீடு முறை & சாஸ்திர விதிகள்:',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• 1. வாரப்பலன் கிழமை எண் = ${res.vaaraNumber} (${res.vaara.dayName})',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                Text(
-                  '• 2. தொடக்க நட்சத்திரம் (வார எண் × 3) = ${res.vaaraNumber} × 3 = ${nethiram.startStarNumber} (${nethiram.startStarName})',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                Text(
-                  '• 3. ஆயாதி மனை நட்சத்திரம் = ${res.nakshatraNumber} (${res.nakshatra.name})',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                const Divider(height: 12),
-                Text('• 1 கண் பிரிவு (முதல் 9 நட்சத்): ${nethiram.range1Description}', style: const TextStyle(fontSize: 11, color: Color(0xFF7A6855))),
-                Text('• 2 கண் பிரிவு (அடுத்த 12 நட்சத்): ${nethiram.range2Description}', style: const TextStyle(fontSize: 11, color: Color(0xFF7A6855))),
-                Text('• 0 கண் பிரிவு (கடைசி 6 நட்சத்): ${nethiram.range3Description}', style: const TextStyle(fontSize: 11, color: Color(0xFF7A6855))),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ பொருந்திய பிரிவு: ${nethiram.matchedRange}',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.bold,
-                    color: nethiram.eyes == 2
-                        ? const Color(0xFF2E7D32)
-                        : (nethiram.eyes == 1 ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    '• 1. வாரப்பலன் கிழமை எண் = ${res.vaaraNumber} (${res.vaara.dayName})',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  Text(
+                    '• 2. வார நட்சத்திரம் (வார எண் × 3) = ${res.vaaraNumber} × 3 = ${nethiram.startStarNumber} (${nethiram.startStarName})',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  Text(
+                    '• 3. ஆயாதி மனை நட்சத்திரம் = ${res.nakshatraNumber} (${res.nakshatra.name})',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  const Divider(height: 12),
+                  Text('• 1 கண் பிரிவு (அடுத்த 9 நட்சத்): ${nethiram.range1Description}', style: const TextStyle(fontSize: 11, color: Color(0xFF7A6855))),
+                  Text('• 2 கண் பிரிவு (அடுத்த 12 நட்சத்): ${nethiram.range2Description}', style: const TextStyle(fontSize: 11, color: Color(0xFF7A6855))),
+                  Text('• 0 கண் பிரிவு (கடைசி 6 நட்சத்): ${nethiram.range3Description}', style: const TextStyle(fontSize: 11, color: Color(0xFF7A6855))),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ பொருந்திய பிரிவு: ${nethiram.matchedRange}',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                      color: nethiram.eyes == 2
+                          ? const Color(0xFF2E7D32)
+                          : (nethiram.eyes == 1 ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          const Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              '※ 2 கண் = உத்தமம் / 1 கண் = மத்திமம் / 0 கண் = அதமம் (தீமை)',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+            const SizedBox(height: 8),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '※ 2 கண் = உத்தமம் / 1 கண் = மத்திமம் / 0 கண் = அதமம் (தீமை)',
+                style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -4137,66 +4959,68 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'யோகக் கணக்கீடு முறை & சாஸ்திர விதிகள்:',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'யோகக் கணக்கீடு முறை & சாஸ்திர விதிகள்:',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '• 1. வாரப்பலன் கிழமை = ${res.vaaraNumber} (${yoga.vaaraDayName})',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                Text(
-                  '• 2. நட்சத்திர பலன் = ${res.nakshatraNumber} (${yoga.nakshatraName})',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '➔ யோக முடிவு: (${yoga.code}) ${yoga.name} — ${yoga.effect}',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.bold,
-                    color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                    ],
                   ),
-                ),
-                const Divider(height: 12),
-                const Text('• அ – அமிர்த யோகம் ➔ நன்மை / உத்தமம் (சகல காரிய சித்தி)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
-                const Text('• சி – சித்த யோகம் ➔ நன்மை / உத்தமம் (எண்ணிய காரியம் ஜெயம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
-                const Text('• ம – மரண யோகம் ➔ தீமை / அதமம் (அசுபம் / தன நஷ்டம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
-                const Text('• பி – பிரபலாரிஷ்ட யோகம் ➔ தீமை / அதமம் (கிழமை பிறந்த நட்சத்திர தோஷம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    '• 1. வாரப்பலன் கிழமை = ${res.vaaraNumber} (${yoga.vaaraDayName})',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  Text(
+                    '• 2. நட்சத்திர பலன் = ${res.nakshatraNumber} (${yoga.nakshatraName})',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '➔ யோக முடிவு: (${yoga.code}) ${yoga.name} — ${yoga.effect}',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                      color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                    ),
+                  ),
+                  const Divider(height: 12),
+                  const Text('• அ – அமிர்த யோகம் ➔ நன்மை / உத்தமம் (சகல காரிய சித்தி)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                  const Text('• சி – சித்த யோகம் ➔ நன்மை / உத்தமம் (எண்ணிய காரியம் ஜெயம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                  const Text('• ம – மரண யோகம் ➔ தீமை / அதமம் (அசுபம் / தன நஷ்டம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
+                  const Text('• பி – பிரபலாரிஷ்ட யோகம் ➔ தீமை / அதமம் (கிழமை பிறந்த நட்சத்திர தோஷம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          const Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              '※ ஆயாதி வாரமும் நட்சத்திரமும் இணைத்து அமிர்தாதி யோகம் கணிக்கப்படுகிறது.',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+            const SizedBox(height: 8),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '※ ஆயாதி வாரமும் நட்சத்திரமும் இணைத்து அமிர்தாதி யோகம் கணிக்கப்படுகிறது.',
+                style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -4315,41 +5139,43 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'தாரா பலன் கணிதம் & சாஸ்திர விதிகள்:',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'தாரா பலன் கணிதம் & சாஸ்திர விதிகள்:',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text('• 1. உரிமையாளர் நட்சத்திரம் = ${thara.ownerNakshatraNumber} (${thara.ownerNakshatraName})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 2. ஆயாதி மனை நட்சத்திரம் = ${thara.houseNakshatraNumber} (${thara.houseNakshatraName})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 3. இடைப்பட்ட தூரம் = ${thara.count} நட்சத்திரங்கள்', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 4. 9 ஆல் வகுத்த மீதம் = ${thara.count} % 9 = ${thara.remainder} ➔ ${thara.tharaName}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
-                const Divider(height: 12),
-                const Text('• 1, 3, 5, 7 ➔ தீமை தரும் (ஜென்மம், விபத்து, பிரத்யக், வதை)', style: TextStyle(fontSize: 11, color: Color(0xFFC62828))),
-                const Text('• 2, 4, 6, 8, 9(0) ➔ நன்மை தரும் (சம்பத்து, க்ஷேமம், சாதகம், மைத்ரம், பரம மைத்ரம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text('• 1. உரிமையாளர் நட்சத்திரம் = ${thara.ownerNakshatraNumber} (${thara.ownerNakshatraName})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 2. ஆயாதி மனை நட்சத்திரம் = ${thara.houseNakshatraNumber} (${thara.houseNakshatraName})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 3. இடைப்பட்ட தூரம் = ${thara.count} நட்சத்திரங்கள்', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 4. 9 ஆல் வகுத்த மீதம் = ${thara.count} % 9 = ${thara.remainder} ➔ ${thara.tharaName}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+                  const Divider(height: 12),
+                  const Text('• 1, 3, 5, 7 ➔ தீமை தரும் (ஜென்மம், விபத்து, பிரத்யக், வதை)', style: TextStyle(fontSize: 11, color: Color(0xFFC62828))),
+                  const Text('• 2, 4, 6, 8, 9(0) ➔ நன்மை தரும் (சம்பத்து, க்ஷேமம், சாதகம், மைத்ரம், பரம மைத்ரம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -4469,38 +5295,40 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'கரணக் கணிதம்: (${res.roundedAyadi} × 5) % 11',
-                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'கரணக் கணிதம்: (${res.roundedAyadi} × 5) % 11',
+                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text('• ${res.roundedAyadi} × 5 = ${res.karanaTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 11 இன் மடங்கு கழிவு = ${res.karanaTotal} - $multiple11 = ${res.karanaNumber} (${karana.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                const SizedBox(height: 4),
-                Text('➔ (${res.karanaNumber}) ${karana.name} — ${karana.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text('• ${res.roundedAyadi} × 5 = ${res.karanaTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 11 இன் மடங்கு கழிவு = ${res.karanaTotal} - $multiple11 = ${res.karanaNumber} (${karana.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  const SizedBox(height: 4),
+                  Text('➔ (${res.karanaNumber}) ${karana.name} — ${karana.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -4621,26 +5449,28 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• 1. உரிமையாளர் ராசி = ${chandra.ownerRasiNumber} (${chandra.ownerRasiName})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 2. ஆயாதி மனை ராசி = ${chandra.houseRasiNumber} (${chandra.houseRasiName})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 3. சந்திர பலன் எண் = (${chandra.houseRasiNumber} - ${chandra.ownerRasiNumber} + 12) % 12 + 1 = ${chandra.number}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  const SizedBox(height: 4),
+                  Text('➔ (${chandra.number}) ${chandra.name} — ${chandra.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+                ],
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('• 1. உரிமையாளர் ராசி = ${chandra.ownerRasiNumber} (${chandra.ownerRasiName})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 2. ஆயாதி மனை ராசி = ${chandra.houseRasiNumber} (${chandra.houseRasiName})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 3. சந்திர பலன் எண் = (${chandra.houseRasiNumber} - ${chandra.ownerRasiNumber} + 12) % 12 + 1 = ${chandra.number}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                const SizedBox(height: 4),
-                Text('➔ (${chandra.number}) ${chandra.name} — ${chandra.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
-              ],
-            ),
-          ),
+          ],
         ],
       ),
     );
@@ -4754,38 +5584,40 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'அஷ்டலட்சுமி கணிதம்: (${res.roundedAyadi} × 3) % 8',
-                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'அஷ்டலட்சுமி கணிதம்: (${res.roundedAyadi} × 3) % 8',
+                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text('• ${res.roundedAyadi} × 3 = ${res.ashtaLakshmiTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 8 இன் மடங்கு கழிவு = ${res.ashtaLakshmiTotal} - $multiple8 = ${res.ashtaLakshmiNumber} (${lakshmi.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                const SizedBox(height: 4),
-                Text('➔ (${res.ashtaLakshmiNumber}) ${lakshmi.name} — ${lakshmi.effect}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text('• ${res.roundedAyadi} × 3 = ${res.ashtaLakshmiTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 8 இன் மடங்கு கழிவு = ${res.ashtaLakshmiTotal} - $multiple8 = ${res.ashtaLakshmiNumber} (${lakshmi.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  const SizedBox(height: 4),
+                  Text('➔ (${res.ashtaLakshmiNumber}) ${lakshmi.name} — ${lakshmi.effect}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -4904,49 +5736,51 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'பஞ்சகக் கணிதம்: வாரம் + திதி + நட்சத்திரம் + ராசி',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'பஞ்சகக் கணிதம்: வாரம் + திதி + நட்சத்திரம் + ராசி',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text('• வாரம்(${pan.vaaraNumber}) + திதி(${pan.thithiNumber}) + நட்சத்திரம்(${pan.nakshatraNumber}) + ராசி(${pan.rasiNumber}) = ${pan.totalSum}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 9 ஆல் வகுத்த மீதம் = ${pan.totalSum} % 9 = ${pan.number} (${pan.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                const Divider(height: 12),
-                Row(
-                  children: [
-                    const Icon(Icons.volunteer_activism_rounded, color: Color(0xFFB45309), size: 18),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'பூமி பூஜை பரிகார தானம்: ${pan.pariharam}',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFB45309)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text('• வாரம்(${pan.vaaraNumber}) + திதி(${pan.thithiNumber}) + நட்சத்திரம்(${pan.nakshatraNumber}) + ராசி(${pan.rasiNumber}) = ${pan.totalSum}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 9 ஆல் வகுத்த மீதம் = ${pan.totalSum} % 9 = ${pan.number} (${pan.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  const Divider(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.volunteer_activism_rounded, color: Color(0xFFB45309), size: 18),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'பூமி பூஜை பரிகார தானம்: ${pan.pariharam}',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFB45309)),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -5066,38 +5900,40 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'குணப் பலன் கணிதம்: ஆயாதி எண் % 3 (மீதி 0 = 3)',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'குணப் பலன் கணிதம்: ஆயாதி எண் % 3 (மீதி 0 = 3)',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text('• ஆயாதி எண் = ${res.roundedAyadi}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 3 இன் மடங்கு கழிவு = ${res.roundedAyadi} - $multiple3 = ${res.gunaNumber} (${guna.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                const SizedBox(height: 4),
-                Text('➔ (${res.gunaNumber}) ${guna.name} — ${guna.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text('• ஆயாதி எண் = ${res.roundedAyadi}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 3 இன் மடங்கு கழிவு = ${res.roundedAyadi} - $multiple3 = ${res.gunaNumber} (${guna.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  const SizedBox(height: 4),
+                  Text('➔ (${res.gunaNumber}) ${guna.name} — ${guna.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -5217,38 +6053,40 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'நாம யோகப் பலன் கணிதம்: (ஆயாதி எண் × 4) % 27',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'நாம யோகப் பலன் கணிதம்: (ஆயாதி எண் × 4) % 27',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text('• ஆயாதி எண் × 4 = ${res.roundedAyadi} × 4 = ${res.namaYogaTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 27 இன் மடங்கு கழிவு = ${res.namaYogaTotal} - $multiple27 = ${res.namaYogaNumber} (${namaYoga.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                const SizedBox(height: 4),
-                Text('➔ (${res.namaYogaNumber}) ${namaYoga.name} — ${namaYoga.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text('• ஆயாதி எண் × 4 = ${res.roundedAyadi} × 4 = ${res.namaYogaTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 27 இன் மடங்கு கழிவு = ${res.namaYogaTotal} - $multiple27 = ${res.namaYogaNumber} (${namaYoga.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  const SizedBox(height: 4),
+                  Text('➔ (${res.namaYogaNumber}) ${namaYoga.name} — ${namaYoga.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -5368,38 +6206,40 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'அஷ்டதிக்கு பாலகர் பலன் கணிதம்: (ஆயாதி எண் × 9) % 8',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'அஷ்டதிக்கு பாலகர் பலன் கணிதம்: (ஆயாதி எண் × 9) % 8',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text('• ஆயாதி எண் × 9 = ${res.roundedAyadi} × 9 = ${res.dikpalakarTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 8 இன் மடங்கு கழிவு = ${res.dikpalakarTotal} - $multiple8 = ${res.dikpalakarNumber} (${dikpalakar.name} - ${dikpalakar.direction})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                const SizedBox(height: 4),
-                Text('➔ (${res.dikpalakarNumber}) ${dikpalakar.name} — ${dikpalakar.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text('• ஆயாதி எண் × 9 = ${res.roundedAyadi} × 9 = ${res.dikpalakarTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 8 இன் மடங்கு கழிவு = ${res.dikpalakarTotal} - $multiple8 = ${res.dikpalakarNumber} (${dikpalakar.name} - ${dikpalakar.direction})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  const SizedBox(height: 4),
+                  Text('➔ (${res.dikpalakarNumber}) ${dikpalakar.name} — ${dikpalakar.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -5519,39 +6359,41 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF6EE),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
-                    const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text(
-                        'அதிதேவதை பலன் கணிதம்: (மனையின் வயது × 5) % 8',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+          if (_showCalculationDetails) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calculate_rounded, color: Color(0xFFB58D3D), size: 18),
+                      const SizedBox(width: 6),
+                      const Expanded(
+                        child: Text(
+                          'அதிதேவதை பலன் கணிதம்: (மனையின் வயது × 5) % 8',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855)),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text('• மனையின் வயது எண் = ${res.ageNumber}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• வயது × 5 = ${res.ageNumber} × 5 = ${res.athidevathaiTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                Text('• 8 இன் மடங்கு கழிவு = ${res.athidevathaiTotal} - $multiple8 = ${res.athidevathaiNumber} (${athidevathai.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
-                const SizedBox(height: 4),
-                Text('➔ (${res.athidevathaiNumber}) ${athidevathai.name} — ${athidevathai.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text('• மனையின் வயது எண் = ${res.ageNumber}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• வயது × 5 = ${res.ageNumber} × 5 = ${res.athidevathaiTotal}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  Text('• 8 இன் மடங்கு கழிவு = ${res.athidevathaiTotal} - $multiple8 = ${res.athidevathaiNumber} (${athidevathai.name})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204))),
+                  const SizedBox(height: 4),
+                  Text('➔ (${res.athidevathaiNumber}) ${athidevathai.name} — ${athidevathai.effect}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -6655,10 +7497,10 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
                   ),
                   SizedBox(height: 4),
-                  Text('• வீட்டின் உரிமையாளர் நட்சத்திர கணமும் மனையின் நட்சத்திர கணமும் ஒன்றாக இருந்தால் நலம் உண்டாகும்.', style: TextStyle(fontSize: 11, color: Color(0xFF5D1204))),
-                  Text('• தேவ கணம் ↔ மனித கணம் வந்தால் ➔ உத்தமம் (மிக நலம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
-                  Text('• ராக்ஷஸ கணம் ↔ மனித கணம் வந்தால் ➔ மத்திமம்', style: TextStyle(fontSize: 11, color: Color(0xFFEF6C00))),
-                  Text('• ராட்சச கணம் ↔ தேவ கணம் வந்தால் ➔ அதர்மம் (பொருத்தம் இல்லை)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
+                  Text('• தலைவன் (எஜமானன்) கணமும் மனையின் கணமும் ஒன்றாகில் ➔ நலம் உண்டாகும் (உத்தமம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                  Text('• தேவகணமும் மனிதகணமும் வந்தால் ➔ உத்தம பலன் (உத்தமம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                  Text('• ராக்ஷஸகணமும் மனிதகணமும் வந்தால் ➔ மகிமையுண்டாகும் (உத்தமம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                  Text('• ராட்சஸகணமும் தேவகணமும் வந்தால் ➔ பகையும் சத்துருக்களால் எக்காலத்திலும் கஷ்டமும் ஏற்படும் (அதமம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
                 ],
               ),
             ),
@@ -7602,7 +8444,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              '※ கணக்கீட்டு விதி: வாரப்பலன் கிழமை எண்ணை (ஞாயிறு=1 .. சனி=7) 3 ஆல் பெருக்கி வரும் எண்ணை தொடக்க நட்சத்திரமாகக் கொண்டு, முதல் 9 நட்சத்திரங்கள் 1-கண், அடுத்த 12 நட்சத்திரங்கள் 2-கண், அடுத்த 6 நட்சத்திரங்கள் 0-கண் ஆகும்.',
+              '※ கணக்கீட்டு விதி: வாரப்பலன் கிழமை எண்ணை (ஞாயிறு=1 .. சனி=7) 3 ஆல் பெருக்கி வரும் நட்சத்திரத்திற்கு அடுத்த நட்சத்திரத்திலிருந்து, முதல் 9 நட்சத்திரங்கள் 1-கண் (மத்திமம்), அடுத்த 12 நட்சத்திரங்கள் 2-கண் (உத்தமம்), அடுத்த 6 நட்சத்திரங்கள் 0-கண் (அதமம்) ஆகும்.',
               style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
             ),
           ],
@@ -8515,7 +9357,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 const Divider(height: 16),
                 const Text('【 16. நேத்திர பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
                 const SizedBox(height: 4),
-                Text('• வார எண்: ${res.vaaraNumber} (${res.vaara.dayName}) ➔ தொடக்க நட்சத் (${res.vaaraNumber} × 3): ${res.nethiram.startStarNumber} (${res.nethiram.startStarName})', style: const TextStyle(fontSize: 11.5, color: Color(0xFF5D1204))),
+                Text('• வார எண்: ${res.vaaraNumber} (${res.vaara.dayName}) ➔ வார நட்சத் (${res.vaaraNumber} × 3): ${res.nethiram.startStarNumber} (${res.nethiram.startStarName})', style: const TextStyle(fontSize: 11.5, color: Color(0xFF5D1204))),
                 Text('• ஆயாதி மனை நட்சத்திரம்: ${res.nakshatraNumber} (${res.nakshatra.name})', style: const TextStyle(fontSize: 11.5, color: Color(0xFF5D1204))),
                 Text('• பலன்: ${res.nethiram.title} [${res.nethiram.status}] — ${res.nethiram.matchedRange}', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: res.nethiram.eyes == 2 ? const Color(0xFF2E7D32) : (res.nethiram.eyes == 1 ? const Color(0xFFEF6C00) : const Color(0xFFC62828)))),
 

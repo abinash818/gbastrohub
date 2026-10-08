@@ -100,7 +100,7 @@ void main() {
 
       final res2 = GpVaasthuService.evaluateGanaMatch('ராட்சச கணம்', 'தேவ கணம்');
       expect(res2['isGood'], false);
-      expect((res2['status'] as String).contains('அதர்மம்'), true);
+      expect((res2['status'] as String).contains('அதமம்'), true);
     });
 
     test('13. Purusha Rasi test', () {
@@ -139,18 +139,36 @@ void main() {
     });
 
     test('16. Nethiram test', () {
-      // Vaaram = 5 (வியாழன்/குரு) -> Start star = 5 * 3 = 15 (சுவாதி)
-      // Nakshatram = 10 (மகம்)
-      // Range 1 (9 stars): 15-23 (சுவாதி to அவிட்டம்) -> No 10
-      // Range 2 (12 stars): 24-8 (சதயம் to பூசம்) -> No 10
-      // Range 3 (6 stars): 9-14 (ஆயில்யம் to சித்திரை) -> Contains 10 (மகம்)
-      // Result: 0 - கண் (அதமம் / தீமை)
-      final nethiram = GpVaasthuService.calculateNethiram(5, 10);
-      expect(nethiram.eyes, 0);
-      expect(nethiram.isGood, false);
-      expect(nethiram.status.contains('அதமம்'), true);
-      expect(nethiram.startStarNumber, 15);
-      expect(nethiram.startStarName.contains('சுவாதி'), true);
+      // Vaaram = 5 (வியாழன்/குரு) -> Week star = 5 * 3 = 15 (சுவாதி)
+      // Range 1 (9 stars): 16-24 (விசாகம் to சதயம்) -> 1 கண் (மத்திமம்)
+      // Range 2 (12 stars): 25-9 (பூரட்டாதி to ஆயில்யம்) -> 2 கண் (உத்தமம்)
+      // Range 3 (6 stars): 10-15 (மகம் to சுவாதி) -> 0 கண் (அதமம் / தீமை)
+
+      // Test Range 3: Nakshatram = 10 (மகம்) -> 0 கண்
+      final nethiramMagam = GpVaasthuService.calculateNethiram(5, 10);
+      expect(nethiramMagam.eyes, 0);
+      expect(nethiramMagam.isGood, false);
+      expect(nethiramMagam.status.contains('அதமம்'), true);
+      expect(nethiramMagam.startStarNumber, 15);
+      expect(nethiramMagam.startStarName.contains('சுவாதி'), true);
+
+      // Test Range 1: Nakshatram = 16 (விசாகம்) -> 1 கண்
+      final nethiramVisakam = GpVaasthuService.calculateNethiram(5, 16);
+      expect(nethiramVisakam.eyes, 1);
+      expect(nethiramVisakam.status.contains('மத்திமம்'), true);
+
+      // Test Range 2: Nakshatram = 25 (பூரட்டாதி) -> 2 கண்
+      final nethiramPoorattathi = GpVaasthuService.calculateNethiram(5, 25);
+      expect(nethiramPoorattathi.eyes, 2);
+      expect(nethiramPoorattathi.status.contains('உத்தமம்'), true);
+
+      // Test Range 2: Nakshatram = 1 (அசுவினி) -> 2 கண்
+      final nethiramAswini = GpVaasthuService.calculateNethiram(5, 1);
+      expect(nethiramAswini.eyes, 2);
+
+      // Test Range 3: Nakshatram = 15 (சுவாதி) -> 0 கண்
+      final nethiramSwathi = GpVaasthuService.calculateNethiram(5, 15);
+      expect(nethiramSwathi.eyes, 0);
 
       // Verify overall Kuzhi calculation has nethiram populated
       final res = GpVaasthuService.calculateKuzhi(

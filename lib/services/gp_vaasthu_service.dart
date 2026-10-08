@@ -1688,7 +1688,7 @@ class GpVaasthuService {
       rasiType: 'சர இராசி',
       effect: 'சர இராசி — நன்மை உண்டாகும்',
       isGood: true,
-      status: 'நன்மை (சுபம்)',
+      status: 'உத்தமம் (நன்மை)',
       iconEmoji: '♈',
     ),
     GpPurushaRasiItem(
@@ -1698,7 +1698,7 @@ class GpVaasthuService {
       rasiType: 'ஸ்திர இராசி',
       effect: 'ஸ்திர இராசி — தீமை உண்டாகும்',
       isGood: false,
-      status: 'தீமை (அதமம்)',
+      status: 'அதமம் (தீமை)',
       iconEmoji: '♉',
     ),
     GpPurushaRasiItem(
@@ -1708,7 +1708,7 @@ class GpVaasthuService {
       rasiType: 'உபய இராசி',
       effect: 'உபய இராசி — நன்மை உண்டாகும்',
       isGood: true,
-      status: 'நன்மை (சுபம்)',
+      status: 'உத்தமம் (நன்மை)',
       iconEmoji: '♊',
     ),
     GpPurushaRasiItem(
@@ -1718,7 +1718,7 @@ class GpVaasthuService {
       rasiType: 'சர இராசி',
       effect: 'சர இராசி — நன்மை உண்டாகும்',
       isGood: true,
-      status: 'நன்மை (சுபம்)',
+      status: 'உத்தமம் (நன்மை)',
       iconEmoji: '♋',
     ),
     GpPurushaRasiItem(
@@ -1728,7 +1728,7 @@ class GpVaasthuService {
       rasiType: 'ஸ்திர இராசி',
       effect: 'ஸ்திர இராசி — தீமை உண்டாகும்',
       isGood: false,
-      status: 'தீமை (அதமம்)',
+      status: 'அதமம் (தீமை)',
       iconEmoji: '♌',
     ),
     GpPurushaRasiItem(
@@ -1738,7 +1738,7 @@ class GpVaasthuService {
       rasiType: 'உபய இராசி',
       effect: 'உபய இராசி — நன்மை உண்டாகும்',
       isGood: true,
-      status: 'நன்மை (சுபம்)',
+      status: 'உத்தமம் (நன்மை)',
       iconEmoji: '♍',
     ),
     GpPurushaRasiItem(
@@ -1748,7 +1748,7 @@ class GpVaasthuService {
       rasiType: 'சர இராசி',
       effect: 'சர இராசி — நன்மை உண்டாகும்',
       isGood: true,
-      status: 'நன்மை (சுபம்)',
+      status: 'உத்தமம் (நன்மை)',
       iconEmoji: '♎',
     ),
     GpPurushaRasiItem(
@@ -1758,7 +1758,7 @@ class GpVaasthuService {
       rasiType: 'ஸ்திர இராசி',
       effect: 'ஸ்திர இராசி — தீமை உண்டாகும்',
       isGood: false,
-      status: 'தீமை (அதமம்)',
+      status: 'அதமம் (தீமை)',
       iconEmoji: '♏',
     ),
     GpPurushaRasiItem(
@@ -1768,7 +1768,7 @@ class GpVaasthuService {
       rasiType: 'உபய இராசி',
       effect: 'உபய இராசி — நன்மை உண்டாகும்',
       isGood: true,
-      status: 'நன்மை (சுபம்)',
+      status: 'உத்தமம் (நன்மை)',
       iconEmoji: '♐',
     ),
     GpPurushaRasiItem(
@@ -1778,7 +1778,7 @@ class GpVaasthuService {
       rasiType: 'சர இராசி',
       effect: 'சர இராசி — நன்மை உண்டாகும்',
       isGood: true,
-      status: 'நன்மை (சுபம்)',
+      status: 'உத்தமம் (நன்மை)',
       iconEmoji: '♑',
     ),
     GpPurushaRasiItem(
@@ -1788,7 +1788,7 @@ class GpVaasthuService {
       rasiType: 'ஸ்திர இராசி',
       effect: 'ஸ்திர இராசி — தீமை உண்டாகும்',
       isGood: false,
-      status: 'தீமை (அதமம்)',
+      status: 'அதமம் (தீமை)',
       iconEmoji: '♒',
     ),
     GpPurushaRasiItem(
@@ -1798,7 +1798,7 @@ class GpVaasthuService {
       rasiType: 'உபய இராசி',
       effect: 'உபய இராசி — நன்மை உண்டாகும்',
       isGood: true,
-      status: 'நன்மை (சுபம்)',
+      status: 'உத்தமம் (நன்மை)',
       iconEmoji: '♓',
     ),
   ];
@@ -2057,7 +2057,7 @@ class GpVaasthuService {
       return {
         'status': 'உத்தமம் (நலம்)',
         'isGood': true,
-        'effect': 'வீட்டின் உரிமையாளர் நட்சத்திர கணமும் மனையின் நட்சத்திர கணமும் ஒன்றாக உள்ளது — மிகுந்த நலம் உண்டாகும்.',
+        'effect': 'தலைவன் (எஜமானன்) கணமும் மனையின் கணமும் ஒன்றாகில் நலம் உண்டாகும்.',
       };
     }
     if ((houseGana == 'தேவ கணம்' && ownerGana == 'மனித கணம்') ||
@@ -2065,23 +2065,23 @@ class GpVaasthuService {
       return {
         'status': 'உத்தமம்',
         'isGood': true,
-        'effect': 'தேவ கணம் — மனித கணம் சேர்க்கை — உத்தம சுப நலம் தரும்.',
+        'effect': 'தேவகணமும் மனிதகணமும் வந்தால் உத்தம பலன் உண்டாகும்.',
       };
     }
     if ((houseGana == 'ராட்சச கணம்' && ownerGana == 'மனித கணம்') ||
         (houseGana == 'மனித கணம்' && ownerGana == 'ராட்சச கணம்')) {
       return {
-        'status': 'மத்திமம்',
-        'isGood': false,
-        'effect': 'ராட்சச கணம் — மனித கணம் சேர்க்கை — மத்திம பலன் தரும்.',
+        'status': 'உத்தமம் (மகிமை)',
+        'isGood': true,
+        'effect': 'ராட்சஸகணமும் மனிதகணமும் வந்தால் மகிமையுண்டாகும்.',
       };
     }
     if ((houseGana == 'ராட்சச கணம்' && ownerGana == 'தேவ கணம்') ||
         (houseGana == 'தேவ கணம்' && ownerGana == 'ராட்சச கணம்')) {
       return {
-        'status': 'அதர்மம் (பகை)',
+        'status': 'அதமம் (பகை)',
         'isGood': false,
-        'effect': 'ராட்சச கணம் — தேவ கணம் சேர்க்கை — பகை / அதர்ம தீய பலன்.',
+        'effect': 'ராட்சஸகணமும் தேவகணமும் வந்தால் பகையும் சத்துருக்களால் எக்காலத்திலும் கஷ்டமும் ஏற்படும்.',
       };
     }
     return {
@@ -2092,32 +2092,38 @@ class GpVaasthuService {
   }
 
   /// Calculate Nethiram (15. நேத்திர பலன்)
-  /// வார எண் (1 ஞா .. 7 சனி) * 3 = தொடக்க நட்சத்திர எண் (1 அசுவினி .. 27 ரேவதி)
-  /// தொடக்க நட்சத்திரத்திலிருந்து:
+  /// வார எண் (1 ஞா .. 7 சனி) * 3 = வார நட்சத்திர எண் (1 அசுவினி .. 27 ரேவதி)
+  /// அதற்கு அடுத்த நட்சத்திரத்திலிருந்து:
   /// - முதல் 9 நட்சத்திரங்கள்: 1 கண் (மத்திமம்)
   /// - அடுத்த 12 நட்சத்திரங்கள்: 2 கண் (உத்தமம்)
-  /// - அடுத்த 6 நட்சத்திரங்கள்: 0 கண் (தீமை)
+  /// - அடுத்த 6 நட்சத்திரங்கள்: 0 கண் (தீமை / அதமம்)
   static GpNethiramItem calculateNethiram(int vaaraNumber, int houseNakshatraNumber) {
-    int startStar = (vaaraNumber * 3) % 27;
-    if (startStar == 0) startStar = 27;
+    int baseStar = (vaaraNumber * 3) % 27;
+    if (baseStar == 0) baseStar = 27;
 
-    // Distance from startStar to houseNakshatraNumber (1-based index 1..27)
-    int distance = (houseNakshatraNumber - startStar) % 27;
-    if (distance < 0) distance += 27;
-    int starIndex = distance + 1;
+    final String baseStarName = nakshatraList[baseStar - 1].name;
 
-    final String startStarName = nakshatraList[startStar - 1].name;
-
-    int end1 = (startStar + 8) % 27;
+    // Range 1 (முதல் 9 நட்சத்): Starts from NEXT star after (vaaraNumber * 3)
+    int start1 = (baseStar % 27) + 1;
+    int end1 = (start1 + 8) % 27;
     if (end1 == 0) end1 = 27;
+
+    // Range 2 (அடுத்த 12 நட்சத்): Starts from NEXT star after end1
     int start2 = (end1 % 27) + 1;
     int end2 = (start2 + 11) % 27;
     if (end2 == 0) end2 = 27;
+
+    // Range 3 (கடைசி 6 நட்சத்): Starts from NEXT star after end2
     int start3 = (end2 % 27) + 1;
     int end3 = (start3 + 5) % 27;
     if (end3 == 0) end3 = 27;
 
-    final String range1Desc = '$startStar ${nakshatraList[startStar - 1].name} முதல் $end1 ${nakshatraList[end1 - 1].name} வரை (9 நட்சத்)';
+    // Distance from start1 to houseNakshatraNumber (1-based index 1..27)
+    int distance = (houseNakshatraNumber - start1) % 27;
+    if (distance < 0) distance += 27;
+    int starIndex = distance + 1;
+
+    final String range1Desc = '$start1 ${nakshatraList[start1 - 1].name} முதல் $end1 ${nakshatraList[end1 - 1].name} வரை (9 நட்சத்)';
     final String range2Desc = '$start2 ${nakshatraList[start2 - 1].name} முதல் $end2 ${nakshatraList[end2 - 1].name} வரை (12 நட்சத்)';
     final String range3Desc = '$start3 ${nakshatraList[start3 - 1].name} முதல் $end3 ${nakshatraList[end3 - 1].name} வரை (6 நட்சத்)';
 
@@ -2129,8 +2135,8 @@ class GpVaasthuService {
         isGood: true,
         status: 'மத்திமம் (1 கண்)',
         iconEmoji: '👁️',
-        startStarNumber: startStar,
-        startStarName: startStarName,
+        startStarNumber: baseStar,
+        startStarName: baseStarName,
         range1Description: range1Desc,
         range2Description: range2Desc,
         range3Description: range3Desc,
@@ -2144,8 +2150,8 @@ class GpVaasthuService {
         isGood: true,
         status: 'உத்தமம் (2 கண்)',
         iconEmoji: '👀',
-        startStarNumber: startStar,
-        startStarName: startStarName,
+        startStarNumber: baseStar,
+        startStarName: baseStarName,
         range1Description: range1Desc,
         range2Description: range2Desc,
         range3Description: range3Desc,
@@ -2159,8 +2165,8 @@ class GpVaasthuService {
         isGood: false,
         status: 'தீமை / அதமம் (0 கண்)',
         iconEmoji: '🕶️',
-        startStarNumber: startStar,
-        startStarName: startStarName,
+        startStarNumber: baseStar,
+        startStarName: baseStarName,
         range1Description: range1Desc,
         range2Description: range2Desc,
         range3Description: range3Desc,

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../widgets/custom_wheel_picker.dart';
 import '../services/numerology_service.dart';
 import 'numerology_results_screen.dart';
+import '../widgets/vehicle_mobile_numerology_view.dart';
 import '../theme/app_colors.dart';
 import '../components/custom_drawer.dart';
 
@@ -18,7 +19,9 @@ class _NumerologyInputScreenState extends State<NumerologyInputScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _vehicleMobileController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
+  int _selectedTab = 0; // 0: Name & DOB, 1: Vehicle & Mobile
 
   String _getTranslatedText(String key) {
     String lang = Localizations.localeOf(context).languageCode;
@@ -26,6 +29,8 @@ class _NumerologyInputScreenState extends State<NumerologyInputScreen> {
       "பெயர் (Name)": {"en": "Name", "hi": "नाम"},
       "பிறந்த தேதி (DOB)": {"en": "Date of Birth", "hi": "जन्म तिथि"},
       "பெயரை உள்ளிடவும்": {"en": "Enter Name", "hi": "नाम दर्ज करें"},
+      "பெயர் & பிறந்த தேதி": {"en": "Name & DOB", "hi": "नाम और जन्म तिथि"},
+      "வாகனம் & மொபைல்": {"en": "Vehicle & Mobile", "hi": "वाहन और मोबाइल"},
     };
     return translations[key]?[lang] ?? key;
   }
@@ -40,6 +45,7 @@ class _NumerologyInputScreenState extends State<NumerologyInputScreen> {
   void dispose() {
     _nameController.dispose();
     _dateController.dispose();
+    _vehicleMobileController.dispose();
     super.dispose();
   }
 
@@ -90,48 +96,57 @@ class _NumerologyInputScreenState extends State<NumerologyInputScreen> {
                     constraints: const BoxConstraints(maxWidth: 850),
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (isWide)
-                              Row(
-                                children: [
-                                  Expanded(child: _buildInputField(_getTranslatedText('பெயர் (Name)'), _nameController, Icons.person_outline)),
-                                  const SizedBox(width: 20),
-                                  Expanded(child: _buildDateField(_getTranslatedText('பிறந்த தேதி (DOB)'), _dateController, Icons.calendar_month_outlined)),
-                                ],
-                              )
-                            else
-                              Column(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildTabSelector(),
+                          if (_selectedTab == 0)
+                            Form(
+                              key: _formKey,
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  _buildInputField(_getTranslatedText('பெயர் (Name)'), _nameController, Icons.person_outline),
-                                  const SizedBox(height: 15),
-                                  _buildDateField(_getTranslatedText('பிறந்த தேதி (DOB)'), _dateController, Icons.calendar_month_outlined),
+                                  if (isWide)
+                                    Row(
+                                      children: [
+                                        Expanded(child: _buildInputField(_getTranslatedText('பெயர் (Name)'), _nameController, Icons.person_outline)),
+                                        const SizedBox(width: 20),
+                                        Expanded(child: _buildDateField(_getTranslatedText('பிறந்த தேதி (DOB)'), _dateController, Icons.calendar_month_outlined)),
+                                      ],
+                                    )
+                                  else
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        _buildInputField(_getTranslatedText('பெயர் (Name)'), _nameController, Icons.person_outline),
+                                        const SizedBox(height: 15),
+                                        _buildDateField(_getTranslatedText('பிறந்த தேதி (DOB)'), _dateController, Icons.calendar_month_outlined),
+                                      ],
+                                    ),
+                                  const SizedBox(height: 20),
+                                  ValueListenableBuilder<TextEditingValue>(
+                                    valueListenable: _nameController,
+                                    builder: (context, value, child) {
+                                      final text = value.text.trim();
+                                      if (text.isEmpty) return const SizedBox.shrink();
+                                      return NumerologyResultsScreen(
+                                        name: text,
+                                        dob: _selectedDate,
+                                        psychicNumber: NumerologyService.calculatePsychicNumber(_selectedDate),
+                                        destinyNumber: NumerologyService.calculateDestinyNumber(_selectedDate),
+                                        nameNumber: NumerologyService.calculateNameNumber(text),
+                                        compoundNameNumber: NumerologyService.calculateCompoundNameNumber(text),
+                                        pyramidData: NumerologyService.calculatePyramidData(text),
+                                        dobPyramidData: NumerologyService.calculateDobPyramidData(_selectedDate),
+                                      );
+                                    },
+                                  ),
                                 ],
                               ),
-                            const SizedBox(height: 20),
-                            ValueListenableBuilder<TextEditingValue>(
-                              valueListenable: _nameController,
-                              builder: (context, value, child) {
-                                final text = value.text.trim();
-                                if (text.isEmpty) return const SizedBox.shrink();
-                                return NumerologyResultsScreen(
-                                  name: text,
-                                  dob: _selectedDate,
-                                  psychicNumber: NumerologyService.calculatePsychicNumber(_selectedDate),
-                                  destinyNumber: NumerologyService.calculateDestinyNumber(_selectedDate),
-                                  nameNumber: NumerologyService.calculateNameNumber(text),
-                                  compoundNameNumber: NumerologyService.calculateCompoundNameNumber(text),
-                                  pyramidData: NumerologyService.calculatePyramidData(text),
-                                  dobPyramidData: NumerologyService.calculateDobPyramidData(_selectedDate),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                            )
+                          else
+                            VehicleMobileNumerologyView(controller: _vehicleMobileController),
+                        ],
                       ),
                     ),
                   ),
@@ -142,6 +157,114 @@ class _NumerologyInputScreenState extends State<NumerologyInputScreen> {
         ),
       ),
     ));
+  }
+
+  Widget _buildTabSelector() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.4), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF5D1204).withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                setState(() {
+                  _selectedTab = 0;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                decoration: BoxDecoration(
+                  color: _selectedTab == 0 ? AppColors.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.person_outline,
+                        size: 16,
+                        color: _selectedTab == 0 ? Colors.white : AppColors.primary,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        _getTranslatedText("பெயர் & பிறந்த தேதி"),
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: _selectedTab == 0 ? Colors.white : AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                setState(() {
+                  _selectedTab = 1;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                decoration: BoxDecoration(
+                  color: _selectedTab == 1 ? AppColors.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.directions_car_filled_outlined,
+                        size: 16,
+                        color: _selectedTab == 1 ? Colors.white : AppColors.primary,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        _getTranslatedText("வாகனம் & மொபைல்"),
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: _selectedTab == 1 ? Colors.white : AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildInputField(String label, TextEditingController controller, IconData icon) {

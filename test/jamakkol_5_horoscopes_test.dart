@@ -38,9 +38,9 @@ void main() {
 
       expect(res.isDay, isTrue);
       expect(res.currentYama, equals(1));
-      expect(res.rahu.rasi, equals(5)); // சிம்மம் (Leo - index 4)
-      expect(res.yamagandan.rasi, equals(1)); // மேஷம் (Aries - index 0)
-      expect(res.mrityu.rasi, equals(2)); // ரிஷபம் (Taurus - index 1)
+      expect(res.rahu.rasi, equals(9)); // தனுசு (Sagittarius - 9)
+      expect(res.yamagandan.rasi, equals(7)); // துலாம் (Libra - 7)
+      expect(res.mrityu.rasi, equals(11)); // கும்பம் (Aquarius - 11)
     });
 
     test('Horoscope 2: Mon 15-06-2026 12:00:00 PM (Monday Day, Yama 4)', () {
@@ -63,9 +63,9 @@ void main() {
 
       expect(res.isDay, isTrue);
       expect(res.currentYama, equals(4));
-      expect(res.rahu.rasi, equals(3)); // மிதுனம் (Gemini - index 2)
+      expect(res.rahu.rasi, equals(4)); // கடகம் (Cancer - 4)
       expect(res.yamagandan.rasi, equals(5)); // சிம்மம் (Leo - index 4)
-      expect(res.mrityu.rasi, equals(3)); // மிதுனம் (Gemini - index 2)
+      expect(res.mrityu.rasi, equals(4)); // கடகம் (Cancer - 4)
     });
 
     test('Horoscope 3: Tue 15-09-2026 11:31:10 PM (Tuesday Night, Yama 4)', () {
@@ -88,9 +88,9 @@ void main() {
 
       expect(res.isDay, isFalse);
       expect(res.currentYama, equals(4));
-      expect(res.rahu.rasi, equals(8)); // விருச்சிகம் (Scorpio - index 7)
-      expect(res.yamagandan.rasi, equals(11)); // கும்பம் (Aquarius - index 10)
-      expect(res.mrityu.rasi, equals(8)); // விருச்சிகம் (Scorpio - index 7)
+      expect(res.rahu.rasi, equals(1)); // மேஷம் (Aries - 1)
+      expect(res.yamagandan.rasi, equals(4)); // கடகம் (Cancer - 4)
+      expect(res.mrityu.rasi, equals(2)); // ரிஷபம் (Taurus - 2)
     });
 
     test('Horoscope 4: Thu 10-09-2026 07:37:25 PM (Thursday Night, Yama 1)', () {
@@ -113,9 +113,9 @@ void main() {
 
       expect(res.isDay, isFalse);
       expect(res.currentYama, equals(1));
-      expect(res.rahu.rasi, equals(5)); // சிம்மம் (5)
-      expect(res.yamagandan.rasi, equals(7)); // துலாம் (7)
-      expect(res.mrityu.rasi, equals(5)); // சிம்மம் (5)
+      expect(res.rahu.rasi, equals(12)); // மீனம் (Pisces - 12)
+      expect(res.yamagandan.rasi, equals(2)); // ரிஷபம் (Taurus - 2)
+      expect(res.mrityu.rasi, equals(12)); // மீனம் (Pisces - 12)
     });
 
     test('Horoscope 5: Thu 23-08-1979 10:08:30 PM (Thursday Night, Yama 3)', () {
@@ -138,9 +138,9 @@ void main() {
 
       expect(res.isDay, isFalse);
       expect(res.currentYama, equals(3));
-      expect(res.rahu.rasi, equals(7)); // துலாம் (7)
-      expect(res.yamagandan.rasi, equals(9)); // தனுசு (9)
-      expect(res.mrityu.rasi, equals(7)); // துலாம் (7)
+      expect(res.rahu.rasi, equals(12)); // மீனம் (Pisces - 12)
+      expect(res.yamagandan.rasi, equals(2)); // ரிஷபம் (Taurus - 2)
+      expect(res.mrityu.rasi, equals(12)); // மீனம் (Pisces - 12)
     });
   });
 }

@@ -10,8 +10,8 @@ enum GpVaasthuRegion {
   ),
   chidambaram(
     id: 'chidambaram',
-    nameTa: 'சிதம்பரம்',
-    nameEn: 'Chidambaram',
+    nameTa: 'தஞ்சை',
+    nameEn: 'Thanjavur',
     constant: 1089,
     kolInches: 33,
     ayadiDivisor: 1.375,
@@ -19,8 +19,8 @@ enum GpVaasthuRegion {
   ),
   kanchipuram(
     id: 'kanchipuram',
-    nameTa: 'காஞ்சிபுரம்',
-    nameEn: 'Kanchipuram',
+    nameTa: 'சிதம்பரம்',
+    nameEn: 'Chidambaram',
     constant: 1156,
     kolInches: 34,
     ayadiDivisor: 1.416,
@@ -28,8 +28,8 @@ enum GpVaasthuRegion {
   ),
   srirangam(
     id: 'srirangam',
-    nameTa: 'ஸ்ரீரங்கம்',
-    nameEn: 'Srirangam',
+    nameTa: 'காஞ்சிபுரம்',
+    nameEn: 'Kanchipuram',
     constant: 1296,
     kolInches: 36,
     ayadiDivisor: 1.500,

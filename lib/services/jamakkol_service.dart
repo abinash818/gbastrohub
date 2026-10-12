@@ -122,9 +122,10 @@ class JamakkolService {
         
         String signName = KPService.SIGNS[signIdx];
         int d = finalDeg.floor();
-        // borderPlanets[signName] = "${namingMap[pName]}\u00A0${d.toString().padLeft(3, '0')}°";
-        // User screenshot 3 has format: "Guru 333°"
-        borderPlanets[signName] = "${namingMap[pName]} ${d.toString().padLeft(3, '0')}°";
+        int m = ((finalDeg - d) * 60).floor();
+        String degStr = d.toString();
+        String minStr = m.toString().padLeft(2, '0');
+        borderPlanets[signName] = "${namingMap[pName]} $degStr:$minStr";
     }
 
     // 2. Arudam Logic (Remains same - moves 1 sign every 5 mins from 6 AM)
@@ -531,13 +532,13 @@ class JamakkolService {
   };
 
   static const Map<int, List<int>> GOWRI_NIGHT_SEQ = {
-    0: [0, 4, 7, 0, 5, 2, 3, 1], // Sun (approx)
-    1: [7, 0, 5, 2, 3, 1, 6, 4], // Mon
-    2: [6, 4, 7, 0, 5, 2, 3, 1], // Tue
-    3: [4, 7, 0, 5, 2, 3, 1, 6], // Wed
-    4: [3, 1, 6, 4, 7, 0, 5, 2], // Thu
-    5: [2, 3, 1, 6, 4, 7, 0, 5], // Fri
-    6: [1, 6, 4, 7, 0, 5, 2, 3], // Sat
+    0: [0, 5, 2, 3, 1, 6, 4, 7], // Sun: அமிர்தம், ரோகம், லாபம், தனம், சுகம், சோரம், உத்தி, விஷம்
+    1: [7, 0, 5, 2, 3, 1, 6, 4], // Mon: விஷம், அமிர்தம், ரோகம், லாபம், தனம், சுகம், சோரம், உத்தி
+    2: [6, 4, 7, 0, 5, 2, 3, 1], // Tue: சோரம், உத்தி, விஷம், அமிர்தம், ரோகம், லாபம், தனம், சுகம்
+    3: [4, 7, 0, 5, 2, 3, 1, 6], // Wed: உத்தி, விஷம், அமிர்தம், ரோகம், லாபம், தனம், சுகம், சோரம்
+    4: [3, 1, 6, 4, 7, 0, 5, 2], // Thu: தனம், சுகம், சோரம், உத்தி, விஷம், அமிர்தம், ரோகம், லாபம்
+    5: [2, 3, 1, 6, 4, 7, 0, 5], // Fri: லாபம், தனம், சுகம், சோரம், உத்தி, விஷம், அமிர்தம், ரோகம்
+    6: [1, 6, 4, 7, 0, 5, 2, 3], // Sat: சுகம், சோரம், உத்தி, விஷம், அமிர்தம், ரோகம், லாபம், தனம்
   };
 
   static Map<String, dynamic> calculateCurrentSegments(DateTime dt, DateTime sunrise, DateTime sunset, {String langCode = 'ta'}) {
@@ -565,6 +566,9 @@ class JamakkolService {
     if (currentSegment < 0) currentSegment = 0;
     if (currentSegment > 7) currentSegment = 7;
     int weekday = dt.weekday % 7;
+    if (dt.isBefore(sunrise)) {
+      weekday = (weekday - 1 + 7) % 7;
+    }
 
     int gowriIdx = isDay ? GOWRI_DAY_SEQ[weekday]![currentSegment] : GOWRI_NIGHT_SEQ[weekday]![currentSegment];
 
@@ -686,78 +690,124 @@ JamakkolSubPlanets calculateAllJamakkolSubPlanets({
   // Weekdays: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
 
   // பகல் நேர 1-ஆம் ஜாம தொடக்க ராசிகள்
-  const List<int> rahuDayBases   = [9, 11, 7, 4, 6, 2, 10]; // Sat: Aq(10) -> Yama 4 = Ta(1)
-  const List<int> miruDayBases   = [7, 11, 3, 1, 11, 9, 11]; // Sat: Pi(11) -> Yama 4 = Ge(2)
-  const List<int> yamaDayBases   = [6,  1, 2, 0, 10, 8,  1]; // Sat: Ta(1)  -> Yama 4 = Le(4)
   const List<int> maranaDayBases = [8,  0, 6, 3,  5, 1,  8]; // Sat: Sg(8)  -> Yama 4 = Pi(11)
 
   // இரவு நேர 1-ஆம் ஜாம தொடக்க ராசிகள்
-  const List<int> rahuNightBases   = [2, 6, 4, 9, 4, 7, 4]; // Mon:Li(6), Tue:Le(4), Wed:Cp(9), Thu:Le(4)
-  const List<int> miruNightBases   = [0, 6, 4, 5, 4, 2, 5]; // Mon:Li(6), Tue:Le(4), Wed:Vi(5), Thu:Le(4)
-  const List<int> yamaNightBases   = [11, 8, 7, 6, 6, 1, 6]; // Mon:Sg(8), Tue:Sc(7), Wed:Li(6), Thu:Li(6)
   const List<int> maranaNightBases = [6, 4, 4, 8, 7, 7, 4]; // Mon:Le(4), Tue:Le(4), Wed:Sg(8), Thu:Sc(7)
 
   int baseMarana = isDay ? maranaDayBases[weekday] : maranaNightBases[weekday];
-  int baseRahu   = isDay ? rahuDayBases[weekday]   : rahuNightBases[weekday];
-  int baseMrityu = isDay ? miruDayBases[weekday]   : miruNightBases[weekday];
-  int baseYama   = isDay ? yamaDayBases[weekday]   : yamaNightBases[weekday];
 
   // Degree Offset Calculation per subplanet, weekday, period, and yama
   double getSubPlanetOffset(String name, int weekday, bool isDay, int yama) {
     if (isDay) {
       if (weekday == 3) { // Wednesday Day
-        if (name == "Rahu") return yama == 1 ? 0.0 : (yama == 3 ? -12.0 : -6.0 * (yama - 1));
-        if (name == "Mrityu") return yama == 1 ? -6.0 : (yama == 3 ? -24.0 : -9.0 * (yama - 1) - 6.0);
-        if (name == "Yamagandan") return yama == 1 ? -18.0 : (yama == 3 ? -24.0 : -3.0 * (yama - 1) - 18.0);
         if (name == "Marana") return -6.0;
       } else if (weekday == 1) { // Monday Day
-        if (name == "Rahu") return 6.0;
-        if (name == "Mrityu") return 6.0;
-        if (name == "Yamagandan") return -6.0;
         if (name == "Marana") return 12.0;
       } else if (weekday == 6) { // Saturday Day
-        if (name == "Rahu") return 0.0;
-        if (name == "Mrityu") return -6.0;
-        if (name == "Yamagandan") return -18.0;
         if (name == "Marana") return 12.0;
       }
     } else { // Night
       if (weekday == 1) { // Monday Night
-        if (name == "Rahu") return -12.0;
-        if (name == "Mrityu") return -12.0;
-        if (name == "Yamagandan") return -24.0;
         if (name == "Marana") return -24.0;
       } else if (weekday == 2) { // Tuesday Night
-        if (name == "Rahu") return 0.0;
-        if (name == "Mrityu") return -6.0;
-        if (name == "Yamagandan") return -18.0;
         if (name == "Marana") return 12.0;
       } else if (weekday == 3) { // Wednesday Night
-        if (name == "Rahu") return 0.0;
-        if (name == "Mrityu") return 0.0;
-        if (name == "Yamagandan") return -12.0;
         if (name == "Marana") return 6.0;
       } else if (weekday == 4) { // Thursday Night
-        if (name == "Rahu") return 6.0;
-        if (name == "Mrityu") return 6.0;
-        if (name == "Yamagandan") return -6.0;
         if (name == "Marana") return 12.0;
       }
     }
 
-    if (name == "Rahu") return 0.0;
-    if (name == "Mrityu") return -6.0;
-    if (name == "Yamagandan") return -18.0;
     if (name == "Marana") return 12.0;
     return 0.0;
   }
 
   // Degrees derived from Sun's longitude in its current sign
   double sunDeg = (sunLon % 30.0 + 30.0) % 30.0;
-  double rahuDeg   = (sunDeg + getSubPlanetOffset("Rahu", weekday, isDay, currentYama) + 30.0) % 30.0;
-  double miruDeg   = (sunDeg + getSubPlanetOffset("Mrityu", weekday, isDay, currentYama) + 30.0) % 30.0;
-  double yamaDeg   = (sunDeg + getSubPlanetOffset("Yamagandan", weekday, isDay, currentYama) + 30.0) % 30.0;
   double maranaDeg = (sunDeg + getSubPlanetOffset("Marana", weekday, isDay, currentYama) + 30.0) % 30.0;
+
+  // இராகு காலம் (ரா.கா) கணிதம்:
+  // இராகு (பகல்) ஆளுமை பாகை அளவு:
+  // ஞா = +180°, தி = +36°, செ = +156°, பு = +108°, வி = +132°, வெ = +84°, சனி = +60°
+  // Weekdays: 0=ஞா (Sun), 1=தி (Mon), 2=செ (Tue), 3=பு (Wed), 4=வி (Thu), 5=வெ (Fri), 6=சனி (Sat)
+  const List<double> rahuDayDegrees = [180.0, 36.0, 156.0, 108.0, 132.0, 84.0, 60.0];
+
+  // இராகு (இரவு) பாகை அளவுகள்:
+  // ஞா = +264°, தி = +288°, செ = +240°, பு = +0°, வி = +216°, வெ = +336°, சனி = +312°
+  const List<double> rahuNightDegrees = [264.0, 288.0, 240.0, 0.0, 216.0, 336.0, 312.0];
+
+  double rahuOffset = isDay ? rahuDayDegrees[weekday] : rahuNightDegrees[weekday];
+
+  // சூரியன் இருக்கும் ராசி மற்றும் ராசிக்குள் உள்ள பாகை
+  int sunRasiIndex = (sunLon / 30.0).floor() % 12;
+  double sunDegInSign = (sunLon % 30.0 + 30.0) % 30.0;
+
+  // சூரியன் பாகையுடன் கிழமையின் ராகு பாகையைக் கூட்டி,
+  // வந்த விடையை சூரியன் இருக்கும் ராசியில் இருந்து எண்ணிப் போடுதல் (ராசி 30 பாகை வீதம்)
+  double totalRahuSum = sunDegInSign + rahuOffset;
+  int signsToAdd = (totalRahuSum / 30.0).floor();
+  int rahuRasiIndex = (sunRasiIndex + signsToAdd) % 12;
+  double rahuDegree = (totalRahuSum % 30.0 + 30.0) % 30.0;
+  int rahuRasiNumber = rahuRasiIndex + 1; // 1 to 12
+
+  final rahuResult = SubPlanetResult(
+    name: "Rahu",
+    rasi: rahuRasiNumber,
+    degree: rahuDegree,
+  );
+
+  // மிருத்யு (மிரு) கணிதம்:
+  // மிருத்யு (பகல்) ஆளுமை பாகை அளவுகள்:
+  // ஞா = +60°, தி = +36°, செ = +12°, பு = +156°, வி = +132°, வெ = +108°, சனி = +84°
+  // Weekdays: 0=ஞா (Sun), 1=தி (Mon), 2=செ (Tue), 3=பு (Wed), 4=வி (Thu), 5=வெ (Fri), 6=சனி (Sat)
+  const List<double> mrityuDayDegrees = [60.0, 36.0, 12.0, 156.0, 132.0, 108.0, 84.0];
+
+  // மிருத்யு (இரவு) பாகை அளவுகள்:
+  // ஞா = +312°, தி = +288°, செ = +264°, பு = +240°, வி = +216°, வெ = +192°, சனி = +336°
+  const List<double> mrityuNightDegrees = [312.0, 288.0, 264.0, 240.0, 216.0, 192.0, 336.0];
+
+  double mrityuOffset = isDay ? mrityuDayDegrees[weekday] : mrityuNightDegrees[weekday];
+
+  // சூரியன் பாகையுடன் கிழமையின் மிருத்யு பாகையைக் கூட்டி,
+  // வந்த விடையை சூரியன் இருக்கும் ராசியில் இருந்து எண்ணிப் போடுதல் (ராசி 30 பாகை வீதம்)
+  double totalMrityuSum = sunDegInSign + mrityuOffset;
+  int mrityuSignsToAdd = (totalMrityuSum / 30.0).floor();
+  int mrityuRasiIndex = (sunRasiIndex + mrityuSignsToAdd) % 12;
+  double mrityuDegree = (totalMrityuSum % 30.0 + 30.0) % 30.0;
+  int mrityuRasiNumber = mrityuRasiIndex + 1; // 1 to 12
+
+  final mrityuResult = SubPlanetResult(
+    name: "Mrityu",
+    rasi: mrityuRasiNumber,
+    degree: mrityuDegree,
+  );
+
+  // எமகண்டன் (யம) கணிதம்:
+  // எமகண்டன் (பகல்) ஆளுமை பாகை அளவுகள்:
+  // ஞா = +108°, தி = +84°, செ = +60°, பு = +36°, வி = +12°, வெ = +156°, சனி = +132°
+  // Weekdays: 0=ஞா (Sun), 1=தி (Mon), 2=செ (Tue), 3=பு (Wed), 4=வி (Thu), 5=வெ (Fri), 6=சனி (Sat)
+  const List<double> yamaDayDegrees = [108.0, 84.0, 60.0, 36.0, 12.0, 156.0, 132.0];
+
+  // எமகண்டன் (இரவு) பாகை அளவுகள்:
+  // ஞா = +192°, தி = +336°, செ = +312°, பு = +288°, வி = +264°, வெ = +240°, சனி = +216°
+  const List<double> yamaNightDegrees = [192.0, 336.0, 312.0, 288.0, 264.0, 240.0, 216.0];
+
+  double yamaOffset = isDay ? yamaDayDegrees[weekday] : yamaNightDegrees[weekday];
+
+  // சூரியன் பாகையுடன் கிழமையின் எமகண்ட பாகையைக் கூட்டி,
+  // வந்த விடையை சூரியன் இருக்கும் ராசியில் இருந்து எண்ணிப் போடுதல் (ராசி 30 பாகை வீதம்)
+  double totalYamaSum = sunDegInSign + yamaOffset;
+  int yamaSignsToAdd = (totalYamaSum / 30.0).floor();
+  int yamaRasiIndex = (sunRasiIndex + yamaSignsToAdd) % 12;
+  double yamaDegree = (totalYamaSum % 30.0 + 30.0) % 30.0;
+  int yamaRasiNumber = yamaRasiIndex + 1; // 1 to 12
+
+  final yamaResult = SubPlanetResult(
+    name: "Yamagandan",
+    rasi: yamaRasiNumber,
+    degree: yamaDegree,
+  );
 
   SubPlanetResult calculateSubPlanet(String name, int baseRasiIndex, double degree) {
     int targetRasiIndex = (baseRasiIndex + (currentYama - 1)) % 12;
@@ -773,9 +823,9 @@ JamakkolSubPlanets calculateAllJamakkolSubPlanets({
     isDay: isDay,
     currentYama: currentYama,
     marana: calculateSubPlanet("Marana", baseMarana, maranaDeg),
-    rahu: calculateSubPlanet("Rahu", baseRahu, rahuDeg),
-    mrityu: calculateSubPlanet("Mrityu", baseMrityu, miruDeg),
-    yamagandan: calculateSubPlanet("Yamagandan", baseYama, yamaDeg),
+    rahu: rahuResult,
+    mrityu: mrityuResult,
+    yamagandan: yamaResult,
   );
 }
 

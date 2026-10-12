@@ -86,6 +86,160 @@ class NumerologyService {
     return pyramid;
   }
 
+  /// Returns Chaldean value for a letter (A-Z) or digit value for (0-9)
+  static int getChaldeanValue(String char) {
+    if (char.isEmpty) return 0;
+    String upper = char[0].toUpperCase();
+    if (chaldeanMap.containsKey(upper)) {
+      return chaldeanMap[upper]!;
+    }
+    int? digit = int.tryParse(upper);
+    if (digit != null) {
+      return digit;
+    }
+    return 0;
+  }
+
+  /// Calculates the Compound Number for Alphanumeric / Numeric (Vehicle, Mobile, etc.)
+  static int calculateAlphanumericCompoundNumber(String input) {
+    int total = 0;
+    String clean = input.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+    for (int i = 0; i < clean.length; i++) {
+      total += getChaldeanValue(clean[i]);
+    }
+    return total;
+  }
+
+  /// Calculates the Root Number (1-9) for Alphanumeric / Numeric input
+  static int calculateAlphanumericRootNumber(String input) {
+    int compound = calculateAlphanumericCompoundNumber(input);
+    return _reduceToSingleDigit(compound);
+  }
+
+  /// Returns character breakdown with mapped Chaldean / numeric value
+  static List<Map<String, dynamic>> getCharacterBreakdown(String input) {
+    String clean = input.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+    List<Map<String, dynamic>> list = [];
+    for (int i = 0; i < clean.length; i++) {
+      list.add({
+        'char': clean[i],
+        'value': getChaldeanValue(clean[i]),
+      });
+    }
+    return list;
+  }
+
+  /// Generates the Pyramid Numerology data for Alphanumeric / Numeric (Vehicle, Mobile, etc.)
+  static List<List<int>> calculateAlphanumericPyramidData(String input) {
+    String clean = input.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+    if (clean.isEmpty) return [];
+
+    List<int> firstRow = [];
+    for (int i = 0; i < clean.length; i++) {
+      firstRow.add(getChaldeanValue(clean[i]));
+    }
+
+    List<List<int>> pyramid = [firstRow];
+
+    while (pyramid.last.length > 1) {
+      List<int> currentRow = pyramid.last;
+      List<int> nextRow = [];
+      for (int i = 0; i < currentRow.length - 1; i++) {
+        int sum = currentRow[i] + currentRow[i + 1];
+        nextRow.add(_reduceToSingleDigit(sum));
+      }
+      pyramid.add(nextRow);
+    }
+
+    return pyramid;
+  }
+
+  /// Planet information for single digit root / pyramid peak numbers (1-9)
+  static Map<String, String> getNumberAttributes(int number) {
+    switch (number) {
+      case 1:
+        return {
+          'planet': 'சூரியன் (Sun)',
+          'color': 'மஞ்சள், தங்க நிறம்',
+          'metal': 'தங்கம், செம்பு',
+          'quality': 'தலைமைத்துவம், புகழ், நிர்வாகத்திறன், வெற்றி',
+          'friendly': '1, 2, 3, 9',
+        };
+      case 2:
+        return {
+          'planet': 'சந்திரன் (Moon)',
+          'color': 'வெள்ளை, வெளிர் நீலம்',
+          'metal': 'வெள்ளி',
+          'quality': 'அமைதி, கற்பனைத் திறன், சமநிலை, பாசம்',
+          'friendly': '1, 5',
+        };
+      case 3:
+        return {
+          'planet': 'குரு (Jupiter)',
+          'color': 'மஞ்சள், பொன் நிறம்',
+          'metal': 'தங்கம்',
+          'quality': 'ஞானம், கல்வி, ஆன்மீகம், வளர்ச்சி, அதிர்ஷ்டம்',
+          'friendly': '1, 2, 3, 9',
+        };
+      case 4:
+        return {
+          'planet': 'ராகு (Rahu)',
+          'color': 'நீலம், சாம்பல்',
+          'metal': 'ஈயம், கலப்பு உலோகம்',
+          'quality': 'திடீர் முன்னேற்றம், நவீன சிந்தனை, சுறுசுறுப்பு',
+          'friendly': '1, 5, 6',
+        };
+      case 5:
+        return {
+          'planet': 'புதன் (Mercury)',
+          'color': 'பச்சை',
+          'metal': 'பித்தளை, தங்கம்',
+          'quality': 'புத்தி கூர்மை, தகவல் தொடர்பு, வியாபார மேன்மை, வேகம்',
+          'friendly': '1, 5, 6',
+        };
+      case 6:
+        return {
+          'planet': 'சுக்கிரன் (Venus)',
+          'color': 'வெள்ளை, பளபளப்பான நிறங்கள்',
+          'metal': 'வெள்ளி, பிளாட்டினம்',
+          'quality': 'சொகுசு, கவர்ச்சி, கலை ஆர்வம், செல்வம், மகிழ்ச்சி',
+          'friendly': '5, 6, 8',
+        };
+      case 7:
+        return {
+          'planet': 'கேது (Ketu)',
+          'color': 'வெளிர் மஞ்சள், பலவண்ணம்',
+          'metal': 'வெள்ளி',
+          'quality': 'ஆராய்ச்சி, நுண்ணறிவு, ஆன்மீக பாதுகாப்பு, தூய்மை',
+          'friendly': '1, 2, 4',
+        };
+      case 8:
+        return {
+          'planet': 'சனி (Saturn)',
+          'color': 'கருப்பு, அடர் நீலம்',
+          'metal': 'இரும்பு',
+          'quality': 'நீதி, உழைப்பு, பொறுமை, நீண்ட கால நிலைத்தன்மை',
+          'friendly': '3, 5, 6',
+        };
+      case 9:
+        return {
+          'planet': 'செவ்வாய் (Mars)',
+          'color': 'சிவப்பு',
+          'metal': 'செம்பு',
+          'quality': 'வீரம், ஆற்றல், துணிவு, தலைமை, வெற்றி',
+          'friendly': '1, 2, 3, 9',
+        };
+      default:
+        return {
+          'planet': '-',
+          'color': '-',
+          'metal': '-',
+          'quality': '-',
+          'friendly': '-',
+        };
+    }
+  }
+
   /// Helper to reduce any number to a single digit (1-9)
   static int _reduceToSingleDigit(int n) {
     if (n == 0) return 0;

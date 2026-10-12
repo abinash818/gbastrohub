@@ -1785,7 +1785,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'கெர்ப்ப பலன் (Garbham)',
+                  'கற்பம்',
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -2239,7 +2239,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'ஆதாயம் (Aadhayam)',
+                  'இலாபம்',
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -2260,7 +2260,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                   ),
                 ),
                 child: const Text(
-                  'சுப ஆதாயம்',
+                  'சுப இலாபம்',
                   style: TextStyle(
                     color: Color(0xFFE65100),
                     fontSize: 11.5,
@@ -2307,7 +2307,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'ஆதாயம் எண்: ${res.aadhayamNumber}',
+                        'இலாபம் எண்: ${res.aadhayamNumber}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.white70,
@@ -2444,7 +2444,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'விரையம் (Virayam)',
+                  'செலவு',
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -2522,7 +2522,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'விரையம் எண்: ${res.virayamNumber}',
+                        'செலவு எண்: ${res.virayamNumber}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.white70,
@@ -2663,7 +2663,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'ஆதாயம் vs விரையம் ஒப்பீடு',
+                  'இலாபம் vs செலவு ஒப்பீடு',
                   style: GoogleFonts.outfit(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -2701,7 +2701,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               children: [
                 Column(
                   children: [
-                    const Text('ஆதாயம்', style: TextStyle(fontSize: 11, color: Color(0xFF7A6855), fontWeight: FontWeight.bold)),
+                    const Text('இலாபம்', style: TextStyle(fontSize: 11, color: Color(0xFF7A6855), fontWeight: FontWeight.bold)),
                     const SizedBox(height: 2),
                     Text(
                       '${res.aadhayamNumber}',
@@ -2715,7 +2715,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
                 Column(
                   children: [
-                    const Text('விரையம்', style: TextStyle(fontSize: 11, color: Color(0xFF7A6855), fontWeight: FontWeight.bold)),
+                    const Text('செலவு', style: TextStyle(fontSize: 11, color: Color(0xFF7A6855), fontWeight: FontWeight.bold)),
                     const SizedBox(height: 2),
                     Text(
                       '${res.virayamNumber}',
@@ -2733,10 +2733,10 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           const SizedBox(height: 10),
           Text(
             isAadhayamGreater
-                ? '✓ சாஸ்திர விதிப்படி ஆதாயத்தை (${res.aadhayamNumber}) விட விரையம் (${res.virayamNumber}) குறைவாக உள்ளது. இது மிகுந்த சுப பலனையும் தன விருத்தியையும் தரும்.'
+                ? '✓ சாஸ்திர விதிப்படி இலாபத்தை (${res.aadhayamNumber}) விட செலவு (${res.virayamNumber}) குறைவாக உள்ளது. இது மிகுந்த சுப பலனையும் தன விருத்தியையும் தரும்.'
                 : (isEqual
-                    ? '※ ஆதாயமும் (${res.aadhayamNumber}) விரையமும் (${res.virayamNumber}) சமமாக உள்ளது. வரவு செலவு சமநிலையில் இருக்கும்.'
-                    : '⚠ சாஸ்திர விதிப்படி ஆதாயத்தை (${res.aadhayamNumber}) விட விரையம் (${res.virayamNumber}) அதிகமாக உள்ளது. [ஆதாயத்தை விட விரையம் குறைவாக இருக்க வேண்டும்]'),
+                    ? '※ இலாபமும் (${res.aadhayamNumber}) செலவும் (${res.virayamNumber}) சமமாக உள்ளது. வரவு செலவு சமநிலையில் இருக்கும்.'
+                    : '⚠ சாஸ்திர விதிப்படி இலாபத்தை (${res.aadhayamNumber}) விட செலவு (${res.virayamNumber}) அதிகமாக உள்ளது. [இலாபத்தை விட செலவு குறைவாக இருக்க வேண்டும்]'),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -6572,7 +6572,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '4 ஊர் முறைகளின் ஒப்பீடு (All 4 Regional Methods)',
+                  '4 ஊர் முறைகளின் ஒப்பீடு',
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -6589,14 +6589,10 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             columnWidths: const {
-              0: FlexColumnWidth(0.85),
-              1: FlexColumnWidth(0.45),
-              2: FlexColumnWidth(0.55),
-              3: FlexColumnWidth(0.85),
-              4: FlexColumnWidth(0.80),
-              5: FlexColumnWidth(0.80),
-              6: FlexColumnWidth(0.80),
-              7: FlexColumnWidth(0.70),
+              0: FlexColumnWidth(1.3),
+              1: FlexColumnWidth(0.8),
+              2: FlexColumnWidth(1.0),
+              3: FlexColumnWidth(1.0),
             },
             children: [
               TableRow(
@@ -6606,36 +6602,20 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
                 children: const [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
-                    child: Text('ஊர்', style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 10)),
+                    padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                    child: Text('ஊர்', style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 11.5)),
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
-                    child: Text('கோல்', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 10)),
+                    padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                    child: Text('கோல்', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 11.5)),
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
-                    child: Text('ஆயாதி', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 10)),
+                    padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                    child: Text('ஆயாதி', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 11.5)),
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
-                    child: Text('கெர்ப்பம்', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 10)),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
-                    child: Text('யோனி', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 10)),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
-                    child: Text('ஆதாயம்', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 10)),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
-                    child: Text('விரையம்', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 10)),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
-                    child: Text('குழி', textAlign: TextAlign.right, style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 10)),
+                    padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                    child: Text('குழி', textAlign: TextAlign.right, style: TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 11.5)),
                   ),
                 ],
               ),
@@ -6652,30 +6632,26 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                   w2Ft: w2Ft,
                   w2In: w2In,
                 );
-                final garbham = r.garbham;
-                final yoni = r.yoni;
-                final aadhayam = r.aadhayam;
-                final virayam = r.virayam;
                 return TableRow(
                   decoration: BoxDecoration(
                     color: isSelected ? const Color(0xFFFFE082).withValues(alpha: 0.25) : Colors.transparent,
                   ),
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                       child: Row(
                         children: [
                           if (isSelected)
-                            const Icon(Icons.check_circle_rounded, color: Color(0xFF5D1204), size: 10)
+                            const Icon(Icons.check_circle_rounded, color: Color(0xFF5D1204), size: 13)
                           else
-                            const SizedBox(width: 10),
-                          const SizedBox(width: 1),
+                            const SizedBox(width: 13),
+                          const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               reg.nameTa,
                               style: TextStyle(
                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                fontSize: 10,
+                                fontSize: 12,
                                 color: const Color(0xFF5D1204),
                               ),
                               maxLines: 1,
@@ -6686,93 +6662,37 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
                       child: Text(
                         '${reg.kolInches}',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 10,
+                          fontSize: 12,
                           color: const Color(0xFF5D1204),
                         ),
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
                       child: Text(
                         '${r.roundedAyadi}',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                          fontSize: 10,
+                          fontSize: 12,
                           color: isSelected ? const Color(0xFF5D1204) : const Color(0xFFB58D3D),
                         ),
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
-                      child: Text(
-                        '${garbham.number}.${garbham.name.split(' ')[0]}',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 9.5,
-                          color: garbham.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
-                      child: Text(
-                        '${yoni.number}.${yoni.name.split(' ')[0]}',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 9.5,
-                          color: yoni.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
-                      child: Text(
-                        '${aadhayam.number}.${aadhayam.effect.split(' ')[0]}',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 9.5,
-                          color: isSelected ? const Color(0xFF5D1204) : const Color(0xFF2E7D32),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1.0, vertical: 8.0),
-                      child: Text(
-                        '${virayam.number}.${virayam.effect.split(' ')[0]}',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 9.5,
-                          color: virayam.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                       child: Text(
                         '${r.roundedKuzhi}',
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 10,
+                          fontSize: 12,
                           color: isSelected ? const Color(0xFF5D1204) : const Color(0xFFB58D3D),
                         ),
                       ),
@@ -6923,7 +6843,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.savings_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '12 ஆதாயப் பலன்கள் சாஸ்திர அட்டவணை (12 Aadhaya Table)',
+            '12 இலாபப் பலன்கள் சாஸ்திர அட்டவணை (12 Ilaba Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -6995,7 +6915,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
             }),
             const SizedBox(height: 4),
             const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 8 ஆல் பெருக்கி வந்த விடையில் எத்தனை 12 உள்ளதோ அதை கழித்து மீதம் ஆதாயம் ஆகும் (மீதம் 0 வந்தால் 12).',
+              '※ குறிப்பு: ஆயாதி எண்ணை 8 ஆல் பெருக்கி வந்த விடையில் எத்தனை 12 உள்ளதோ அதை கழித்து மீதம் இலாபம் ஆகும் (மீதம் 0 வந்தால் 12).',
               style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
             ),
           ],
@@ -7027,7 +6947,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '10 விரையப் பலன்கள் சாஸ்திர அட்டவணை (10 Viraya Table)',
+            '10 செலவுப் பலன்கள் சாஸ்திர அட்டவணை (10 Selavu Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -7105,7 +7025,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
             }),
             const SizedBox(height: 4),
             const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 9 ஆல் பெருக்கி வந்த விடையில் எத்தனை 10 உள்ளதோ அதை கழித்து மீதம் விரையம் ஆகும் (மீதம் 0 வந்தால் 10). [ஆதாயத்தை விட விரையம் குறைவாக இருக்க வேண்டும்].',
+              '※ குறிப்பு: ஆயாதி எண்ணை 9 ஆல் பெருக்கி வந்த விடையில் எத்தனை 10 உள்ளதோ அதை கழித்து மீதம் செலவு ஆகும் (மீதம் 0 வந்தால் 10). [இலாபத்தை விட செலவு குறைவாக இருக்க வேண்டும்].',
               style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
             ),
           ],
@@ -7137,7 +7057,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.menu_book_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '8 கெர்ப்பங்கள் சாஸ்திர அட்டவணை (8 Garbha Table)',
+            '8 கற்பங்கள் சாஸ்திர அட்டவணை (8 Karpam Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -9271,7 +9191,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 Text('• ஆயாதி எண் = ${res.perimeterInches.toStringAsFixed(2)} ÷ ${res.ayadiDivisor} = ${res.ayadiExact} ➔ ${res.roundedAyadi}', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFFB45309))),
 
                 const Divider(height: 16),
-                const Text('【 2. கெர்ப்ப பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                const Text('【 2. கற்ப பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
                 const SizedBox(height: 4),
                 Text('• ${res.roundedAyadi} % 8 = ${res.garbhamNumber} ➔ ${res.garbham.name} (${res.garbham.direction} - ${res.garbham.deity})', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
                 Text('• பலன்: ${res.garbham.effect} [${res.garbham.status}]', style: TextStyle(fontSize: 11.5, color: res.garbham.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
@@ -9283,16 +9203,16 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 Text('• பலன்: ${res.yoni.effect}', style: TextStyle(fontSize: 11.5, color: res.yoni.isGood ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
 
                 const Divider(height: 16),
-                const Text('【 4. ஆதாயம் பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                const Text('【 4. இலாபம் பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
                 const SizedBox(height: 4),
                 Text('• ${res.roundedAyadi} × 8 = ${res.aadhayamTotal} | கழிவு $multiple12 = ${res.aadhayamNumber}', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
                 Text('• பலன்: (${res.aadhayamNumber}) ${res.aadhayam.effect}', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
 
                 const Divider(height: 16),
-                const Text('【 5. விரையம் பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                const Text('【 5. செலவு பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
                 const SizedBox(height: 4),
                 Text('• ${res.roundedAyadi} × 9 = ${res.virayamTotal} | கழிவு $multiple10 = ${res.virayamNumber}', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
-                Text('• பலன்: (${res.virayamNumber}) ${res.virayam.effect} [ஆதாயம் ${res.aadhayamNumber} ${res.isAadhayamGreater ? '>' : '<='} விரையம் ${res.virayamNumber}]', style: TextStyle(fontSize: 11.5, color: res.isAadhayamGreater ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
+                Text('• பலன்: (${res.virayamNumber}) ${res.virayam.effect} [இலாபம் ${res.aadhayamNumber} ${res.isAadhayamGreater ? '>' : '<='} செலவு ${res.virayamNumber}]', style: TextStyle(fontSize: 11.5, color: res.isAadhayamGreater ? const Color(0xFF2E7D32) : const Color(0xFFC62828))),
 
                 const Divider(height: 16),
                 const Text('【 6. வாரப்பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),

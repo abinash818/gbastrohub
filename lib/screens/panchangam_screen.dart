@@ -11,6 +11,7 @@ import 'panchangam_image_screen.dart';
 import 'package:astrology_flutter/l10n/app_localizations.dart';
 import '../services/astro_utils.dart';
 import '../services/settings_service.dart';
+import '../services/maitra_dhanishta_service.dart';
 
 class PanchangamScreen extends StatefulWidget {
   const PanchangamScreen({super.key});
@@ -24,6 +25,15 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
   Map<String, dynamic>? _panchangamData;
   Map<String, dynamic>? _chartResults;
   bool _isLoading = true;
+  DhanishtaPanchamiInfo? _dhanishtaInfo;
+  List<MaitraMuhurthamSlot> _todayMaitraSlots = [];
+
+  // Month-wise Explorer & Local Cache State
+  DateTime _explorerMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
+  List<MaitraMuhurthamSlot> _monthMaitraSlots = [];
+  List<DhanishtaDaySlot> _monthDhanishtaSlots = [];
+  bool _isMonthDataLoading = false;
+  int _explorerSubTab = 0; // 0: மைத்ர, 1: தனிஷ்டா, 2: 13 நட்சத்திர அடைப்பு
 
   static const List<List<String>> AMIRTHATHI_YOGAM_TABLE = [
     // Sun (0)
@@ -83,6 +93,35 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
   void initState() {
     super.initState();
     _loadPanchangam();
+    _loadMonthData(_selectedDate);
+  }
+
+  Future<void> _loadMonthData(DateTime monthDt) async {
+    setState(() {
+      _explorerMonth = DateTime(monthDt.year, monthDt.month, 1);
+      _isMonthDataLoading = true;
+    });
+
+    try {
+      final loc = await SettingsService.getDefaultLocation();
+      final double lat = (loc['lat'] as num?)?.toDouble() ?? 13.0827;
+      final double lon = (loc['lon'] as num?)?.toDouble() ?? 80.2707;
+
+      final maitra = await MaitraDhanishtaService.getMonthMaitraMuhurthams(monthDt.year, monthDt.month, lat, lon);
+      final dhanishta = await MaitraDhanishtaService.getMonthDhanishtaDays(monthDt.year, monthDt.month, lat, lon);
+
+      if (mounted) {
+        setState(() {
+          _monthMaitraSlots = maitra;
+          _monthDhanishtaSlots = dhanishta;
+          _isMonthDataLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isMonthDataLoading = false);
+      }
+    }
   }
 
   DateTime _parseTimeString(String timeStr, DateTime baseDate) {
@@ -220,8 +259,13 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
       
       final endTimes = await KPService.calculateEndTimes(_selectedDate, lat, lon, tz);
 
+      final dhanishta = MaitraDhanishtaService.getDhanishtaInfo(moonNakIdx);
+      final todayMaitra = MaitraDhanishtaService.getTodayMaitraMuhurthams(_selectedDate, lat, lon);
+
       setState(() {
         _chartResults = results;
+        _dhanishtaInfo = dhanishta;
+        _todayMaitraSlots = todayMaitra;
         _panchangamData = {
           ...pancha,
           'location_name': locName,
@@ -379,7 +423,7 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
     final bool isWide = MediaQuery.of(context).size.width > 900;
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: const Color(0xFFFAF6EE),
         appBar: isWide ? null : AppBar(
@@ -419,10 +463,11 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.primaryLight,
             indicatorWeight: 3.5,
-            labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 15),
-            tabs: [
+            labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 13),
+            tabs: const [
               Tab(text: "விவரம் (Details)"),
               Tab(text: "கோச்சாரம் (Chart)"),
+              Tab(text: "மைத்ர / தனிஷ்டா"),
             ],
           ),
         ),
@@ -453,10 +498,11 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
                                   unselectedLabelColor: AppColors.textSecondary,
                                   indicatorColor: AppColors.primaryLight,
                                   indicatorWeight: 3.5,
-                                  labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16),
-                                  tabs: [
+                                  labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 15),
+                                  tabs: const [
                                     Tab(text: "விவரம் (Details)"),
                                     Tab(text: "கோச்சாரம் (Chart)"),
+                                    Tab(text: "மைத்ர / தனிஷ்டா"),
                                   ],
                                 ),
                               ),
@@ -507,6 +553,7 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
                       children: [
                         _buildVivaramTab(),
                         _buildKattamTab(),
+                        _buildMaitraDhanishtaTab(),
                       ],
                     ),
                   ),
@@ -1565,6 +1612,1049 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
 
   Widget _buildDivider() {
     return Divider(height: 12, color: AppColors.primaryLight.withOpacity(0.12));
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // TAB 3: MAITRA MUHURTHAM & DHANISHTA PANCHAMI (MONTH-WISE LOCAL CACHE)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  static const List<String> MONTH_NAMES_TAMIL = [
+    "ஜனவரி", "பிப்ரவரி", "மார்ச்", "ஏப்ரல்", "மே", "ஜூன்",
+    "ஜூலை", "ஆகஸ்ட்", "செப்டம்பர்", "அக்டோபர்", "நவம்பர்", "டிசம்பர்"
+  ];
+
+  Widget _buildMaitraDhanishtaTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 1. தேர்ந்தெடுக்கப்பட்ட நாளின் நேரடி நிலை (Today's Quick Live Status)
+          _buildTodayQuickStatusCard(),
+
+          const SizedBox(height: 16),
+
+          // 2. மாதம் & வருடம் வாரியான தேடல் & அட்டவணை (Month-wise Explorer Card)
+          _buildMonthExplorerSection(),
+
+          const SizedBox(height: 85),
+        ],
+      ),
+    );
+  }
+
+  // 1. இன்றைய நாள் சுருக்க அட்டை (Today's Quick Live Status)
+  Widget _buildTodayQuickStatusCard() {
+    final hasTodayMaitra = _todayMaitraSlots.isNotEmpty;
+    final info = _dhanishtaInfo;
+    final isPanchami = info?.isDhanishtaPanchami ?? false;
+    final isAdaippu = info?.isAdaippu ?? false;
+
+    Color adaippuColor;
+    if (isPanchami) {
+      adaippuColor = const Color(0xFFC62828);
+    } else if (isAdaippu) {
+      adaippuColor = const Color(0xFFE65100);
+    } else {
+      adaippuColor = const Color(0xFF2E7D32);
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.primaryLight.withValues(alpha: 0.3), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.04),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.today_rounded, size: 18, color: AppColors.primary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    "இன்றைய நாள் நிலை (${DateFormat('dd/MM/yyyy').format(_selectedDate)})",
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    _panchangamData?['location_name'] ?? 'சென்னை',
+                    style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textSecondary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              children: [
+                // Maitra Status Row
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: hasTodayMaitra ? const Color(0xFFE8F5E9) : const Color(0xFFFFFDE7),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: hasTodayMaitra ? const Color(0xFF81C784) : const Color(0xFFFFD54F),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        hasTodayMaitra ? Icons.stars_rounded : Icons.info_outline_rounded,
+                        color: hasTodayMaitra ? const Color(0xFF2E7D32) : const Color(0xFFF57F17),
+                        size: 22,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              hasTodayMaitra ? "இன்று மைத்ர முகூர்த்தம் அமைகிறது!" : "இன்று மைத்ர முகூர்த்தம் அமையவில்லை",
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: hasTodayMaitra ? const Color(0xFF1B5E20) : const Color(0xFFE65100),
+                              ),
+                            ),
+                            if (hasTodayMaitra) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                "${_todayMaitraSlots.first.formattedTime} • ${_todayMaitraSlots.first.nakshatra} + ${_todayMaitraSlots.first.lagna}",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (hasTodayMaitra)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: _todayMaitraSlots.first.isTuesday ? const Color(0xFFFFD54F) : const Color(0xFFC8E6C9),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _todayMaitraSlots.first.isTuesday ? "100% உத்தமம்" : "75% உத்தமம்",
+                            style: GoogleFonts.outfit(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: _todayMaitraSlots.first.isTuesday ? const Color(0xFFE65100) : const Color(0xFF1B5E20),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // Dhanishta Status Row
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: adaippuColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: adaippuColor.withValues(alpha: 0.3), width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isAdaippu ? Icons.warning_amber_rounded : Icons.check_circle_rounded,
+                        color: adaippuColor,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              info?.statusText ?? "நட்சத்திர நிலை அறியப்படுகிறது",
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: adaippuColor,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              info?.adaippuTitle ?? "அடைப்பில்லை",
+                              style: GoogleFonts.outfit(
+                                fontSize: 11.5,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: adaippuColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          isAdaippu ? "${info?.adaippuMonths} மாத அடைப்பு" : "அடைப்பில்லை",
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: adaippuColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 2. மாதம் வாரியான ஆய்வு பகுதி (Month-wise Explorer Card)
+  Widget _buildMonthExplorerSection() {
+    String monthTamil = MONTH_NAMES_TAMIL[_explorerMonth.month - 1];
+    String monthDisplay = "$monthTamil ${_explorerMonth.year}";
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFFFB300).withValues(alpha: 0.4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFFB300).withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header: Month Selector + Cache Indicator
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFFF8E1), Color(0xFFFFECB3)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Month Selector Bar
+                Row(
+                  children: [
+                    // Previous Month Button
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_rounded, size: 18, color: Color(0xFFE65100)),
+                      onPressed: () {
+                        final prev = DateTime(_explorerMonth.year, _explorerMonth.month - 1, 1);
+                        _loadMonthData(prev);
+                      },
+                      tooltip: "முந்தைய மாதம்",
+                    ),
+
+                    // Month Name (Clickable Picker Dialog)
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _showMonthPickerSheet(),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFFFB74D), width: 1.2),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.calendar_month_rounded, size: 16, color: Color(0xFFE65100)),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  monthDisplay,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFFB71C1C),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.arrow_drop_down, color: Color(0xFFE65100)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Next Month Button
+                    IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios_rounded, size: 18, color: Color(0xFFE65100)),
+                      onPressed: () {
+                        final next = DateTime(_explorerMonth.year, _explorerMonth.month + 1, 1);
+                        _loadMonthData(next);
+                      },
+                      tooltip: "அடுத்த மாதம்",
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 6),
+
+                // Location & Local Cache Status Chip
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.location_on, size: 14, color: Color(0xFFE65100)),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        _panchangamData?['location_name'] ?? 'சென்னை (டீஃபால்ட் இடம்)',
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF8D6E63),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.bolt_rounded, size: 12, color: Color(0xFF2E7D32)),
+                          const SizedBox(width: 2),
+                          Text(
+                            "லோக்கல் கேச் (0ms)",
+                            style: GoogleFonts.outfit(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF2E7D32),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Sub-Tab Segmented Selector
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+            child: Row(
+              children: [
+                _buildSegmentButton(0, "🪙 மைத்ர (${_monthMaitraSlots.length})"),
+                const SizedBox(width: 6),
+                _buildSegmentButton(1, "🪔 தனிஷ்டா (${_monthDhanishtaSlots.length})"),
+                const SizedBox(width: 6),
+                _buildSegmentButton(2, "📜 அடைப்பு அட்டவணை"),
+              ],
+            ),
+          ),
+
+          const Divider(height: 12),
+
+          // Sub-Tab Content
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: _buildSubTabContent(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSegmentButton(int index, String label) {
+    bool isSelected = _explorerSubTab == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _explorerSubTab = index),
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : const Color(0xFFF5F5F5),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.3),
+              width: 1.2,
+            ),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              fontSize: 11.5,
+              fontWeight: FontWeight.bold,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubTabContent() {
+    if (_isMonthDataLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: Column(
+            children: [
+              SizedBox(
+                width: 26,
+                height: 26,
+                child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.primary),
+              ),
+              SizedBox(height: 10),
+              Text(
+                "லோக்கல் கேச்சில் இருந்து தரவு பெறப்படுகிறது...",
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_explorerSubTab == 0) {
+      return _buildMonthMaitraView();
+    } else if (_explorerSubTab == 1) {
+      return _buildMonthDhanishtaView();
+    } else {
+      return _buildAdaippuReferenceView();
+    }
+  }
+
+  // Sub-Tab 0: மைத்ர முகூர்த்தப் பட்டியல்
+  Widget _buildMonthMaitraView() {
+    String monthTamil = MONTH_NAMES_TAMIL[_explorerMonth.month - 1];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_monthMaitraSlots.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFDE7),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFFE082)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Color(0xFFF57F17), size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "இந்த $monthTamil ${_explorerMonth.year} மாதத்தில் மைத்ர முகூர்த்தம் அமையவில்லை.",
+                    style: GoogleFonts.outfit(fontSize: 12.5, color: const Color(0xFFE65100), fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else ...[
+          for (var slot in _monthMaitraSlots) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: slot.isTuesday ? const Color(0xFFFFF8E1) : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: slot.isTuesday ? const Color(0xFFFFB300) : AppColors.primaryLight.withValues(alpha: 0.3),
+                  width: slot.isTuesday ? 1.5 : 1.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          "${DateFormat('dd/MM/yyyy').format(slot.date)} • ${slot.weekday}",
+                          style: GoogleFonts.outfit(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: slot.isTuesday ? const Color(0xFFFF8F00) : const Color(0xFF2E7D32),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            slot.isTuesday ? "100% மகா உத்தமம்" : "75% உத்தமம்",
+                            style: GoogleFonts.outfit(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.access_time_filled, size: 16, color: Color(0xFF2E7D32)),
+                          const SizedBox(width: 4),
+                          Text(
+                            slot.formattedTime,
+                            style: GoogleFonts.outfit(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF1B5E20),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF5F5F5),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                          ),
+                          child: Text(
+                            "${slot.nakshatra} + ${slot.lagna}",
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+
+        const SizedBox(height: 14),
+
+        // Golden Loan clearance guidelines
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFDE7),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFFFE082)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.lightbulb_rounded, size: 17, color: Color(0xFFE65100)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      "மைத்ர முகூர்த்த சாஸ்திரக் குறிப்புகள்:",
+                      style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: const Color(0xFFB71C1C)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              _buildBulletPoint("வாங்கிய கடனில் சிறு தொகையை (₹100, ₹500, ₹1000) இந்நேரத்தில் திருப்பிக் கொடுத்தால் மொத்தக் கடனும் மிக விரைவில் தீரும்."),
+              _buildBulletPoint("அடமானம் வைத்த நகைகள் அல்லது சொத்து பத்திரங்களை மீட்க உன்னதமான நேரம்."),
+              _buildBulletPoint("செவ்வாய்க்கிழமையுடன் இணையும் முகூர்த்தம் 100% மகா உத்தம பலனைத் தரும்."),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Sub-Tab 1: தனிஷ்டா பஞ்சமி / அடைப்புப் பட்டியல்
+  Widget _buildMonthDhanishtaView() {
+    String monthTamil = MONTH_NAMES_TAMIL[_explorerMonth.month - 1];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_monthDhanishtaSlots.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF81C784)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: Color(0xFF2E7D32), size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "இந்த $monthTamil ${_explorerMonth.year} மாதத்தில் அடைப்பு / பஞ்சக நட்சத்திரங்கள் இல்லை.",
+                    style: GoogleFonts.outfit(fontSize: 12.5, color: const Color(0xFF1B5E20), fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else ...[
+          for (var slot in _monthDhanishtaSlots) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: slot.isDhanishtaPanchami ? const Color(0xFFC62828).withValues(alpha: 0.4) : const Color(0xFFE65100).withValues(alpha: 0.3),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${DateFormat('dd/MM/yyyy').format(slot.date)} • ${slot.weekday}",
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "நட்சத்திரம்: ${slot.nakshatraNameTamil} (${slot.nakshatraNameEn})",
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: slot.isDhanishtaPanchami ? const Color(0xFFFFCDD2) : const Color(0xFFFFE0B2),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: slot.isDhanishtaPanchami ? const Color(0xFFC62828) : const Color(0xFFE65100),
+                        ),
+                      ),
+                      child: Text(
+                        slot.isDhanishtaPanchami ? "தனிஷ்டா பஞ்சமி (6 மாதம்)" : "${slot.adaippuMonths} மாத அடைப்பு",
+                        style: GoogleFonts.outfit(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                          color: slot.isDhanishtaPanchami ? const Color(0xFFB71C1C) : const Color(0xFFE65100),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+
+        const SizedBox(height: 14),
+
+        // Panchak restrictions note
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFEBEE),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFFFCDD2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.shield_rounded, size: 17, color: Color(0xFFC62828)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      "தனிஷ்டா பஞ்சமி சாஸ்திரக் கட்டுப்பாடுகள்:",
+                      style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: const Color(0xFFB71C1C)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              _buildBulletPoint("பஞ்சக காலத்தில் புதுமனை கூரை வேய்தல், புதிய கட்டில்/மெத்தை வாங்குதல் மற்றும் தெற்கு திசை பயணம் செய்வதைத் தவிர்க்க வேண்டும்."),
+              _buildBulletPoint("இந்நாட்களில் மரணம் நேர்ந்தால் செய்ய வேண்டிய 'தனிஷ்டா பஞ்சக சாந்தி' மற்றும் அடைப்பு காலம் மிக முக்கியமானதாகும்."),
+              _buildBulletPoint("பரிகாரம்: தனிஷ்டா பஞ்சக சாந்தி ஹோமம், எள் & நெய் தீப தானம் செய்தல் உத்தமம்."),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Sub-Tab 2: 13 நட்சத்திர அடைப்பு முழு அட்டவணை
+  Widget _buildAdaippuReferenceView() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.menu_book_rounded, size: 18, color: Color(0xFFB71C1C)),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                "13 நட்சத்திர அடைப்பு சாஸ்திர முழு அட்டவணை",
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        for (var row in MaitraDhanishtaService.ADAIPPU_REFERENCE_TABLE) ...[
+          _buildAdaippuReferenceRow(row),
+        ],
+      ],
+    );
+  }
+
+  // Month Picker Dialog
+  void _showMonthPickerSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        int selectedYear = _explorerMonth.year;
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Year Selector
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios_rounded, size: 18, color: AppColors.primary),
+                        onPressed: () => setSheetState(() => selectedYear--),
+                      ),
+                      Text(
+                        "$selectedYear ஆம் ஆண்டு",
+                        style: GoogleFonts.outfit(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.primary),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_forward_ios_rounded, size: 18, color: AppColors.primary),
+                        onPressed: () => setSheetState(() => selectedYear++),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  // Month Grid
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      childAspectRatio: 2.2,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                    ),
+                    itemCount: 12,
+                    itemBuilder: (context, index) {
+                      int m = index + 1;
+                      bool isCurrent = selectedYear == _explorerMonth.year && m == _explorerMonth.month;
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                          _loadMonthData(DateTime(selectedYear, m, 1));
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isCurrent ? AppColors.primary : const Color(0xFFF5F5F5),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isCurrent ? AppColors.primary : Colors.grey.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            MONTH_NAMES_TAMIL[index],
+                            style: GoogleFonts.outfit(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                              color: isCurrent ? Colors.white : AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+  Widget _buildBulletPoint(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 6),
+            width: 5,
+            height: 5,
+            decoration: const BoxDecoration(
+              color: AppColors.primaryLight,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdaippuReferenceRow(Map<String, dynamic> row) {
+    int months = row['months'] as int;
+    String label = row['duration_label'] as String;
+    String title = row['title'] as String;
+    List<String> stars = List<String>.from(row['stars']);
+    String desc = row['description'] as String;
+
+    Color badgeColor;
+    if (months == 6) {
+      badgeColor = const Color(0xFFC62828);
+    } else if (months == 4) {
+      badgeColor = const Color(0xFFD84315);
+    } else if (months == 3) {
+      badgeColor = const Color(0xFFE65100);
+    } else if (months == 2) {
+      badgeColor = const Color(0xFFF57F17);
+    } else {
+      badgeColor = const Color(0xFF2E7D32);
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: badgeColor.withValues(alpha: 0.3), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: badgeColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    label,
+                    style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: badgeColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              for (var star in stars)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F5F5),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    star,
+                    style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            desc,
+            style: GoogleFonts.outfit(
+              fontSize: 11.5,
+              color: AppColors.textSecondary,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   static const List<String> HORA_NAMES = ["சூரியன்", "சுக்கிரன்", "புதன்", "சந்திரன்", "சனி", "குரு", "செவ்வாய்"];

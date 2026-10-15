@@ -472,11 +472,12 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
           context: context,
           builder: (context) => CustomTimeWheelPicker(
             initialTime: _selectedTime,
-            onSelect: (time) async {
-              final sec = await _promptForSeconds(context, _selectedSecond);
+            initialSecond: _selectedSecond,
+            showSeconds: true,
+            onSelectWithSeconds: (time, second) {
               setState(() {
                 _selectedTime = time;
-                _selectedSecond = sec ?? _selectedSecond;
+                _selectedSecond = second;
                 _updateTimeFieldDisplay();
               });
             },

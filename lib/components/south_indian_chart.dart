@@ -27,6 +27,8 @@ class SouthIndianChart extends StatelessWidget {
   final Map<String, String>? borderLabels;
   final String? highlightSign;
   final bool allowScroll;
+  final Map<String, String>? rasiKathir;
+  final double heightRatio;
 
   const SouthIndianChart({
     super.key, 
@@ -36,7 +38,37 @@ class SouthIndianChart extends StatelessWidget {
     this.borderLabels,
     this.highlightSign,
     this.allowScroll = true,
+    this.rasiKathir,
+    this.heightRatio = 1.0,
   });
+
+  static double? _extractDegree(String str) {
+    // Matches e.g. "06:28", "2:24", "14:32:10"
+    final m1 = RegExp(r'(\d{1,2}):(\d{2})').firstMatch(str);
+    if (m1 != null) {
+      return int.parse(m1.group(1)!) + int.parse(m1.group(2)!) / 60.0;
+    }
+    // Matches e.g. "14° 32'", "14°32"
+    final m2 = RegExp(r'(\d{1,2})°\s*(\d{1,2})').firstMatch(str);
+    if (m2 != null) {
+      return int.parse(m2.group(1)!) + int.parse(m2.group(2)!) / 60.0;
+    }
+    return null;
+  }
+
+  static List<String> sortItemsByDegree(List<String> items) {
+    if (items.length <= 1) return items;
+    if (items.any((e) => _extractDegree(e) != null)) {
+      final sorted = List<String>.from(items);
+      sorted.sort((a, b) {
+        final degA = _extractDegree(a) ?? 999.0;
+        final degB = _extractDegree(b) ?? 999.0;
+        return degA.compareTo(degB);
+      });
+      return sorted;
+    }
+    return items;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,14 +78,16 @@ class SouthIndianChart extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
         final double size = constraints.maxWidth;
-        final double boxSize = size / 4;
+        final double height = size * heightRatio;
 
         final bool hasBorderLabels = borderLabels != null && borderLabels!.isNotEmpty;
         final double pad = hasBorderLabels ? 24.0 : 0.0;
+        final double innerW = size - (pad * 2);
+        final double innerH = height - (pad * 2);
 
         return Container(
           width: size,
-          height: size,
+          height: height,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -77,14 +111,15 @@ class SouthIndianChart extends StatelessWidget {
                     child: GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 4,
-                        childAspectRatio: 1.0,
+                        childAspectRatio: innerW / innerH,
                       ),
                       itemCount: 16,
                       itemBuilder: (context, index) {
                         final rasi = RASI_ORDER[index];
-                        final items = rasiMap[rasi] ?? [];
+                        final rawItems = rasiMap[rasi] ?? [];
+                        final items = sortItemsByDegree(rawItems);
                         final bool isLagnaCell = items.any((e) => e.startsWith("லக்") || e.startsWith("உத") || e.startsWith("Asc") || e.startsWith("Lagna") || e.startsWith("Uda") || e.startsWith("लग्न") || e.startsWith("उदय"));
                         final bool isArudamCell = items.any((e) => e.startsWith("ஆரூ") || e.startsWith("Aru") || e.startsWith("आरू"));
                         final bool isKaviCell = items.any((e) => e.startsWith("கவி") || e.startsWith("Kav") || e.startsWith("कवि"));
@@ -93,6 +128,7 @@ class SouthIndianChart extends StatelessWidget {
                           rasi: rasi,
                           items: items,
                           allowScroll: allowScroll,
+                          kathir: (rasi != null && rasiKathir != null) ? rasiKathir![rasi] : null,
                         );
                       },
                     ),
@@ -101,13 +137,13 @@ class SouthIndianChart extends StatelessWidget {
               ),
               
               // 2. Border Labels
-              if (hasBorderLabels) ..._buildBorderLabels(context, size),
+              if (hasBorderLabels) ..._buildBorderLabels(context, size, height),
 
               // 3. Center Label
               Center(
                 child: SizedBox(
-                  width: (size - (hasBorderLabels ? 48 : 0)) / 2 - 8,
-                  height: (size - (hasBorderLabels ? 48 : 0)) / 2 - 8,
+                  width: innerW / 2 - 8,
+                  height: innerH / 2 - 8,
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: centerWidget ?? Text(
@@ -131,10 +167,11 @@ class SouthIndianChart extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildBorderLabels(BuildContext context, double size) {
+  List<Widget> _buildBorderLabels(BuildContext context, double width, double height) {
     if (borderLabels == null) return [];
     List<Widget> labels = [];
-    final double boxSize = (size - 48) / 4; // Subtracting the inner padding
+    final double boxW = (width - 48) / 4; // Subtracting the inner padding
+    final double boxH = (height - 48) / 4;
 
     borderLabels!.forEach((sign, label) {
       if (label.trim().isEmpty) return; // Skip empty labels
@@ -153,18 +190,18 @@ class SouthIndianChart extends StatelessWidget {
 
       if (row == 0) { // Top
         anchorY = 12; // Center of the top 24px padding
-        anchorX = 24 + (col * boxSize) + (boxSize / 2);
+        anchorX = 24 + (col * boxW) + (boxW / 2);
       } else if (row == 3) { // Bottom
-        anchorY = size - 12; // Center of the bottom 24px padding
-        anchorX = 24 + (col * boxSize) + (boxSize / 2);
+        anchorY = height - 12; // Center of the bottom 24px padding
+        anchorX = 24 + (col * boxW) + (boxW / 2);
       } else if (col == 0) { // Left
         isVerticalEdge = true;
         anchorX = 12; // Center of the left 24px padding
-        anchorY = 24 + (row * boxSize) + (boxSize / 2);
+        anchorY = 24 + (row * boxH) + (boxH / 2);
       } else if (col == 3) { // Right
         isVerticalEdge = true;
-        anchorX = size - 12; // Center of the right 24px padding
-        anchorY = 24 + (row * boxSize) + (boxSize / 2);
+        anchorX = width - 12; // Center of the right 24px padding
+        anchorY = 24 + (row * boxH) + (boxH / 2);
       }
 
       String displayText = AstroTranslationService.translate(context, label.trim(), isPlanet: true);
@@ -223,8 +260,14 @@ class _ChartCell extends StatefulWidget {
   final String? rasi;
   final List<String> items;
   final bool allowScroll;
+  final String? kathir;
 
-  const _ChartCell({required this.rasi, required this.items, this.allowScroll = true});
+  const _ChartCell({
+    required this.rasi, 
+    required this.items, 
+    this.allowScroll = true,
+    this.kathir,
+  });
 
   @override
   State<_ChartCell> createState() => _ChartCellState();
@@ -279,7 +322,7 @@ class _ChartCellState extends State<_ChartCell> {
 
     // Non-scrollable static poster mode: auto-scale all items inside FittedBox
     if (!widget.allowScroll) {
-      return Container(
+      final staticCell = Container(
         decoration: BoxDecoration(
           color: isSpecialCell ? (isLagnaCell ? Colors.green.withOpacity(0.05) : (isArudamCell ? Colors.blue.withOpacity(0.05) : Colors.red.withOpacity(0.05))) : Colors.white,
           border: Border.all(
@@ -340,6 +383,16 @@ class _ChartCellState extends State<_ChartCell> {
           ),
         ),
       );
+
+      if (widget.kathir != null && widget.kathir!.isNotEmpty) {
+        return Stack(
+          children: [
+            staticCell,
+            _buildKathirBadge(widget.kathir!),
+          ],
+        );
+      }
+      return staticCell;
     }
 
     // Dynamically adjust font size to reduce the need for scrolling
@@ -352,7 +405,7 @@ class _ChartCellState extends State<_ChartCell> {
       fontSize = 10.0;
     }
 
-    return Container(
+    final scrollCell = Container(
       decoration: BoxDecoration(
         color: isSpecialCell ? (isLagnaCell ? Colors.green.withOpacity(0.05) : (isArudamCell ? Colors.blue.withOpacity(0.05) : Colors.red.withOpacity(0.05))) : Colors.white,
         border: Border.all(
@@ -443,6 +496,47 @@ class _ChartCellState extends State<_ChartCell> {
                 );
               }).toList(),
             ),
+          ),
+        ),
+      ),
+    );
+
+    if (widget.kathir != null && widget.kathir!.isNotEmpty) {
+      return Stack(
+        children: [
+          scrollCell,
+          _buildKathirBadge(widget.kathir!),
+        ],
+      );
+    }
+    return scrollCell;
+  }
+
+  Widget _buildKathirBadge(String text) {
+    return Positioned(
+      bottom: 2,
+      left: 2,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF7ED),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: const Color(0xFFF97316).withOpacity(0.8), width: 0.8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 8.5,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFFC2410C),
+            height: 1.0,
           ),
         ),
       ),

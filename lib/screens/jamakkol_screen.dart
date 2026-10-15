@@ -13,6 +13,8 @@ import '../widgets/location_search_dialog.dart';
 import '../services/location_data.dart';
 import 'package:astrology_flutter/l10n/app_localizations.dart';
 import '../services/astro_translation_service.dart';
+import '../widgets/custom_wheel_picker.dart';
+import '../widgets/custom_time_wheel_picker.dart';
 
 class JamakkolScreen extends StatefulWidget {
   const JamakkolScreen({super.key});
@@ -27,6 +29,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
   Map<String, dynamic>? _results;
   bool _isLoading = true;
   bool _isAltNaming = false;
+  bool _showKathirOnChart = true;
   bool _isInit = false;
 
   // Input variables
@@ -347,18 +350,42 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           ),
           const SizedBox(height: 5),
           if (_results != null) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 16,
               children: [
-                Text(AppLocalizations.of(context)!.jamakkolPlanet, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _isAltNaming ? AppColors.primary : Colors.grey.shade600)),
-                Switch(
-                  value: _isAltNaming,
-                  onChanged: (val) {
-                    setState(() => _isAltNaming = val);
-                    _calculateJamakkol();
-                  },
-                  activeColor: AppColors.primary,
-                  activeTrackColor: AppColors.primary.withOpacity(0.3),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(AppLocalizations.of(context)!.jamakkolPlanet, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _isAltNaming ? AppColors.primary : Colors.grey.shade600)),
+                    Switch(
+                      value: _isAltNaming,
+                      onChanged: (val) {
+                        setState(() => _isAltNaming = val);
+                        _calculateJamakkol();
+                      },
+                      activeColor: AppColors.primary,
+                      activeTrackColor: AppColors.primary.withOpacity(0.3),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.localeName == 'ta' ? 'கதிர்' : (AppLocalizations.of(context)!.localeName == 'hi' ? 'रश्मि' : 'Rays'), 
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _showKathirOnChart ? AppColors.primary : Colors.grey.shade600),
+                    ),
+                    Switch(
+                      value: _showKathirOnChart,
+                      onChanged: (val) {
+                        setState(() => _showKathirOnChart = val);
+                      },
+                      activeColor: AppColors.primary,
+                      activeTrackColor: AppColors.primary.withOpacity(0.3),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -552,9 +579,12 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
 
   Widget _buildKathirAnalysis() {
     final strength = _results!['strength'] as Map<String, dynamic>;
-    
+    final bhavas = (strength['bhavas'] as List<dynamic>?) ?? [];
+    final isTa = AppLocalizations.of(context)!.localeName == 'ta';
+    final isHi = AppLocalizations.of(context)!.localeName == 'hi';
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -574,49 +604,155 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
             children: [
               const Icon(Icons.flash_on_rounded, color: Color(0xFFB58D3D), size: 20),
               const SizedBox(width: 8),
-              Text(
-                AppLocalizations.of(context)!.strengthAnalysis, 
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.primary)
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.strengthAnalysis, 
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.primary),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          _buildKathirRow(AppLocalizations.of(context)!.feature, AppLocalizations.of(context)!.sign, AppLocalizations.of(context)!.lord, AppLocalizations.of(context)!.total, isHeader: true),
-          const Divider(color: Color(0xFFB58D3D)),
-          _buildKathirRow(AstroTranslationService.translate(context, strength['udayam']['label']), AstroTranslationService.translate(context, "${strength['udayam']['rasi']}"), AstroTranslationService.translate(context, "${strength['udayam']['lord']}", isPlanet: true), "${strength['udayam']['total']}"),
-          _buildKathirRow(AstroTranslationService.translate(context, strength['arudam']['label']), AstroTranslationService.translate(context, "${strength['arudam']['rasi']}"), AstroTranslationService.translate(context, "${strength['arudam']['lord']}", isPlanet: true), "${strength['arudam']['total']}"),
-          _buildKathirRow(AstroTranslationService.translate(context, strength['kavi']['label']), AstroTranslationService.translate(context, "${strength['kavi']['rasi']}"), AstroTranslationService.translate(context, "${strength['kavi']['lord']}", isPlanet: true), "${strength['kavi']['total']}"),
-          const Divider(color: Color(0xFFB58D3D)),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+          const SizedBox(height: 10),
+          // Rule description box
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF7ED),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFFFB74D).withOpacity(0.6), width: 0.8),
+            ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("${AppLocalizations.of(context)!.jamakkolPlanet} (${AstroTranslationService.translate(context, strength['jamam']['planet'], isPlanet: true)})", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
-                Text("${strength['jamam']['total']}", style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFE65100), fontSize: 18)),
+                const Icon(Icons.info_outline_rounded, color: Color(0xFFC2410C), size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isTa 
+                      ? "விதிகள்: உச்சம் x3 | ஆட்சி x2 | நட்பு/பொது x1 | நீசம் x0 | பாம்பு = 4"
+                      : (isHi ? "नियम: उच्च x3 | स्वग्रही x2 | सम/मित्र x1 | नीच x0 | राहु = 4" : "Rules: Exalted x3 | Own x2 | Neutral x1 | Debilitated x0 | Snake = 4"),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC2410C)),
+                  ),
+                ),
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          // Section 1: Key Points
+          Text(
+            isTa ? "முக்கிய அம்சங்களின் கதிர்:" : (isHi ? "मुख्य बिंदु रश्मि:" : "Key Features:"),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
+          ),
+          const SizedBox(height: 8),
+          _buildKathirRow(
+            isTa ? "அம்சம்" : (isHi ? "बिंदु" : "Feature"),
+            isTa ? "ராசிக் கதிர்" : (isHi ? "राशि" : "Rasi Ray"),
+            isTa ? "கிரகக் கதிர்" : (isHi ? "ग्रह" : "Planet Ray"),
+            isTa ? "இறுதி கதிர்" : (isHi ? "कुल" : "Final Ray"),
+            isHeader: true,
+          ),
+          const Divider(color: Color(0xFFB58D3D)),
+          _buildKathirRow(
+            AstroTranslationService.translate(context, strength['udayam']['label']),
+            "${strength['udayam']['rasiDisplay'] ?? strength['udayam']['rasi']}",
+            "${strength['udayam']['planetDisplay'] ?? strength['udayam']['lord'] ?? '0'}",
+            "${strength['udayam']['totalDisplay'] ?? strength['udayam']['total']}",
+            highlightColor: Colors.green.withOpacity(0.06),
+          ),
+          _buildKathirRow(
+            AstroTranslationService.translate(context, strength['arudam']['label']),
+            "${strength['arudam']['rasiDisplay'] ?? strength['arudam']['rasi']}",
+            "${strength['arudam']['planetDisplay'] ?? strength['arudam']['lord'] ?? '0'}",
+            "${strength['arudam']['totalDisplay'] ?? strength['arudam']['total']}",
+            highlightColor: Colors.blue.withOpacity(0.06),
+          ),
+          _buildKathirRow(
+            AstroTranslationService.translate(context, strength['kavi']['label']),
+            "${strength['kavi']['rasiDisplay'] ?? strength['kavi']['rasi']}",
+            "${strength['kavi']['planetDisplay'] ?? strength['kavi']['lord'] ?? '0'}",
+            "${strength['kavi']['totalDisplay'] ?? strength['kavi']['total']}",
+            highlightColor: Colors.red.withOpacity(0.06),
+          ),
+          const Divider(color: Color(0xFFB58D3D)),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "${AppLocalizations.of(context)!.jamakkolPlanet} (${(strength['jamam']['planet'] == 'Rahu' || strength['jamam']['planet'] == 'ராகு') ? (isTa ? 'பாம்பு' : (isHi ? 'राहु' : 'Snake')) : AstroTranslationService.translate(context, strength['jamam']['planet'], isPlanet: true)})",
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D1204), fontSize: 13),
+                ),
+                Text(
+                  "${strength['jamam']['totalDisplay'] ?? strength['jamam']['total']}",
+                  style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFE65100), fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+
+          if (bhavas.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            // Section 2: All 12 Bhavas Ray Table
+            Text(
+              isTa ? "12 பாவங்களின் கதிர் அட்டவணை (கட்ட அட்டவணை சுருக்கம்):" : (isHi ? "12 भाव रश्मि विश्लेषण:" : "12 Bhavas Ray Table:"),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
+            ),
+            const SizedBox(height: 8),
+            _buildKathirRow(
+              isTa ? "பாவம் / ராசி" : (isHi ? "भाव / राशि" : "Bhava / Sign"),
+              isTa ? "ராசிக் கதிர்" : (isHi ? "राशि" : "Rasi Ray"),
+              isTa ? "கிரகக் கதிர்" : (isHi ? "ग्रह" : "Planet Ray"),
+              isTa ? "இறுதி கதிர்" : (isHi ? "कुल" : "Final Ray"),
+              isHeader: true,
+            ),
+            const Divider(color: Color(0xFFB58D3D)),
+            ...bhavas.map((b) {
+              String signDisplayName = isTa 
+                  ? (b['signTamil'] ?? b['sign']) 
+                  : AstroTranslationService.translate(context, b['sign']);
+              String bhavaTitle = "${b['bhava']}. $signDisplayName";
+              if (b['isUdayam'] == true) bhavaTitle += isTa ? " (உதயம்)" : " (Uda)";
+              else if (b['isArudam'] == true) bhavaTitle += isTa ? " (ஆரூ)" : " (Aru)";
+              else if (b['isKavi'] == true) bhavaTitle += isTa ? " (கவி)" : " (Kav)";
+
+              Color? rowBg;
+              if (b['isUdayam'] == true) rowBg = Colors.green.withOpacity(0.06);
+              else if (b['isArudam'] == true) rowBg = Colors.blue.withOpacity(0.06);
+              else if (b['isKavi'] == true) rowBg = Colors.red.withOpacity(0.06);
+
+              return _buildKathirRow(
+                bhavaTitle,
+                "${b['rasiDisplay'] ?? b['rasi']}",
+                "${b['planetDisplay'] ?? '0'}",
+                "${b['totalDisplay'] ?? b['total']}",
+                highlightColor: rowBg,
+              );
+            }).toList(),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildKathirRow(String col1, String col2, String col3, String col4, {bool isHeader = false}) {
+  Widget _buildKathirRow(String col1, String col2, String col3, String col4, {bool isHeader = false, Color? highlightColor}) {
     final style = TextStyle(
       fontWeight: isHeader ? FontWeight.w900 : FontWeight.bold,
-      fontSize: isHeader ? 12 : 14,
-      color: isHeader ? Colors.grey.shade600 : const Color(0xFF5D1204),
+      fontSize: isHeader ? 11 : 12,
+      color: isHeader ? Colors.grey.shade700 : const Color(0xFF5D1204),
     );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+    return Container(
+      decoration: BoxDecoration(
+        color: highlightColor,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       child: Row(
         children: [
-          Expanded(flex: 3, child: Text(col1, style: style)),
-          Expanded(flex: 2, child: Text(col2, style: style, textAlign: TextAlign.center)),
-          Expanded(flex: 2, child: Text(col3, style: style, textAlign: TextAlign.center)),
-          Expanded(flex: 2, child: Text(col4, style: style.copyWith(color: isHeader ? null : const Color(0xFFE65100), fontSize: isHeader ? 12 : 16), textAlign: TextAlign.right)),
+          Expanded(flex: 7, child: Text(col1, style: style)),
+          Expanded(flex: 3, child: Text(col2, style: style, textAlign: TextAlign.center)),
+          Expanded(flex: 5, child: Text(col3, style: style.copyWith(fontSize: isHeader ? 11 : 11.5), textAlign: TextAlign.center)),
+          Expanded(flex: 4, child: Text(col4, style: style.copyWith(color: isHeader ? null : const Color(0xFFE65100), fontSize: isHeader ? 11 : 13.5, fontWeight: FontWeight.w900), textAlign: TextAlign.right)),
         ],
       ),
     );
@@ -624,83 +760,60 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
 
   Future<void> _selectTime(BuildContext context) async {
     DateTime timeToShow = _showIppothu ? _nowTime : (_inputTime ?? _nowTime);
-    final TimeOfDay? picked = await showTimePicker(
+    showDialog(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(timeToShow),
+      builder: (context) => CustomTimeWheelPicker(
+        initialTime: TimeOfDay.fromDateTime(timeToShow),
+        initialSecond: timeToShow.second,
+        showSeconds: true,
+        onSelectWithSeconds: (time, second) {
+          setState(() {
+            DateTime newTime = DateTime(
+              timeToShow.year,
+              timeToShow.month,
+              timeToShow.day,
+              time.hour,
+              time.minute,
+              second,
+            );
+            if (_showIppothu) {
+              _nowTime = newTime;
+            } else {
+              _inputTime = newTime;
+            }
+          });
+          _calculateJamakkol();
+        },
+      ),
     );
-    if (picked != null) {
-      if (!context.mounted) return;
-      int seconds = timeToShow.second;
-      final secondsController = TextEditingController(text: seconds.toString());
-      final int? pickedSeconds = await showDialog<int>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(AppLocalizations.of(context)!.localeName == 'ta' ? 'விநாடிகள் (Seconds)' : 'Seconds'),
-          content: TextField(
-            controller: secondsController,
-            keyboardType: TextInputType.number,
-            autofocus: true,
-            decoration: InputDecoration(
-              hintText: '0-59',
-              suffixText: 'sec',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, 0),
-              child: Text(AppLocalizations.of(context)!.localeName == 'ta' ? 'பூஜ்ஜியம் (Reset)' : 'Reset'),
-            ),
-            TextButton(
-              onPressed: () {
-                int s = int.tryParse(secondsController.text) ?? 0;
-                if (s < 0) s = 0;
-                if (s > 59) s = 59;
-                Navigator.pop(context, s);
-              },
-              child: Text(AppLocalizations.of(context)!.localeName == 'ta' ? 'சரி (OK)' : 'OK'),
-            ),
-          ],
-        ),
-      );
-
-      setState(() {
-        DateTime newTime = DateTime(
-          timeToShow.year, timeToShow.month, timeToShow.day,
-          picked.hour, picked.minute, pickedSeconds ?? seconds
-        );
-        if (_showIppothu) {
-          _nowTime = newTime;
-        } else {
-          _inputTime = newTime;
-        }
-      });
-      _calculateJamakkol();
-    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime timeToShow = _showIppothu ? _nowTime : (_inputTime ?? _nowTime);
-    final DateTime? picked = await showDatePicker(
+    showDialog(
       context: context,
-      initialDate: timeToShow,
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2101),
+      builder: (context) => CustomWheelPicker(
+        initialDate: timeToShow,
+        onSelect: (date) {
+          setState(() {
+            DateTime newTime = DateTime(
+              date.year,
+              date.month,
+              date.day,
+              timeToShow.hour,
+              timeToShow.minute,
+              timeToShow.second,
+            );
+            if (_showIppothu) {
+              _nowTime = newTime;
+            } else {
+              _inputTime = newTime;
+            }
+          });
+          _calculateJamakkol();
+        },
+      ),
     );
-    if (picked != null) {
-      setState(() {
-        DateTime newTime = DateTime(
-          picked.year, picked.month, picked.day,
-          timeToShow.hour, timeToShow.minute, timeToShow.second
-        );
-        if (_showIppothu) {
-          _nowTime = newTime;
-        } else {
-          _inputTime = newTime;
-        }
-      });
-      _calculateJamakkol();
-    }
   }
 
   Widget _buildTimePlaceCard() {
@@ -902,8 +1015,8 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
   }
 
   Widget _buildCombinedChart() {
-    Map<String, List<String>> rasiMap = {};
-    for (var sign in KPService.SIGNS) rasiMap[sign] = [];
+    Map<String, List<Map<String, dynamic>>> rasiEntries = {};
+    for (var sign in KPService.SIGNS) rasiEntries[sign] = [];
     
     final outer = _results!['outer'];
     final udayamIdx = _results!['udayam_idx'] ?? 0;
@@ -912,7 +1025,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     final Map<String, dynamic> pDetails = _results!['inner']['planet_details'];
     pDetails.forEach((pKey, pVal) {
       String sign = pVal['rasi'];
-      double lon = pVal['longitude'] % 30;
+      double lon = (pVal['longitude'] ?? 0.0) % 30;
       int d = lon.floor();
       int m = ((lon - d) * 60).floor();
       
@@ -922,7 +1035,10 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
         double jUdayamDeg = (outer['udayam_abs_deg'] ?? 0.0) % 30;
         int jd = jUdayamDeg.floor();
         int jm = ((jUdayamDeg - jd) * 60).floor();
-        rasiMap[jUdayamSign]?.add("${AppLocalizations.of(context)!.udaShort}\u00A0${jd.toString().padLeft(2, '0')}:${jm.toString().padLeft(2, '0')}");
+        rasiEntries[jUdayamSign]?.add({
+          'label': "${AppLocalizations.of(context)!.udaShort}\u00A0${jd.toString().padLeft(2, '0')}:${jm.toString().padLeft(2, '0')}",
+          'deg': jUdayamDeg,
+        });
       } else {
         if (pKey == 'fortuna') return; // Skip Fortuna in Jamakkol Chart
         
@@ -950,7 +1066,10 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           name = "$name($suffix)";
         }
 
-        rasiMap[sign]!.add("$name\u00A0${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}");
+        rasiEntries[sign]?.add({
+          'label': "$name\u00A0${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}",
+          'deg': lon,
+        });
       }
     });
 
@@ -962,14 +1081,20 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     int aM = ((aDegInSign - aD) * 60).floor();
     
     debugPrint("Arudam: Idx=$arudamIdx, Deg=$aDeg");
-    rasiMap[KPService.SIGNS[arudamIdx % 12]]?.add("${AppLocalizations.of(context)!.aruShort}\u00A0${aD.toString().padLeft(2, '0')}:${aM.toString().padLeft(2, '0')}");
+    rasiEntries[KPService.SIGNS[arudamIdx % 12]]?.add({
+      'label': "${AppLocalizations.of(context)!.aruShort}\u00A0${aD.toString().padLeft(2, '0')}:${aM.toString().padLeft(2, '0')}",
+      'deg': aDegInSign,
+    });
     
     int kaviIdx = _results?['kavi_idx'] ?? 0;
     double kDegInSign = 30.0 - aDegInSign;
     if (kDegInSign >= 30.0) kDegInSign = 29.9999;
     int kD = kDegInSign.floor();
     int kM = ((kDegInSign - kD) * 60).floor();
-    rasiMap[KPService.SIGNS[kaviIdx % 12]]?.add("${AppLocalizations.of(context)!.kaviShort}\u00A0${kD.toString().padLeft(2, '0')}:${kM.toString().padLeft(2, '0')}");
+    rasiEntries[KPService.SIGNS[kaviIdx % 12]]?.add({
+      'label': "${AppLocalizations.of(context)!.kaviShort}\u00A0${kD.toString().padLeft(2, '0')}:${kM.toString().padLeft(2, '0')}",
+      'deg': kDegInSign,
+    });
 
     // Subplanets (Marana, Rahu, Mrityu, Yamagandan)
     final lang = AppLocalizations.of(context)!.localeName;
@@ -1001,11 +1126,22 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
         int d = degInSign.floor();
         int m = ((degInSign - d) * 60).floor();
         String name = getSubPlanetDisplayName(sp.name, lang);
-        rasiMap[sign]?.add("$name\u00A0${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}");
+        rasiEntries[sign]?.add({
+          'label': "$name\u00A0${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}",
+          'deg': degInSign,
+        });
       }
       addSubPlanet(subPlanets.rahu);
       addSubPlanet(subPlanets.mrityu);
       addSubPlanet(subPlanets.yamagandan);
+    }
+
+    // Degree-wise ascending sort (lowest to highest) for each rasi box
+    Map<String, List<String>> rasiMap = {};
+    for (var sign in KPService.SIGNS) {
+      final list = rasiEntries[sign] ?? [];
+      list.sort((a, b) => (a['deg'] as double).compareTo(b['deg'] as double));
+      rasiMap[sign] = list.map((e) => e['label'] as String).toList();
     }
 
     // Border Labels
@@ -1029,6 +1165,8 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           centerWidget: _buildCenterWidget(),
           borderLabels: borderLabels,
           highlightSign: highlightSign,
+          rasiKathir: _showKathirOnChart ? (_results!['strength']?['rasi_kathir_map'] as Map<String, String>?) : null,
+          heightRatio: 1.40,
         ),
       ],
     );
@@ -1066,6 +1204,9 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
 
     // Helper: Translate planet name
     String getPName(String name) {
+      if (name.toLowerCase() == 'rahu' || name == 'ராகு') {
+        return isTa ? "பாம்பு" : (isHi ? "राहु" : "Snake");
+      }
       return AstroTranslationService.translate(context, name, isPlanet: true);
     }
     
@@ -1146,44 +1287,27 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
       kPlanetStr = "${getPName(kPlanet['planet'])} - ${kPlanet['lordship']} = $kpDegStr ${getRName(kPlanet['nakshatra'])} ${kPlanet['pada']}";
     }
 
-    // 8. Arudam Lord House
-    String aLordHouseStr = notes['arudam_lord_house'].toString();
+    // 4. Udayam Lord House
+    String uLordHouseStr = (notes['udayam_lord_house'] ?? "-").toString();
 
-    // 9. Arudam vs Udayam
-    String aVsUStr = notes['arudam_vs_udayam'].toString();
+    // 9. Arudam Lord House
+    String aLordHouseStr = (notes['arudam_lord_house'] ?? "-").toString();
 
-    // 10. Arudam vs Kavippu
-    String aVsKStr = notes['arudam_vs_kavi'].toString();
+    // 10. Udayam vs Arudam
+    String uVsAStr = (notes['udayam_vs_arudam'] ?? "-").toString();
 
-    // 11. 8th Lord
-    final eLord = notes['eighth_lord_details'] as Map;
-    String eLordStr = isTa 
-        ? "${getPName(eLord['lord'])} \_ ${eLord['house']}-ல்"
-        : (isHi ? "${getPName(eLord['lord'])} \_ ${eLord['house']} वें भाव में" : "${getPName(eLord['lord'])} in House ${eLord['house']}");
+    // 11. Udayam vs Kavippu
+    String uVsKStr = (notes['udayam_vs_kavi'] ?? "-").toString();
 
-    // 12. Badhakadhipathi
-    final bLord = notes['badhaka_lord_details'] as Map;
-    String bTypeLabel = isTa
-        ? (bLord['type_offset'] == 11 ? "சர ராசி 11" : (bLord['type_offset'] == 9 ? "ஸ்திர ராசி 9" : "உபய ராசி 7"))
-        : (isHi ? (bLord['type_offset'] == 11 ? "चर राशि 11" : (bLord['type_offset'] == 9 ? "स्थिर राशि 9" : "द्विस्वभाव राशि 7")) : "Badhaka House ${bLord['type_offset']}");
-    String bLordStr = isTa
-        ? "${getPName(bLord['lord'])} ($bTypeLabel) ${bLord['house']} \_ல்"
-        : (isHi ? "${getPName(bLord['lord'])} ($bTypeLabel) ${bLord['house']} वें भाव में" : "${getPName(bLord['lord'])} ($bTypeLabel) in House ${bLord['house']}");
+    // 12. Arudam vs Udayam
+    String aVsUStr = (notes['arudam_vs_udayam'] ?? "-").toString();
 
-    // 13. Parivarthanai
-    final parivarthanas = notes['parivarthana'] as List;
-    String parivarthanaiStr = parivarthanas.isEmpty 
-        ? (isTa ? "இராசி பரிவர்த்தனை இல்லை" : (isHi ? "राशि परिवर्तन नहीं है" : "No Rasi exchange"))
-        : parivarthanas.map((p) {
-            final parts = p.toString().split('-');
-            return "${getPName(parts[0])} - ${getPName(parts[1])}";
-          }).join(", ");
+    // 13. Arudam vs Kavippu
+    String aVsKStr = (notes['arudam_vs_kavi'] ?? "-").toString();
 
     // 14. Sootchuma Rasi
     final sootchuma = notes['sootchuma_details'] as Map;
-    String sootchumaStr = isTa
-        ? "${getRName(sootchuma['rasi'])} (துல்லியமாக: ${getRName(sootchuma['pada_rasi'])} - ${getRName(sootchuma['pada_nakshatra'])} ${sootchuma['pada_num']})"
-        : "${getRName(sootchuma['rasi'])} (Precise: ${getRName(sootchuma['pada_rasi'])} - ${getRName(sootchuma['pada_nakshatra'])} ${sootchuma['pada_num']})";
+    String sootchumaStr = getRName(sootchuma['rasi'] ?? "-");
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1207,25 +1331,25 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
               const Icon(Icons.description_rounded, color: Color(0xFFB58D3D), size: 20),
               const SizedBox(width: 8),
               Text(
-                AppLocalizations.of(context)!.jamakkolNotes, 
+                isTa ? "ஜாமக்கோள் பிரசன்ன விபரம்" : AppLocalizations.of(context)!.jamakkolNotes, 
                 style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.primary)
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildNoteRow(isTa ? "1. உதயம் தொடர்பு கொள்ளும் கிரகம்" : "1. Planet Contacting Udayam", uContactStr),
-          _buildNoteRow(isTa ? "2. உதயம் நின்ற நட்சத்திர பாதம்" : "2. Udayam Star Pada", uStarStr),
-          _buildNoteRow(isTa ? "3. உதயத்தை கடந்த கிரகம்" : "3. Planet Passed Udayam", crossedStr),
-          _buildNoteRow(isTa ? "4. ஆருடம் உள்ள பாவம்" : "4. Arudam House Details", aHouseStr),
+          _buildNoteRow(isTa ? "1. உதயம் நின்ற நட்சத்திர பாதம்" : "1. Udayam Star Pada", uStarStr),
+          _buildNoteRow(isTa ? "2. உதயம் தொடர்பு கொள்ளும் கிரகம்" : "2. Planet Contacting Udayam", uContactStr),
+          _buildNoteRow(isTa ? "3. உதயத்தைக் கடந்த கிரகம்" : "3. Planet Passed Udayam", crossedStr),
+          _buildNoteRow(isTa ? "4. உதயாதிபதி நின்ற பாவம்" : "4. Udayam Lord's House", uLordHouseStr),
           _buildNoteRow(isTa ? "5. ஆருடம் தொடர்பு கொள்ளும் கிரகம்" : "5. Planet Contacting Arudam", aContactStr),
-          _buildNoteRow(isTa ? "6. கவிப்புள்ள பாவம்" : "6. Kavippu House Details", kHouseStr),
-          _buildNoteRow(isTa ? "7. கவிக்கப்படும் கிரகம்" : "7. Planet Covered by Kavippu", kPlanetStr),
-          _buildNoteRow(isTa ? "8. ஆருடாதிபதி நின்ற பாவம்" : "8. Arudam Lord's House", aLordHouseStr),
-          _buildNoteRow(isTa ? "9. ஆருடம் vs உதயம்" : "9. Arudam vs Udayam", aVsUStr),
-          _buildNoteRow(isTa ? "10. ஆருடம் vs கவிப்பு" : "10. Arudam vs Kavippu", aVsKStr),
-          _buildNoteRow(isTa ? "11. அஷ்டமாதிபதி" : "11. 8th Lord", eLordStr),
-          _buildNoteRow(isTa ? "12. பாதகாதிபதி" : "12. Badhakadhipathi", bLordStr),
-          _buildNoteRow(isTa ? "13. இராசிப் பரிவர்த்தனை" : "13. Rasi Parivarthanai", parivarthanaiStr),
+          _buildNoteRow(isTa ? "6. ஆருடம் உள்ள பாவம்" : "6. Arudam House Details", aHouseStr),
+          _buildNoteRow(isTa ? "7. கவிப்பு உள்ள பாவம்" : "7. Kavippu House Details", kHouseStr),
+          _buildNoteRow(isTa ? "8. கவிக்கப்படும் கிரகம்" : "8. Planet Covered by Kavippu", kPlanetStr),
+          _buildNoteRow(isTa ? "9. ஆருட அதிபதி நின்ற பாவம்" : "9. Arudam Lord's House", aLordHouseStr),
+          _buildNoteRow(isTa ? "10. உதயம் vs ஆருடம்" : "10. Udayam vs Arudam", uVsAStr),
+          _buildNoteRow(isTa ? "11. உதயம் vs கவிப்பு" : "11. Udayam vs Kavippu", uVsKStr),
+          _buildNoteRow(isTa ? "12. ஆருடம் vs உதயம்" : "12. Arudam vs Udayam", aVsUStr),
+          _buildNoteRow(isTa ? "13. ஆருடம் vs கவிப்பு" : "13. Arudam vs Kavippu", aVsKStr),
           _buildNoteRow(isTa ? "14. சூட்சும ராசி" : "14. Sootchuma Rasi", sootchumaStr),
         ],
       ),

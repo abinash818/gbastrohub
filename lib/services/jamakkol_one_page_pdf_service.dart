@@ -215,6 +215,9 @@ class JamakkolOnePagePdfService {
 
     // Helper: Translate planet name
     String getPName(String name) {
+      if (name.toLowerCase() == 'rahu' || name == 'ராகு') {
+        return isTa ? "பாம்பு" : (isHi ? "राहु" : "Snake");
+      }
       return KPService.TAMIL_PLANETS[name] ?? name;
     }
     
@@ -304,13 +307,22 @@ class JamakkolOnePagePdfService {
       kPlanetStr = "${getPName(kPlanet['planet'])} - ${kPlanet['lordship']} = $kpDegStr ${getRName(kPlanet['nakshatra'])} ${kPlanet['pada']}";
     }
 
+    // 4. Udayam Lord House
+    String uLordHouseStr = (notes['udayam_lord_house'] ?? "-").toString();
+
     // 8. Arudam Lord House
     String aLordHouseStr = (notes['arudam_lord_house'] ?? "-").toString();
 
-    // 9. Arudam vs Udayam
+    // 10. Udayam vs Arudam
+    String uVsAStr = (notes['udayam_vs_arudam'] ?? "-").toString();
+
+    // 11. Udayam vs Kavippu
+    String uVsKStr = (notes['udayam_vs_kavi'] ?? "-").toString();
+
+    // 12. Arudam vs Udayam
     String aVsUStr = (notes['arudam_vs_udayam'] ?? "-").toString();
 
-    // 10. Arudam vs Kavippu
+    // 13. Arudam vs Kavippu
     String aVsKStr = (notes['arudam_vs_kavi'] ?? "-").toString();
 
     // 11. 8th Lord
@@ -345,16 +357,13 @@ class JamakkolOnePagePdfService {
 
     // 14. Sootchuma Rasi
     final sootchuma = notes['sootchuma_details'] as Map? ?? {};
-    String sootchumaStr = "-";
-    if (sootchuma.isNotEmpty) {
-      sootchumaStr = isTa
-          ? "${getRName(sootchuma['rasi'])} (துல்லியமாக: ${getRName(sootchuma['pada_rasi'])} - ${getRName(sootchuma['pada_nakshatra'])} ${sootchuma['pada_num']})"
-          : "${getRName(sootchuma['rasi'])} (Precise: ${getRName(sootchuma['pada_rasi'])} - ${getRName(sootchuma['pada_nakshatra'])} ${sootchuma['pada_num']})";
-    }
+    String sootchumaStr = (sootchuma['rasi'] != null && sootchuma['rasi'].toString().isNotEmpty)
+        ? getRName(sootchuma['rasi'].toString())
+        : "-";
 
     // Chart Gen
-    Map<String, List<String>> rasiMap = {};
-    for (var sign in KPService.SIGNS) rasiMap[sign] = [];
+    Map<String, List<Map<String, dynamic>>> rasiEntries = {};
+    for (var sign in KPService.SIGNS) rasiEntries[sign] = [];
     
     final langCode = l10n.localeName;
     String udayamLabel = langCode == 'en' ? 'Ud' : (langCode == 'hi' ? 'उद' : 'உத');
@@ -373,7 +382,10 @@ class JamakkolOnePagePdfService {
         double jUdayamDeg = (outer['udayam_abs_deg'] ?? 0.0) % 30;
         int jd = jUdayamDeg.floor();
         int jm = ((jUdayamDeg - jd) * 60).floor();
-        if (rasiMap.containsKey(jUdayamSign)) rasiMap[jUdayamSign]?.add("<span style='color:green; font-weight:bold'>$udayamLabel&nbsp;${jd.toString().padLeft(2, '0')}:${jm.toString().padLeft(2, '0')}</span>");
+        rasiEntries[jUdayamSign]?.add({
+          'label': "<span style='color:green; font-weight:bold'>$udayamLabel&nbsp;${jd.toString().padLeft(2, '0')}:${jm.toString().padLeft(2, '0')}</span>",
+          'deg': jUdayamDeg,
+        });
       } else {
         String k = pKey.toString();
         if (k == 'fortuna') return; // Skip Fortuna in PDF Jamakkol Chart
@@ -399,7 +411,10 @@ class JamakkolOnePagePdfService {
           pName = "$pName($suffix)";
         }
 
-        if (rasiMap.containsKey(sign)) rasiMap[sign]!.add("$pName&nbsp;${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}");
+        rasiEntries[sign]?.add({
+          'label': "$pName&nbsp;${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}",
+          'deg': pLon,
+        });
       }
     });
 
@@ -407,17 +422,19 @@ class JamakkolOnePagePdfService {
     double aDegInSign = aDeg % 30.0;
     int aD = aDegInSign.floor();
     int aM = ((aDegInSign - aD) * 60).floor();
-    if (rasiMap.containsKey(KPService.SIGNS[arudamIdx % 12])) {
-        rasiMap[KPService.SIGNS[arudamIdx % 12]]?.add("<span style='color:red; font-weight:bold'>$arudamLabel&nbsp;${aD.toString().padLeft(2, '0')}:${aM.toString().padLeft(2, '0')}</span>");
-    }
+    rasiEntries[KPService.SIGNS[arudamIdx % 12]]?.add({
+      'label': "<span style='color:red; font-weight:bold'>$arudamLabel&nbsp;${aD.toString().padLeft(2, '0')}:${aM.toString().padLeft(2, '0')}</span>",
+      'deg': aDegInSign,
+    });
     
     double kDegInSign = 30.0 - aDegInSign;
     if (kDegInSign >= 30.0) kDegInSign = 29.9999;
     int kD = kDegInSign.floor();
     int kM = ((kDegInSign - kD) * 60).floor();
-    if (rasiMap.containsKey(KPService.SIGNS[kaviIdx % 12])) {
-        rasiMap[KPService.SIGNS[kaviIdx % 12]]?.add("<span style='color:purple; font-weight:bold'>$kaviLabel&nbsp;${kD.toString().padLeft(2, '0')}:${kM.toString().padLeft(2, '0')}</span>");
-    }
+    rasiEntries[KPService.SIGNS[kaviIdx % 12]]?.add({
+      'label': "<span style='color:purple; font-weight:bold'>$kaviLabel&nbsp;${kD.toString().padLeft(2, '0')}:${kM.toString().padLeft(2, '0')}</span>",
+      'deg': kDegInSign,
+    });
 
     final subPlanets = results['sub_planets'] as JamakkolSubPlanets?;
     if (subPlanets != null) {
@@ -456,13 +473,22 @@ class JamakkolOnePagePdfService {
         else if (sp.name == "Yamagandan") color = "darkorange";
         else color = "#B58D3D";
 
-        if (rasiMap.containsKey(sign)) {
-          rasiMap[sign]?.add("<span style='color:$color; font-weight:bold'>$name&nbsp;${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}</span>");
-        }
+        rasiEntries[sign]?.add({
+          'label': "<span style='color:$color; font-weight:bold'>$name&nbsp;${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}</span>",
+          'deg': degInSign,
+        });
       }
       addSubPlanet(subPlanets.rahu);
       addSubPlanet(subPlanets.mrityu);
       addSubPlanet(subPlanets.yamagandan);
+    }
+
+    // Degree-wise ascending sort (lowest to highest) for each rasi box
+    Map<String, List<String>> rasiMap = {};
+    for (var sign in KPService.SIGNS) {
+      final list = rasiEntries[sign] ?? [];
+      list.sort((a, b) => (a['deg'] as double).compareTo(b['deg'] as double));
+      rasiMap[sign] = list.map((e) => e['label'] as String).toList();
     }
 
     String renderOuterLabel(String sign) {
@@ -480,6 +506,13 @@ class JamakkolOnePagePdfService {
         String innerHtml = innerItems.join('<br>');
         String outerHtml = renderOuterLabel(sign);
         
+        final strength = results['strength'] as Map<String, dynamic>?;
+        final kathirMap = strength?['rasi_kathir_map'] as Map<String, String>?;
+        String kathirHtml = "";
+        if (kathirMap != null && kathirMap.containsKey(sign)) {
+          kathirHtml = "<div style='position: absolute; bottom: 0; left: 0; padding: 0.4mm 0.8mm; font-size: 1.8mm; font-weight: bold; color: #C2410C; background: #FFF7ED; border-radius: 0.5mm; border: 0.2mm solid #FDBA74;'>${kathirMap[sign]}</div>";
+        }
+
         String outerDiv = "";
         if (outerHtml.isNotEmpty) {
             String style = "";
@@ -498,6 +531,7 @@ class JamakkolOnePagePdfService {
         return """
         <div style='position: relative; height: 100%; width: 100%;'>
             $outerDiv
+            $kathirHtml
             <div style='position: absolute; bottom: 0; right: 0; padding: 1mm; text-align: right;'>$innerHtml</div>
         </div>
         """;
@@ -704,23 +738,23 @@ class JamakkolOnePagePdfService {
             
             <div style="flex: 1; border-left: 0.5mm solid #1E3A8A; padding: 2mm 3mm; display: flex; flex-direction: column; justify-content: center;">
                 <div style="background: var(--header-blue); color: white; padding: 1mm; font-size: 2.2mm; font-weight: bold; text-align: center; border-radius: 0.5mm; margin-bottom: 1.5mm;">
-                   📄 ஜாமக்கோள் குறிப்புகள்
+                   📄 ${isTa ? "ஜாமக்கோள் பிரசன்ன விபரம்" : (isHi ? "जामक्कोल प्रसन्न विवरण" : "Jamakkol Prasannam Details")}
                 </div>
                 
                 <table style="width: 100%; font-size: 2.2mm; line-height: 1.4; margin-bottom: 1mm;">
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">1. உதயம் தொடர்பு கொள்ளும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uContactStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">2. உதயம் நின்ற நட்சத்திர பாதம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uStarStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">3. உதயத்தை கடந்த கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$crossedStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">4. ஆருடம் உள்ள பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aHouseStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">1. உதயம் நின்ற நட்சத்திர பாதம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uStarStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">2. உதயம் தொடர்பு கொள்ளும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uContactStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">3. உதயத்தைக் கடந்த கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$crossedStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">4. உதயாதிபதி நின்ற பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uLordHouseStr</td></tr>
                   <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">5. ஆருடம் தொடர்பு கொள்ளும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aContactStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">6. கவிப்புள்ள பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$kHouseStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">7. கவிக்கப்படும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$kPlanetStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">8. ஆருடாதிபதி நின்ற பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aLordHouseStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">9. ஆருடம் vs உதயம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aVsUStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">10. ஆருடம் vs கவிப்பு</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aVsKStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">11. அஷ்டமாதிபதி</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$eLordStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">12. பாதகாதிபதி</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$bLordStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">13. இராசிப் பரிவர்த்தனை</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$parivarthanaiStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">6. ஆருடம் உள்ள பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aHouseStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">7. கவிப்பு உள்ள பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$kHouseStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">8. கவிக்கப்படும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$kPlanetStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">9. ஆருட அதிபதி நின்ற பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aLordHouseStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">10. உதயம் vs ஆருடம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uVsAStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">11. உதயம் vs கவிப்பு</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uVsKStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">12. ஆருடம் vs உதயம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aVsUStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">13. ஆருடம் vs கவிப்பு</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aVsKStr</td></tr>
                   <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">14. சூட்சும ராசி</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$sootchumaStr</td></tr>
                 </table>
 

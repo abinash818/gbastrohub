@@ -1,15 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/gp_vaasthu_service.dart';
+import '../widgets/thalaivaasal_vaasthu_view.dart';
+import '../widgets/vaasthu_pooja_view.dart';
 
 class _PoruthamTableRowItem {
   final int sNo;
   final String name;
   final String value;
-  final String status; // 'உ', 'ம', 'அ'
+  final String status; // 'உ', 'ம', 'அ' அல்லது 'உ / அ', 'அ / உ'
   final String statusText; // 'உத்தமம்', 'மத்திமம்', 'அதமம்'
   final bool isGood;
   final String symbol; // '✓', '✗'
+  final bool hasMultipleMethods;
+  final String? method1Title;
+  final String? method1Calc;
+  final String? method1Name;
+  final String? method1Effect;
+  final String? method1Status;
+  final bool? method1IsGood;
+  final String? method2Title;
+  final String? method2Calc;
+  final String? method2Name;
+  final String? method2Effect;
+  final String? method2Status;
+  final bool? method2IsGood;
 
   const _PoruthamTableRowItem({
     required this.sNo,
@@ -19,6 +34,19 @@ class _PoruthamTableRowItem {
     required this.statusText,
     required this.isGood,
     required this.symbol,
+    this.hasMultipleMethods = false,
+    this.method1Title,
+    this.method1Calc,
+    this.method1Name,
+    this.method1Effect,
+    this.method1Status,
+    this.method1IsGood,
+    this.method2Title,
+    this.method2Calc,
+    this.method2Name,
+    this.method2Effect,
+    this.method2Status,
+    this.method2IsGood,
   });
 }
 
@@ -108,40 +136,90 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAF6EE),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF5D1204),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFFFFE082), size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          children: [
-            Text(
-              'GB 26 பொருத்தங்கள்',
-              style: GoogleFonts.cinzel(
-                color: const Color(0xFFFFE082),
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.0,
+    final double curW1Ft = double.tryParse(_w1FtCtrl.text.trim()) ?? 17.0;
+    final double curW1In = double.tryParse(_w1InCtrl.text.trim()) ?? 0.0;
+
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFFAF6EE),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF5D1204),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFFFFE082), size: 20),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Column(
+            children: [
+              Text(
+                'GB வாஸ்து',
+                style: GoogleFonts.cinzel(
+                  color: const Color(0xFFFFE082),
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
+                ),
+              ),
+              const Text(
+                '26 பொருத்தங்கள் | தலைவாசல் | பூமி பூஜை நாள்',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+          centerTitle: true,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48),
+            child: Container(
+              color: const Color(0xFF5D1204),
+              child: const TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.center,
+                indicatorColor: Color(0xFFFFE082),
+                indicatorWeight: 3.5,
+                labelColor: Color(0xFFFFE082),
+                unselectedLabelColor: Colors.white70,
+                labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.0),
+                tabs: [
+                  Tab(
+                    icon: Icon(Icons.checklist_rtl_rounded, size: 18),
+                    text: '26 பொருத்தங்கள்',
+                  ),
+                  Tab(
+                    icon: Icon(Icons.door_front_door_rounded, size: 18),
+                    text: 'தலைவாசல் கணிதம்',
+                  ),
+                  Tab(
+                    icon: Icon(Icons.calendar_month_rounded, size: 18),
+                    text: 'வாஸ்து பூஜை நாள்',
+                  ),
+                ],
               ),
             ),
-            const Text(
-              'ஆயாதி எண், 26 வாஸ்து பொருத்தங்கள் & குழிக்கணக்கு',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ],
+          ),
         ),
-        centerTitle: true,
+        body: SafeArea(
+          child: TabBarView(
+            children: [
+              _buildPoruthangalView(),
+              ThalaivaasalVaasthuView(
+                initialFeet: curW1Ft > 0 ? curW1Ft : 17.0,
+                initialInches: curW1In,
+              ),
+              const VaasthuPoojaView(),
+            ],
+          ),
+        ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
+    );
+  }
+
+  Widget _buildPoruthangalView() {
+    return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 18.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -399,9 +477,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               const SizedBox(height: 24),
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 
   // Region Selector Segment
@@ -893,6 +969,24 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
     final bool isGanaGood = (ganaMatch['isGood'] as bool?) ?? false;
     final String ganaStatusStr = (ganaMatch['status'] as String?) ?? '';
 
+    String getLetter(bool isGood, String statusStr) {
+      if (statusStr.contains('மத்திமம்')) return 'ம';
+      if (statusStr.contains('உத்தமம்') || isGood) return 'உ';
+      return 'அ';
+    }
+
+    String getSym(String letter) {
+      if (letter == 'உ') return '✓';
+      if (letter == 'ம') return '=';
+      return '✗';
+    }
+
+    String getFullText(String letter) {
+      if (letter == 'உ') return 'உத்தமம்';
+      if (letter == 'ம') return 'மத்திமம்';
+      return 'அதமம்';
+    }
+
     _PoruthamTableRowItem item({
       required int sNo,
       required String name,
@@ -900,8 +994,22 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
       required String status,
       required String statusText,
       required bool isGood,
+      String? customSymbol,
+      bool hasMultipleMethods = false,
+      String? method1Title,
+      String? method1Calc,
+      String? method1Name,
+      String? method1Effect,
+      String? method1Status,
+      bool? method1IsGood,
+      String? method2Title,
+      String? method2Calc,
+      String? method2Name,
+      String? method2Effect,
+      String? method2Status,
+      bool? method2IsGood,
     }) {
-      final String symbol = status == 'உ' ? '✓' : (status == 'ம' ? '=' : '✗');
+      final String symbol = customSymbol ?? (status == 'உ' ? '✓' : (status == 'ம' ? '=' : '✗'));
       return _PoruthamTableRowItem(
         sNo: sNo,
         name: name,
@@ -910,8 +1018,51 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
         statusText: statusText,
         isGood: isGood,
         symbol: symbol,
+        hasMultipleMethods: hasMultipleMethods,
+        method1Title: method1Title,
+        method1Calc: method1Calc,
+        method1Name: method1Name,
+        method1Effect: method1Effect,
+        method1Status: method1Status,
+        method1IsGood: method1IsGood,
+        method2Title: method2Title,
+        method2Calc: method2Calc,
+        method2Name: method2Name,
+        method2Effect: method2Effect,
+        method2Status: method2Status,
+        method2IsGood: method2IsGood,
       );
     }
+
+    // 9. Thithi Dual Methods Calculation
+    final String t1Letter = getLetter(res.thithi1.isGood, res.thithi1.status);
+    final String t2Letter = getLetter(res.thithi2.isGood, res.thithi2.status);
+    final String t1Sym = getSym(t1Letter);
+    final String t2Sym = getSym(t2Letter);
+    final String t1Full = getFullText(t1Letter);
+    final String t2Full = getFullText(t2Letter);
+
+    final String statusThithi = (t1Letter == t2Letter) ? t1Letter : '$t1Letter / $t2Letter';
+    final String symbolThithi = (t1Letter == t2Letter) ? t1Sym : '$t1Sym / $t2Sym';
+    final String statusTextThithi = (t1Letter == t2Letter) ? t1Full : '$t1Full / $t2Full';
+
+    final int multiple30_1 = res.thithi1Number == 30 ? (res.thithi1Total - 30) : ((res.thithi1Total ~/ 30) * 30);
+    final int multiple30_2 = res.thithi2Number == 30 ? (res.thithi2Total - 30) : ((res.thithi2Total ~/ 30) * 30);
+
+    // 11. Bootham Dual Methods Calculation
+    final String b1Letter = getLetter(res.bootham1.isGood, res.bootham1.status);
+    final String b2Letter = getLetter(res.bootham2.isGood, res.bootham2.status);
+    final String b1Sym = getSym(b1Letter);
+    final String b2Sym = getSym(b2Letter);
+    final String b1Full = getFullText(b1Letter);
+    final String b2Full = getFullText(b2Letter);
+
+    final String statusBootham = (b1Letter == b2Letter) ? b1Letter : '$b1Letter / $b2Letter';
+    final String symbolBootham = (b1Letter == b2Letter) ? b1Sym : '$b1Sym / $b2Sym';
+    final String statusTextBootham = (b1Letter == b2Letter) ? b1Full : '$b1Full / $b2Full';
+
+    final int multiple5_1 = res.bootham1Number == 5 ? (res.bootham1Total - 5) : ((res.bootham1Total ~/ 5) * 5);
+    final int multiple5_2 = res.bootham2Number == 5 ? (res.bootham2Total - 5) : ((res.bootham2Total ~/ 5) * 5);
 
     return [
       item(
@@ -982,9 +1133,23 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
         sNo: 9,
         name: 'திதி',
         value: '${res.thithi1.name.replaceAll('வ. ', 'வளர்.').replaceAll('தே. ', 'தேய்.')} / ${res.thithi2.name.replaceAll('வ. ', 'வளர்.').replaceAll('தே. ', 'தேய்.')}',
-        status: res.thithi1.status.contains('மத்திமம்') ? 'ம' : (res.thithi1.isGood ? 'உ' : 'அ'),
-        statusText: res.thithi1.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.thithi1.isGood ? 'உத்தமம்' : 'அதமம்'),
-        isGood: res.thithi1.isGood,
+        status: statusThithi,
+        statusText: statusTextThithi,
+        isGood: res.thithi1.isGood || res.thithi2.isGood,
+        customSymbol: symbolThithi,
+        hasMultipleMethods: true,
+        method1Title: 'முதல் மரபு (ஆயாதி × 4)',
+        method1Name: '${res.thithi1.name} [${res.thithi1.paksha}]',
+        method1Calc: 'கணக்கீடு: ${res.roundedAyadi} × 4 = ${res.thithi1Total} | கழிவு $multiple30_1 = ${res.thithi1Number}',
+        method1Effect: res.thithi1.effect,
+        method1Status: res.thithi1.status,
+        method1IsGood: res.thithi1.isGood,
+        method2Title: 'இரண்டாவது மரபு (ஆயாதி × 9)',
+        method2Name: '${res.thithi2.name} [${res.thithi2.paksha}]',
+        method2Calc: 'கணக்கீடு: ${res.roundedAyadi} × 9 = ${res.thithi2Total} | கழிவு $multiple30_2 = ${res.thithi2Number}',
+        method2Effect: res.thithi2.effect,
+        method2Status: res.thithi2.status,
+        method2IsGood: res.thithi2.isGood,
       ),
       item(
         sNo: 10,
@@ -997,10 +1162,24 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
       item(
         sNo: 11,
         name: 'பூதம்',
-        value: '${res.bootham1Number} (${res.bootham1.name.split(' ')[0]})',
-        status: res.bootham1.status.contains('மத்திமம்') ? 'ம' : (res.bootham1.isGood ? 'உ' : 'அ'),
-        statusText: res.bootham1.status.contains('மத்திமம்') ? 'மத்திமம்' : (res.bootham1.isGood ? 'உத்தமம்' : 'அதமம்'),
-        isGood: res.bootham1.isGood,
+        value: '${res.bootham1Number} (${res.bootham1.name.split(' ')[0]}) / ${res.bootham2Number} (${res.bootham2.name.split(' ')[0]})',
+        status: statusBootham,
+        statusText: statusTextBootham,
+        isGood: res.bootham1.isGood || res.bootham2.isGood,
+        customSymbol: symbolBootham,
+        hasMultipleMethods: true,
+        method1Title: 'முறை 1 (ஆயாதி × 3)',
+        method1Name: '${res.bootham1Number} - ${res.bootham1.name} (${res.bootham1.tamilElementName})',
+        method1Calc: 'கணக்கீடு: ${res.roundedAyadi} × 3 = ${res.bootham1Total} | கழிவு $multiple5_1 = ${res.bootham1Number}',
+        method1Effect: res.bootham1.effect,
+        method1Status: res.bootham1.status,
+        method1IsGood: res.bootham1.isGood,
+        method2Title: 'முறை 2 (ஆயாதி × 9)',
+        method2Name: '${res.bootham2Number} - ${res.bootham2.name} (${res.bootham2.tamilElementName})',
+        method2Calc: 'கணக்கீடு: ${res.roundedAyadi} × 9 = ${res.bootham2Total} | கழிவு $multiple5_2 = ${res.bootham2Number}',
+        method2Effect: res.bootham2.effect,
+        method2Status: res.bootham2.status,
+        method2IsGood: res.bootham2.isGood,
       ),
       item(
         sNo: 12,
@@ -1320,12 +1499,12 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
                 SizedBox(width: 4),
                 SizedBox(
-                  width: 34,
+                  width: 44,
                   child: Text('நிலை', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
                 ),
                 SizedBox(width: 4),
                 SizedBox(
-                  width: 32,
+                  width: 36,
                   child: Text('முடிவு', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
                 ),
               ],
@@ -1340,125 +1519,173 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
             itemBuilder: (context, index) {
               final item = items[index];
               final bool isEven = index.isEven;
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isEven ? const Color(0xFFFAF6EE).withValues(alpha: 0.6) : Colors.white,
-                  border: Border(
-                    bottom: BorderSide(color: const Color(0xFFB58D3D).withValues(alpha: 0.12), width: 0.8),
+              return InkWell(
+                onTap: item.hasMultipleMethods
+                    ? () => _showMultiMethodDetailsDialog(context, item, res)
+                    : null,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isEven ? const Color(0xFFFAF6EE).withValues(alpha: 0.6) : Colors.white,
+                    border: Border(
+                      bottom: BorderSide(color: const Color(0xFFB58D3D).withValues(alpha: 0.12), width: 0.8),
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    // S.No
-                    SizedBox(
-                      width: 28,
-                      child: Center(
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF5D1204).withValues(alpha: 0.08),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.35)),
-                          ),
-                          child: Text(
-                            '${item.sNo}',
-                            style: const TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF5D1204),
+                  child: Row(
+                    children: [
+                      // S.No
+                      SizedBox(
+                        width: 28,
+                        child: Center(
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF5D1204).withValues(alpha: 0.08),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.35)),
+                            ),
+                            child: Text(
+                              '${item.sNo}',
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF5D1204),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    // Name
-                    Expanded(
-                      flex: 4,
-                      child: Text(
-                        item.name,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF5D1204),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    // Value & Result
-                    Expanded(
-                      flex: 5,
-                      child: Text(
-                        item.value,
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF3E2723),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    // Status Badge (உ / ம / அ)
-                    SizedBox(
-                      width: 34,
-                      child: Center(
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: item.status == 'உ'
-                                ? const Color(0xFFE8F5E9)
-                                : (item.status == 'ம' ? const Color(0xFFFFF3E0) : const Color(0xFFFFEBEE)),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: item.status == 'உ'
-                                  ? const Color(0xFF2E7D32)
-                                  : (item.status == 'ம' ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
-                              width: 1,
+                      const SizedBox(width: 6),
+                      // Name
+                      Expanded(
+                        flex: 4,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                item.name,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF5D1204),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            item.status,
-                            style: TextStyle(
-                              color: item.status == 'உ'
-                                  ? const Color(0xFF2E7D32)
-                                  : (item.status == 'ம' ? const Color(0xFFEF6C00) : const Color(0xFFC62828)),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11.5,
-                            ),
-                          ),
+                            if (item.hasMultipleMethods) ...[
+                              const SizedBox(width: 3),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF5D1204).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.45), width: 0.8),
+                                ),
+                                child: const Text(
+                                  '2 முறை',
+                                  style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    // Symbol (✓ / = / ✗)
-                    SizedBox(
-                      width: 32,
-                      child: Center(
+                      const SizedBox(width: 6),
+                      // Value & Result
+                      Expanded(
+                        flex: 5,
                         child: Text(
-                          item.symbol,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: item.status == 'உ' || item.symbol == '✓'
-                                ? const Color(0xFF2E7D32)
-                                : (item.status == 'ம' || item.symbol == '='
-                                    ? const Color(0xFFEF6C00)
-                                    : const Color(0xFFC62828)),
-                            fontWeight: FontWeight.w900,
-                            fontSize: item.symbol == '=' ? 17 : 15,
+                          item.value,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF3E2723),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      // Status Badge (உ / ம / அ அல்லது உ / அ, அ / உ)
+                      SizedBox(
+                        width: 44,
+                        child: Center(
+                          child: Container(
+                            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: item.status.contains('/') ? 4 : 2,
+                              vertical: 2,
+                            ),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: _getPoruthamStatusBgColor(item.status),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: _getPoruthamStatusBorderColor(item.status),
+                                width: item.hasMultipleMethods ? 1.3 : 1.0,
+                              ),
+                              boxShadow: item.hasMultipleMethods
+                                  ? [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.08),
+                                        blurRadius: 3,
+                                        offset: const Offset(0, 1),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    item.status,
+                                    style: TextStyle(
+                                      color: _getPoruthamStatusTextColor(item.status),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: item.status.contains('/') ? 10.0 : 11.5,
+                                    ),
+                                  ),
+                                  if (item.hasMultipleMethods) ...[
+                                    const SizedBox(width: 1.5),
+                                    Icon(
+                                      Icons.touch_app_rounded,
+                                      size: 10,
+                                      color: _getPoruthamStatusTextColor(item.status),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      // Symbol (✓ / = / ✗ அல்லது ✓/✗)
+                      SizedBox(
+                        width: 36,
+                        child: Center(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              item.symbol,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _getPoruthamSymbolColor(item.status, item.symbol),
+                                fontWeight: FontWeight.w900,
+                                fontSize: item.symbol.contains('/') ? 12 : (item.symbol == '=' ? 17 : 15),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -1629,6 +1856,252 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Color _getPoruthamStatusBgColor(String status) {
+    if (status == 'உ') return const Color(0xFFE8F5E9);
+    if (status == 'ம') return const Color(0xFFFFF3E0);
+    if (status == 'அ') return const Color(0xFFFFEBEE);
+    return const Color(0xFFFFF8E1);
+  }
+
+  Color _getPoruthamStatusBorderColor(String status) {
+    if (status == 'உ') return const Color(0xFF2E7D32);
+    if (status == 'ம') return const Color(0xFFEF6C00);
+    if (status == 'அ') return const Color(0xFFC62828);
+    return const Color(0xFFFFA000);
+  }
+
+  Color _getPoruthamStatusTextColor(String status) {
+    if (status == 'உ') return const Color(0xFF2E7D32);
+    if (status == 'ம') return const Color(0xFFEF6C00);
+    if (status == 'அ') return const Color(0xFFC62828);
+    return const Color(0xFFB78103);
+  }
+
+  Color _getPoruthamSymbolColor(String status, String symbol) {
+    if (symbol.contains('/')) return const Color(0xFFE65100);
+    if (status == 'உ' || symbol == '✓') return const Color(0xFF2E7D32);
+    if (status == 'ம' || symbol == '=') return const Color(0xFFEF6C00);
+    return const Color(0xFFC62828);
+  }
+
+  void _showMultiMethodDetailsDialog(BuildContext context, _PoruthamTableRowItem item, GpKuzhiResult res) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Colors.white,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Title Bar
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF5D1204).withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          item.sNo == 9 ? '🌓' : '🌍',
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${item.name} - இரு முறைகள் ஒப்பீடு',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF5D1204),
+                              ),
+                            ),
+                            Text(
+                              'ஆயாதி எண்: ${res.roundedAyadi} | நிலை: ${item.statusText}',
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF7A6855), fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF5D1204)),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 20, color: Color(0xFFE0D5C1)),
+
+                  // Method 1 Card
+                  _buildMethodDetailCard(
+                    title: item.method1Title ?? 'முறை 1',
+                    name: item.method1Name ?? '',
+                    calc: item.method1Calc,
+                    effect: item.method1Effect ?? '',
+                    status: item.method1Status ?? '',
+                    isGood: item.method1IsGood ?? false,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Method 2 Card
+                  _buildMethodDetailCard(
+                    title: item.method2Title ?? 'முறை 2',
+                    name: item.method2Name ?? '',
+                    calc: item.method2Calc,
+                    effect: item.method2Effect ?? '',
+                    status: item.method2Status ?? '',
+                    isGood: item.method2IsGood ?? false,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Overall Decision Banner
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: item.status == 'உ'
+                          ? const Color(0xFFE8F5E9)
+                          : (item.status == 'அ'
+                              ? const Color(0xFFFFEBEE)
+                              : const Color(0xFFFFF8E1)),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: item.status == 'உ'
+                            ? const Color(0xFF2E7D32)
+                            : (item.status == 'அ'
+                                ? const Color(0xFFC62828)
+                                : const Color(0xFFFFA000)),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          item.status == 'உ'
+                              ? Icons.check_circle_rounded
+                              : (item.status == 'அ' ? Icons.cancel_rounded : Icons.info_rounded),
+                          color: item.status == 'உ'
+                              ? const Color(0xFF2E7D32)
+                              : (item.status == 'அ' ? const Color(0xFFC62828) : const Color(0xFFE65100)),
+                          size: 22,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'முடிவு: ${item.statusText} (${item.symbol})',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              color: item.status == 'உ'
+                                  ? const Color(0xFF1B5E20)
+                                  : (item.status == 'அ' ? const Color(0xFFB71C1C) : const Color(0xFFB45309)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Action Button
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF5D1204),
+                      foregroundColor: const Color(0xFFFFE082),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('சரி (சரிபார்க்கப்பட்டது)', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMethodDetailCard({
+    required String title,
+    required String name,
+    required String? calc,
+    required String effect,
+    required String status,
+    required bool isGood,
+  }) {
+    final bool isU = status.contains('உத்தமம்') || isGood;
+    final bool isM = status.contains('மத்திமம்');
+    final Color badgeColor = isU
+        ? const Color(0xFF2E7D32)
+        : (isM ? const Color(0xFFEF6C00) : const Color(0xFFC62828));
+    final String symbol = isU ? '✓' : (isM ? '=' : '✗');
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF6EE),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: badgeColor, width: 1),
+                ),
+                child: Text(
+                  '$status ($symbol)',
+                  style: TextStyle(color: badgeColor, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            name,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF2C1810)),
+          ),
+          if (effect.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              'பலன்: $effect',
+              style: const TextStyle(fontSize: 11.5, color: Color(0xFF555555), fontWeight: FontWeight.w500),
+            ),
+          ],
+          if (calc != null && calc.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              calc,
+              style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontWeight: FontWeight.w500),
+            ),
+          ],
         ],
       ),
     );

@@ -697,11 +697,38 @@ class JamakkolService {
       'type_offset': badhakaOffset + 1,
     };
 
-    // 13. Rasi Parivarthanai (இராசிப் பரிவர்த்தனை)
+    // 14. Sootchuma Rasi (சூட்சும ராசி)
+    // உதயத்திலிருந்து ஆருட அதிபதி நிற்கும் எண்ணிக்கையை ஆருட அதிபதியிலிருந்து எண்ணி வரும் ராசி சூட்சும ராசி
+    int countSigns = ((arudamLordRasiIdx - udayamIdx + 12) % 12) + 1;
+    int sootchumaRasiIdx = (arudamLordRasiIdx + countSigns - 1) % 12;
+
+    final sootchumaMap = {
+      'rasi': KPService.SIGNS[sootchumaRasiIdx],
+      'count': countSigns,
+    };
+
+    // 15. Outer Planet Ucham / Neecham (உச்சம் / நீச்சம்)
+    List<String> uchamPlanets = [];
+    List<String> neechamPlanets = [];
+    planetDegrees.forEach((p, deg) {
+      if (p != "Rahu" && p != "Ketu" && p != "பாம்பு" && p != "Maanthi") {
+        String sign = KPService.SIGNS[(deg / 30.0).floor() % 12];
+        if (UCHAM[p] == sign) {
+          uchamPlanets.add(p);
+        } else if (NEECHAM[p] == sign) {
+          neechamPlanets.add(p);
+        }
+      }
+    });
+
+    // 16. Rasi Parivarthanai (இராசிப் பரிவர்த்தனை)
     List<String> parivarthana = [];
+    List<Map<String, String>> parivarthanaDetails = [];
     Map<String, String> planetInSign = {};
     planetDegrees.forEach((p, deg) {
-      planetInSign[p] = KPService.SIGNS[(deg / 30.0).floor() % 12];
+      if (p != "Rahu" && p != "Ketu" && p != "பாம்பு" && p != "Maanthi") {
+        planetInSign[p] = KPService.SIGNS[(deg / 30.0).floor() % 12];
+      }
     });
     List<String> keys = planetInSign.keys.toList();
     for (int i = 0; i < keys.length; i++) {
@@ -712,19 +739,29 @@ class JamakkolService {
         String s2 = planetInSign[p2]!;
         if (SIGN_LORDS[s1] == p2 && SIGN_LORDS[s2] == p1) {
           parivarthana.add("$p1-$p2");
+          int s1Idx = KPService.SIGNS.indexOf(s1);
+          int s2Idx = KPService.SIGNS.indexOf(s2);
+          String signA, signB, planetA, planetB;
+          if (s2Idx <= s1Idx) {
+            signA = s2;
+            planetA = p1;
+            signB = s1;
+            planetB = p2;
+          } else {
+            signA = s1;
+            planetA = p2;
+            signB = s2;
+            planetB = p1;
+          }
+          parivarthanaDetails.add({
+            'planet1': planetA,
+            'planet2': planetB,
+            'sign1': signA,
+            'sign2': signB,
+          });
         }
       }
     }
-
-    // 14. Sootchuma Rasi (சூட்சும ராசி)
-    // உதயத்திலிருந்து ஆருட அதிபதி நிற்கும் எண்ணிக்கையை ஆருட அதிபதியிலிருந்து எண்ணி வரும் ராசி சூட்சும ராசி
-    int countSigns = ((arudamLordRasiIdx - udayamIdx + 12) % 12) + 1;
-    int sootchumaRasiIdx = (arudamLordRasiIdx + countSigns - 1) % 12;
-
-    final sootchumaMap = {
-      'rasi': KPService.SIGNS[sootchumaRasiIdx],
-      'count': countSigns,
-    };
 
     return {
       'udayam_contact': udayamContacts,
@@ -743,7 +780,10 @@ class JamakkolService {
       'eighth_lord_details': eighthLordMap,
       'badhaka_lord_details': badhakaLordMap,
       'parivarthana': parivarthana,
+      'parivarthana_details': parivarthanaDetails,
       'sootchuma_details': sootchumaMap,
+      'ucham_planets': uchamPlanets,
+      'neecham_planets': neechamPlanets,
     };
   }
   static const Map<String, List<String>> GOWRI_TYPES = {

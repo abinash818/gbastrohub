@@ -371,6 +371,49 @@ class JamakkolOnePagePdfService {
         ? getRName(sootchuma['rasi'].toString())
         : "-";
 
+    // 15. Outer Planet Ucham / Neecham
+    final uchamList = (notes['ucham_planets'] as List?)?.cast<String>() ?? [];
+    final neechamList = (notes['neecham_planets'] as List?)?.cast<String>() ?? [];
+
+    String getFullPName(String p) {
+      if (isTa) return KPService.TAMIL_PLANETS[p] ?? p;
+      if (isHi) return KPService.HINDI_PLANETS[p] ?? p;
+      return KPService.ENGLISH_PLANETS[p] ?? p;
+    }
+
+    String getFullSignName(String s) {
+      if (isTa) return KPService.TAMIL_SIGNS[s] ?? s;
+      if (isHi) return KPService.HINDI_SIGNS[s] ?? s;
+      return KPService.ENGLISH_SIGNS[s] ?? s;
+    }
+
+    String uchamNeechamStr = "-";
+    List<String> unParts = [];
+    if (uchamList.isNotEmpty) {
+      String uNames = uchamList.map(getFullPName).join(", ");
+      unParts.add(isTa ? "உச்சம் _ $uNames" : (isHi ? "उच्च _ $uNames" : "Exalted _ $uNames"));
+    }
+    if (neechamList.isNotEmpty) {
+      String nNames = neechamList.map(getFullPName).join(", ");
+      unParts.add(isTa ? "நீச்சம் _ $nNames" : (isHi ? "नीच _ $nNames" : "Debilitated _ $nNames"));
+    }
+    if (unParts.isNotEmpty) {
+      uchamNeechamStr = unParts.join("<br>");
+    }
+
+    // 16. Rasi Parivarthanai
+    final pDetails = notes['parivarthana_details'] as List? ?? [];
+    String parivarthanaiDisplayStr = "-";
+    if (pDetails.isNotEmpty) {
+      parivarthanaiDisplayStr = pDetails.map((d) {
+        String s1Name = getFullSignName(d['sign1'] ?? "");
+        String s2Name = getFullSignName(d['sign2'] ?? "");
+        String p1Name = getFullPName(d['planet1'] ?? "");
+        String p2Name = getFullPName(d['planet2'] ?? "");
+        return "${s1Name}_${s2Name}<br>$p1Name $p2Name";
+      }).join("<br><br>");
+    }
+
     // Chart Gen
     Map<String, List<Map<String, dynamic>>> rasiEntries = {};
     for (var sign in KPService.SIGNS) rasiEntries[sign] = [];
@@ -594,6 +637,12 @@ class JamakkolOnePagePdfService {
       addSubPlanetRow(subPlanets.mrityu);
     }
 
+    if (details.containsKey('maanthi')) {
+      double mDeg = (details['maanthi']['longitude'] ?? 0.0).toDouble();
+      String mName = langCode == 'en' ? 'Maanthi' : (langCode == 'hi' ? 'मांदी' : 'மாந்தி');
+      addOuterRow(mName, mDeg);
+    }
+
     final pDegs = outer['planet_degrees'] as Map? ?? {};
     final namingMap = isAltNaming ? JamakkolService.JAMAKKOL_TAMIL_ALT : JamakkolService.JAMAKKOL_TAMIL_SHORT;
     for (var pName in JamakkolService.JAMAKKOL_PLANETS) {
@@ -602,13 +651,14 @@ class JamakkolOnePagePdfService {
     }
 
     String innerPathaHtml = "";
-    final keys = ['lagna', 'sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn', 'rahu', 'ketu'];
+    final keys = ['lagna', 'sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn', 'rahu', 'ketu', 'maanthi'];
     for (var key in keys) {
       if (!details.containsKey(key)) continue;
       double deg = (details[key]['longitude'] ?? 0.0).toDouble();
       String nameKey = key[0].toUpperCase() + key.substring(1);
       String name = _toLocal(nameKey, langCode);
       if (key == 'lagna') name = langCode == 'en' ? 'Lagna' : (langCode == 'hi' ? 'लग्न' : 'லக்னம்');
+      if (key == 'maanthi') name = langCode == 'en' ? 'Maanthi' : (langCode == 'hi' ? 'मांदी' : 'மாந்தி');
       int d = deg.floor();
       int m = ((deg - d) * 60).floor();
       var sp = _getStarPada(deg);
@@ -751,7 +801,7 @@ class JamakkolOnePagePdfService {
                    📄 ${isTa ? "ஜாமக்கோள் பிரசன்ன விபரம்" : (isHi ? "जामक्कोल प्रसन्न विवरण" : "Jamakkol Prasannam Details")}
                 </div>
                 
-                <table style="width: 100%; font-size: 2.2mm; line-height: 1.4; margin-bottom: 1mm;">
+                <table style="width: 100%; font-size: 2.05mm; line-height: 1.35; margin-bottom: 1mm;">
                   <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">1. உதயம் நின்ற நட்சத்திர பாதம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uStarStr</td></tr>
                   <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">2. உதயம் தொடர்பு கொள்ளும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uContactStr</td></tr>
                   <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">3. உதயத்தைக் கடந்த கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$crossedStr</td></tr>
@@ -766,10 +816,12 @@ class JamakkolOnePagePdfService {
                   <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">12. ஆருடம் vs உதயம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aVsUStr</td></tr>
                   <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">13. ஆருடம் vs கவிப்பு</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aVsKStr</td></tr>
                   <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">14. சூட்சும ராசி</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$sootchumaStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">${isTa ? "15. உச்சம் / நீச்சம்" : (isHi ? "15. उच्च / नीच" : "15. Exalted / Debilitated")}</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uchamNeechamStr</td></tr>
+                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">${isTa ? "16. இராசி பரிவர்த்தனை" : (isHi ? "16. राशि परिवर्तन" : "16. Rasi Parivarthanai")}</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$parivarthanaiDisplayStr</td></tr>
                 </table>
 
                 <div style="background: var(--header-blue); color: white; padding: 1mm; font-size: 2.2mm; font-weight: bold; text-align: center; border-radius: 0.5mm; margin-bottom: 1.5mm;">
-                   ⚡ கதிர் பலம் (Strength)
+                   ⚡ ${isTa ? "முக்கிய கதிர் அம்சங்கள்" : (isHi ? "मुख्य रश्मि बिंदु" : "Key Kathir Features")}
                 </div>
                 
                 <table style="width: 100%; font-size: 2.2mm; line-height: 1.4; border-collapse: collapse;">

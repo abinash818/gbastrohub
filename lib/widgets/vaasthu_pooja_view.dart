@@ -14,8 +14,37 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
   int _selectedYear = 2026;
   String _selectedCity = 'நாமக்கல்';
   int _selectedIndex = 4; // Default to Aippasi 11 (index 4) as in the user's prompt
+  late final TextEditingController _yearController;
 
   final Map<int, String> _customSunrises = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _yearController = TextEditingController(text: _selectedYear.toString());
+  }
+
+  @override
+  void dispose() {
+    _yearController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickYearDialog() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(_selectedYear, 1, 1),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+      initialDatePickerMode: DatePickerMode.year,
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedYear = picked.year;
+        _yearController.text = _selectedYear.toString();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,16 +65,16 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
           _buildHeaderBanner(),
           const SizedBox(height: 16),
 
-          // 2. City & Year Filter Card
+          // 2. City & Year Filter Card (வருடம் தட்டச்சு/தேர்வு & ஊர்)
           _buildFilterCard(),
           const SizedBox(height: 18),
 
-          // 3. Featured Calculation (படம் 2: உதாரணக் கணக்கீடு)
-          _buildFeaturedCalculationCard(selectedItem),
+          // 3. Complete 8-Month Table Card (இந்த எட்டு நாட்களுக்கு உண்டான அட்டவணை)
+          _buildPoojaTableCard(items),
           const SizedBox(height: 18),
 
-          // 4. Complete 8-Month Table Card
-          _buildPoojaTableCard(items),
+          // 4. Featured Calculation for selected day (கணக்கீட்டு விபரம்)
+          _buildFeaturedCalculationCard(selectedItem),
           const SizedBox(height: 18),
 
           // 5. Vaasthu Rules & Guidelines
@@ -91,7 +120,7 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'வாஸ்து / பூமி பூஜை நாள் & நேரம்',
+                  'வாஸ்து நாள் அன்று பூமி(வாஸ்து) பூஜை நேரம்',
                   style: GoogleFonts.outfit(
                     color: const Color(0xFFFFE082),
                     fontSize: 15,
@@ -149,45 +178,194 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          // Year Selector Row
-          Row(
-            children: [
-              const Text('வருடம்:', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855))),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [2025, 2026, 2027, 2028].map((y) {
-                    final isSel = _selectedYear == y;
-                    return InkWell(
-                      onTap: () => setState(() => _selectedYear = y),
-                      borderRadius: BorderRadius.circular(16),
+          // Year Row with Type Option, Buttons, and Year Picker
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.calendar_today_rounded, color: Color(0xFF5D1204), size: 17),
+                const SizedBox(width: 5),
+                const Text('வருடம்:', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF7A6855))),
+                const SizedBox(width: 8),
+
+                // Step - button
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _selectedYear--;
+                      _yearController.text = _selectedYear.toString();
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFAF6EE),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.4)),
+                    ),
+                    child: const Icon(Icons.remove_rounded, size: 16, color: Color(0xFF5D1204)),
+                  ),
+                ),
+                const SizedBox(width: 5),
+
+                // Direct Year Type Input
+                SizedBox(
+                  width: 66,
+                  height: 36,
+                  child: TextField(
+                    controller: _yearController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 4,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF5D1204),
+                    ),
+                    decoration: InputDecoration(
+                      counterText: '',
+                      contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                      filled: true,
+                      fillColor: const Color(0xFFFAF6EE),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: const Color(0xFFB58D3D).withValues(alpha: 0.4)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFF5D1204), width: 1.5),
+                      ),
+                    ),
+                    onChanged: (val) {
+                      final y = int.tryParse(val.trim());
+                      if (y != null && y >= 1900 && y <= 2100) {
+                        setState(() => _selectedYear = y);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 5),
+
+                // Step + button
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _selectedYear++;
+                      _yearController.text = _selectedYear.toString();
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFAF6EE),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.4)),
+                    ),
+                    child: const Icon(Icons.add_rounded, size: 16, color: Color(0xFF5D1204)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Year Picker dialog button (matches the search icon button below)
+                InkWell(
+                  onTap: _pickYearDialog,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Tooltip(
+                    message: 'ஆண்டு தேர்வு (Calendar)',
+                    child: Container(
+                      padding: const EdgeInsets.all(9),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF5D1204),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.calendar_month_rounded, color: Color(0xFFFFE082), size: 18),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Quick selection chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                const Text('விரைவு: ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF888888))),
+                ...([2024, 2025, 2026, 2027, 2028, 2029, 2030].map((y) {
+                  final isSel = _selectedYear == y;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedYear = y;
+                          _yearController.text = y.toString();
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(14),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                         decoration: BoxDecoration(
                           color: isSel ? const Color(0xFF5D1204) : const Color(0xFFFAF6EE),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: isSel ? const Color(0xFF5D1204) : const Color(0xFFB58D3D).withValues(alpha: 0.4),
+                            color: isSel ? const Color(0xFF5D1204) : const Color(0xFFB58D3D).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Text(
                           '$y',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: isSel ? FontWeight.bold : FontWeight.w600,
                             color: isSel ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
                           ),
                         ),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  );
+                })),
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: InkWell(
+                    onTap: _pickYearDialog,
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFAF6EE),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFFB58D3D).withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.calendar_month_rounded, size: 12, color: Color(0xFF5D1204)),
+                          SizedBox(width: 4),
+                          Text(
+                            'அனைத்து ஆண்டுகள்',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF5D1204),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const Divider(height: 20),
 
@@ -287,7 +465,7 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Text(
-                  'உதாரணக் கணக்கீடு (Ex)',
+                  'கணக்கீட்டு விபரம்',
                   style: TextStyle(color: Color(0xFFFFE082), fontSize: 11, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -437,7 +615,7 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'வாஸ்து / பூமி பூஜை நாள் & நேரம் அட்டவணை:',
+                  'வாஸ்து நாள் அன்று பூமி(வாஸ்து) பூஜை நேரம் அட்டவணை:',
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold,
                     fontSize: 14.5,
@@ -449,7 +627,7 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'குறிப்பிட்ட வரிசையைத் தொட்டு மேலே உள்ள உதாரணக் கணக்கீட்டைப் பார்க்கலாம்:',
+            'குறிப்பிட்ட வரிசையைத் தொட்டு அதற்கான விரிவான கணக்கீட்டு விபரத்தைக் கீழே காணலாம்:',
             style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855)),
           ),
           const SizedBox(height: 12),

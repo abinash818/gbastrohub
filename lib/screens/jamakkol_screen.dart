@@ -518,6 +518,13 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
       addSubPlanetRow(subPlanets.mrityu);
     }
 
+    // Add Maanthi to Outer Pathasaram Table
+    final innerDetails = _results!['inner']?['planet_details'] as Map?;
+    if (innerDetails != null && innerDetails.containsKey('maanthi')) {
+      double mDeg = (innerDetails['maanthi']['longitude'] ?? 0.0).toDouble();
+      addRow(AppLocalizations.of(context)!.maanthi, mDeg);
+    }
+
     final pDegs = outer['planet_degrees'] as Map;
     final namingMap = _isAltNaming ? JamakkolService.JAMAKKOL_TAMIL_ALT : JamakkolService.JAMAKKOL_TAMIL_SHORT;
     
@@ -569,15 +576,20 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     }
 
     final pDetails = _results!['inner']['planet_details'] as Map;
-    final keys = ['lagna', 'sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn', 'rahu', 'ketu'];
+    final keys = ['lagna', 'sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn', 'rahu', 'ketu', 'maanthi'];
     
     for (var key in keys) {
       if (!pDetails.containsKey(key)) continue;
       double deg = (pDetails[key]['longitude'] ?? 0.0).toDouble();
       String nameKey = key[0].toUpperCase() + key.substring(1);
       String name = KPService.TAMIL_PLANETS[nameKey] ?? nameKey;
-      if (key == 'lagna') name = AppLocalizations.of(context)!.lagna;
-      else name = AstroTranslationService.translate(context, name, isPlanet: true);
+      if (key == 'lagna') {
+        name = AppLocalizations.of(context)!.lagna;
+      } else if (key == 'maanthi') {
+        name = AppLocalizations.of(context)!.maanthi;
+      } else {
+        name = AstroTranslationService.translate(context, name, isPlanet: true);
+      }
       addRow(name, deg);
     }
 
@@ -622,43 +634,13 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  AppLocalizations.of(context)!.strengthAnalysis, 
+                  isTa ? "முக்கிய கதிர் அம்சங்கள்" : (isHi ? "मुख्य रश्मि बिंदु" : "Key Kathir Features"), 
                   style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.primary),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          // Rule description box
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF7ED),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFFFB74D).withOpacity(0.6), width: 0.8),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline_rounded, color: Color(0xFFC2410C), size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    isTa 
-                      ? "விதிகள்: உச்சம் x3 | ஆட்சி x2 | நட்பு/பொது x1 | நீசம் x0 | பாம்பு = 4"
-                      : (isHi ? "नियम: उच्च x3 | स्वग्रही x2 | सम/मित्र x1 | नीच x0 | राहु = 4" : "Rules: Exalted x3 | Own x2 | Neutral x1 | Debilitated x0 | Snake = 4"),
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC2410C)),
-                  ),
-                ),
-              ],
-            ),
-          ),
           const SizedBox(height: 16),
-          // Section 1: Key Points
-          Text(
-            isTa ? "முக்கிய அம்சங்களின் கதிர்:" : (isHi ? "मुख्य बिंदु रश्मि:" : "Key Features:"),
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
-          ),
-          const SizedBox(height: 8),
           _buildKathirRow(
             isTa ? "அம்சம்" : (isHi ? "बिंदु" : "Feature"),
             isTa ? "ராசிக் கதிர்" : (isHi ? "राशि" : "Rasi Ray"),
@@ -789,7 +771,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isTa ? "கதிர் பலம் - ராசிக் கட்டம்:" : (isHi ? "रश्मि विश्लेषण - राशि चक्र:" : "Kathir Ray Chart:"),
+          isTa ? "கதிர்கள் அட்டவணை:" : (isHi ? "रश्मि सारणी:" : "Kathir Table:"),
           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
         ),
         const SizedBox(height: 10),
@@ -1654,6 +1636,49 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     final sootchuma = notes['sootchuma_details'] as Map;
     String sootchumaStr = getRName(sootchuma['rasi'] ?? "-");
 
+    // 15. Outer Planet Ucham / Neecham
+    final uchamList = (notes['ucham_planets'] as List?)?.cast<String>() ?? [];
+    final neechamList = (notes['neecham_planets'] as List?)?.cast<String>() ?? [];
+
+    String getFullPName(String p) {
+      if (isTa) return KPService.TAMIL_PLANETS[p] ?? p;
+      if (isHi) return KPService.HINDI_PLANETS[p] ?? p;
+      return KPService.ENGLISH_PLANETS[p] ?? p;
+    }
+
+    String getFullSignName(String s) {
+      if (isTa) return KPService.TAMIL_SIGNS[s] ?? s;
+      if (isHi) return KPService.HINDI_SIGNS[s] ?? s;
+      return KPService.ENGLISH_SIGNS[s] ?? s;
+    }
+
+    String uchamNeechamStr = "-";
+    List<String> unParts = [];
+    if (uchamList.isNotEmpty) {
+      String uNames = uchamList.map(getFullPName).join(", ");
+      unParts.add(isTa ? "உச்சம் _ $uNames" : (isHi ? "उच्च _ $uNames" : "Exalted _ $uNames"));
+    }
+    if (neechamList.isNotEmpty) {
+      String nNames = neechamList.map(getFullPName).join(", ");
+      unParts.add(isTa ? "நீச்சம் _ $nNames" : (isHi ? "नीच _ $nNames" : "Debilitated _ $nNames"));
+    }
+    if (unParts.isNotEmpty) {
+      uchamNeechamStr = unParts.join("\n");
+    }
+
+    // 16. Rasi Parivarthanai
+    final pDetails = notes['parivarthana_details'] as List? ?? [];
+    String parivarthanaiDisplayStr = "-";
+    if (pDetails.isNotEmpty) {
+      parivarthanaiDisplayStr = pDetails.map((d) {
+        String s1Name = getFullSignName(d['sign1'] ?? "");
+        String s2Name = getFullSignName(d['sign2'] ?? "");
+        String p1Name = getFullPName(d['planet1'] ?? "");
+        String p2Name = getFullPName(d['planet2'] ?? "");
+        return "${s1Name}_${s2Name}\n$p1Name $p2Name";
+      }).join("\n\n");
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1696,6 +1721,8 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           _buildNoteRow(isTa ? "12. ஆருடம் vs உதயம்" : "12. Arudam vs Udayam", aVsUStr),
           _buildNoteRow(isTa ? "13. ஆருடம் vs கவிப்பு" : "13. Arudam vs Kavippu", aVsKStr),
           _buildNoteRow(isTa ? "14. சூட்சும ராசி" : "14. Sootchuma Rasi", sootchumaStr),
+          _buildNoteRow(isTa ? "15. உச்சம் / நீச்சம்" : (isHi ? "15. उच्च / नीच" : "15. Exalted / Debilitated"), uchamNeechamStr),
+          _buildNoteRow(isTa ? "16. இராசி பரிவர்த்தனை" : (isHi ? "16. राशि परिवर्तन" : "16. Rasi Parivarthanai"), parivarthanaiDisplayStr),
         ],
       ),
     );

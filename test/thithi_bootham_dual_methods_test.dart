@@ -18,11 +18,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Check that '2 முறை' badges are visible for Thithi and Bootham
-    expect(find.text('2 முறை'), findsNWidgets(2));
+    // Check that method selector card is visible
+    expect(find.text('திதி & பூதம் கணித முறை தேர்வு:'), findsOneWidget);
+    expect(find.text('மரபு 1 (× 4)'), findsOneWidget);
+    expect(find.text('மரபு 2 (× 9)'), findsOneWidget);
+    expect(find.text('முறை 1 (× 3)'), findsOneWidget);
+    expect(find.text('முறை 2 (× 9)'), findsOneWidget);
 
-    // Tap on Thithi row / '2 முறை' badge
-    await tester.tap(find.text('2 முறை').first);
+    // Tap on Thithi row to open comparison dialog
+    await tester.tap(find.text('திதி').first);
     await tester.pumpAndSettle();
 
     // Verify dialog opened
@@ -35,8 +39,8 @@ void main() {
     await tester.tap(find.text('சரி (சரிபார்க்கப்பட்டது)'));
     await tester.pumpAndSettle();
 
-    // Now tap on Bootham '2 முறை' badge
-    await tester.tap(find.text('2 முறை').last);
+    // Now tap on Bootham row to open comparison dialog
+    await tester.tap(find.text('பூதம்').first);
     await tester.pumpAndSettle();
 
     // Verify Bootham dialog opened

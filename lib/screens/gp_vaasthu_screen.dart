@@ -77,6 +77,8 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
   int _selectedOwnerNakshatra = 1; // Default to Ashwini
   int _selectedOwnerRasi = 1; // Default to Mesham
   int _selectedResultTab = 0; // 0: பொருத்தப் பட்டியல் (26 பலன்கள்), 1: விரிவான பலன்கள்
+  int _selectedThithiMethod = 1; // 1: முதல் மரபு (ஆயாதி × 4), 2: இரண்டாவது மரபு (ஆயாதி × 9)
+  int _selectedBoothamMethod = 1; // 1: முறை 1 (ஆயாதி × 3), 2: முறை 2 (ஆயாதி × 9)
   static const bool _showCalculationDetails = false; // Hide formula breakdowns in detailed view for clean live UI
 
   GpKuzhiResult? _result;
@@ -234,6 +236,10 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
 
               // 2.1. Owner Details Input Card (உரிமையாளர் நட்சத்திரம் & ராசி)
               _buildOwnerDetailsInputCard(),
+              const SizedBox(height: 16),
+
+              // 2.2. Thithi & Bhootham Method Selection Card (திதி & பூதம் கணித முறை தேர்வு)
+              _buildMethodSelectionCard(),
               const SizedBox(height: 16),
 
               // 3. Calculation Action Button
@@ -932,6 +938,154 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
     );
   }
 
+  // 2.2. Thithi & Bhootham Method Selection Card (திதி & பூதம் கணித முறை தேர்வு)
+  Widget _buildMethodSelectionCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.3), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF5D1204).withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.tune_rounded, color: Color(0xFF5D1204), size: 19),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'திதி & பூதம் கணித முறை தேர்வு:',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.5,
+                    color: const Color(0xFF5D1204),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Thithi Method Row
+          Row(
+            children: [
+              const SizedBox(
+                width: 48,
+                child: Text(
+                  'திதி:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF7A6855)),
+                ),
+              ),
+              _buildMethodChip(
+                label: 'மரபு 1 (× 4)',
+                isSelected: _selectedThithiMethod == 1,
+                onTap: () {
+                  setState(() => _selectedThithiMethod = 1);
+                },
+              ),
+              const SizedBox(width: 8),
+              _buildMethodChip(
+                label: 'மரபு 2 (× 9)',
+                isSelected: _selectedThithiMethod == 2,
+                onTap: () {
+                  setState(() => _selectedThithiMethod = 2);
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Bhootham Method Row
+          Row(
+            children: [
+              const SizedBox(
+                width: 48,
+                child: Text(
+                  'பூதம்:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF7A6855)),
+                ),
+              ),
+              _buildMethodChip(
+                label: 'முறை 1 (× 3)',
+                isSelected: _selectedBoothamMethod == 1,
+                onTap: () {
+                  setState(() => _selectedBoothamMethod = 1);
+                },
+              ),
+              const SizedBox(width: 8),
+              _buildMethodChip(
+                label: 'முறை 2 (× 9)',
+                isSelected: _selectedBoothamMethod == 2,
+                onTap: () {
+                  setState(() => _selectedBoothamMethod = 2);
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMethodChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF5D1204) : const Color(0xFFFAF6EE),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected ? const Color(0xFF5D1204) : const Color(0xFFB58D3D).withValues(alpha: 0.35),
+              width: isSelected ? 1.4 : 1.0,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                size: 13,
+                color: isSelected ? const Color(0xFFFFE082) : const Color(0xFF7A6855),
+              ),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                    color: isSelected ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildUnitInputField({
     required String label,
     required TextEditingController controller,
@@ -968,24 +1122,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
     final Map<String, dynamic> ganaMatch = GpVaasthuService.evaluateGanaMatch(res.nakshatra.gana, ownerGana);
     final bool isGanaGood = (ganaMatch['isGood'] as bool?) ?? false;
     final String ganaStatusStr = (ganaMatch['status'] as String?) ?? '';
-
-    String getLetter(bool isGood, String statusStr) {
-      if (statusStr.contains('மத்திமம்')) return 'ம';
-      if (statusStr.contains('உத்தமம்') || isGood) return 'உ';
-      return 'அ';
-    }
-
-    String getSym(String letter) {
-      if (letter == 'உ') return '✓';
-      if (letter == 'ம') return '=';
-      return '✗';
-    }
-
-    String getFullText(String letter) {
-      if (letter == 'உ') return 'உத்தமம்';
-      if (letter == 'ம') return 'மத்திமம்';
-      return 'அதமம்';
-    }
 
     _PoruthamTableRowItem item({
       required int sNo,
@@ -1034,32 +1170,23 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
       );
     }
 
-    // 9. Thithi Dual Methods Calculation
-    final String t1Letter = getLetter(res.thithi1.isGood, res.thithi1.status);
-    final String t2Letter = getLetter(res.thithi2.isGood, res.thithi2.status);
-    final String t1Sym = getSym(t1Letter);
-    final String t2Sym = getSym(t2Letter);
-    final String t1Full = getFullText(t1Letter);
-    final String t2Full = getFullText(t2Letter);
-
-    final String statusThithi = (t1Letter == t2Letter) ? t1Letter : '$t1Letter / $t2Letter';
-    final String symbolThithi = (t1Letter == t2Letter) ? t1Sym : '$t1Sym / $t2Sym';
-    final String statusTextThithi = (t1Letter == t2Letter) ? t1Full : '$t1Full / $t2Full';
+    // 9. Thithi Calculation based on _selectedThithiMethod
+    final bool isThithiM1 = _selectedThithiMethod == 1;
+    final activeThithi = isThithiM1 ? res.thithi1 : res.thithi2;
+    final String activeThithiName = activeThithi.name.replaceAll('வ. ', 'வளர். ').replaceAll('தே. ', 'தேய். ');
+    final String statusThithi = activeThithi.status.contains('மத்திமம்') ? 'ம' : (activeThithi.isGood ? 'உ' : 'அ');
+    final String statusTextThithi = activeThithi.status.contains('மத்திமம்') ? 'மத்திமம்' : (activeThithi.isGood ? 'உத்தமம்' : 'அதமம்');
 
     final int multiple30_1 = res.thithi1Number == 30 ? (res.thithi1Total - 30) : ((res.thithi1Total ~/ 30) * 30);
     final int multiple30_2 = res.thithi2Number == 30 ? (res.thithi2Total - 30) : ((res.thithi2Total ~/ 30) * 30);
 
-    // 11. Bootham Dual Methods Calculation
-    final String b1Letter = getLetter(res.bootham1.isGood, res.bootham1.status);
-    final String b2Letter = getLetter(res.bootham2.isGood, res.bootham2.status);
-    final String b1Sym = getSym(b1Letter);
-    final String b2Sym = getSym(b2Letter);
-    final String b1Full = getFullText(b1Letter);
-    final String b2Full = getFullText(b2Letter);
-
-    final String statusBootham = (b1Letter == b2Letter) ? b1Letter : '$b1Letter / $b2Letter';
-    final String symbolBootham = (b1Letter == b2Letter) ? b1Sym : '$b1Sym / $b2Sym';
-    final String statusTextBootham = (b1Letter == b2Letter) ? b1Full : '$b1Full / $b2Full';
+    // 11. Bootham Calculation based on _selectedBoothamMethod
+    final bool isBoothamM1 = _selectedBoothamMethod == 1;
+    final activeBootham = isBoothamM1 ? res.bootham1 : res.bootham2;
+    final int activeBoothamNumber = isBoothamM1 ? res.bootham1Number : res.bootham2Number;
+    final String activeBoothamName = '$activeBoothamNumber (${activeBootham.name.split(' ')[0]})';
+    final String statusBootham = activeBootham.status.contains('மத்திமம்') ? 'ம' : (activeBootham.isGood ? 'உ' : 'அ');
+    final String statusTextBootham = activeBootham.status.contains('மத்திமம்') ? 'மத்திமம்' : (activeBootham.isGood ? 'உத்தமம்' : 'அதமம்');
 
     final int multiple5_1 = res.bootham1Number == 5 ? (res.bootham1Total - 5) : ((res.bootham1Total ~/ 5) * 5);
     final int multiple5_2 = res.bootham2Number == 5 ? (res.bootham2Total - 5) : ((res.bootham2Total ~/ 5) * 5);
@@ -1132,11 +1259,10 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
       item(
         sNo: 9,
         name: 'திதி',
-        value: '${res.thithi1.name.replaceAll('வ. ', 'வளர்.').replaceAll('தே. ', 'தேய்.')} / ${res.thithi2.name.replaceAll('வ. ', 'வளர்.').replaceAll('தே. ', 'தேய்.')}',
+        value: activeThithiName,
         status: statusThithi,
         statusText: statusTextThithi,
-        isGood: res.thithi1.isGood || res.thithi2.isGood,
-        customSymbol: symbolThithi,
+        isGood: activeThithi.isGood,
         hasMultipleMethods: true,
         method1Title: 'முதல் மரபு (ஆயாதி × 4)',
         method1Name: '${res.thithi1.name} [${res.thithi1.paksha}]',
@@ -1162,11 +1288,10 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
       item(
         sNo: 11,
         name: 'பூதம்',
-        value: '${res.bootham1Number} (${res.bootham1.name.split(' ')[0]}) / ${res.bootham2Number} (${res.bootham2.name.split(' ')[0]})',
+        value: activeBoothamName,
         status: statusBootham,
         statusText: statusTextBootham,
-        isGood: res.bootham1.isGood || res.bootham2.isGood,
-        customSymbol: symbolBootham,
+        isGood: activeBootham.isGood,
         hasMultipleMethods: true,
         method1Title: 'முறை 1 (ஆயாதி × 3)',
         method1Name: '${res.bootham1Number} - ${res.bootham1.name} (${res.bootham1.tamilElementName})',
@@ -1561,37 +1686,15 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                       // Name
                       Expanded(
                         flex: 4,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                item.name,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF5D1204),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (item.hasMultipleMethods) ...[
-                              const SizedBox(width: 3),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF5D1204).withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.45), width: 0.8),
-                                ),
-                                child: const Text(
-                                  '2 முறை',
-                                  style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
-                                ),
-                              ),
-                            ],
-                          ],
+                        child: Text(
+                          item.name,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF5D1204),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -7282,11 +7385,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 3 ஆல் பெருக்கி விடையில் எத்தனை 8 உள்ளதோ அதை கழித்து மீதி யோனி எண் ஆகும் (மீதம் 0 வந்தால் 8).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -7386,11 +7484,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 8 ஆல் பெருக்கி வந்த விடையில் எத்தனை 12 உள்ளதோ அதை கழித்து மீதம் இலாபம் ஆகும் (மீதம் 0 வந்தால் 12).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -7496,11 +7589,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 9 ஆல் பெருக்கி வந்த விடையில் எத்தனை 10 உள்ளதோ அதை கழித்து மீதம் செலவு ஆகும் (மீதம் 0 வந்தால் 10). [இலாபத்தை விட செலவு குறைவாக இருக்க வேண்டும்].',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -7606,11 +7694,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 8 ஆல் வகுத்து மீதம் 0 வந்தால் 8 (கழுதை - ஈசான்யன்) எனக் கொள்ள வேண்டும்.',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -7723,11 +7806,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 9 ஆல் பெருக்கி வந்த விடையில் எத்தனை 7 உள்ளதோ அதை கழித்து வருவது வாரப்பலன் எண் ஆகும் (மீதம் 0 வந்தால் 7 சனி).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -7831,11 +7909,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 4 ஆல் பெருக்கி விடையில் எத்தனை 9 உள்ளதோ அதை கழித்து மீதம் அம்ச எண் ஆகும் (மீதம் 0 வந்தால் 9).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -7993,11 +8066,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 8 ஆல் பெருக்கி வரும் விடையில் எத்தனை 27 உள்ளதோ கழித்து வரும் மீதம் வரும் எண் நட்சத்திர பலன் ஆகும் (மீதம் 0 வந்தால் 27 ரேவதி).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -8102,11 +8170,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 9 ஆல் பெருக்கி வந்த விடையில் எத்தனை 4 உள்ளதோ அதை கழித்து விடும் எண் வம்ச பலன் ஆகும் (மீதம் 0 வந்தால் 4 சூத்திர வம்சம்).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -8222,11 +8285,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 4 and 9 ஆல் பெருக்கி வந்த விடையில் எத்தனை 30 உள்ளதோ அதை கழித்து வருவது திதி எண் ஆகும் (மீதம் 0 வந்தால் 30 அமாவாசை).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -8331,11 +8389,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 4 ஆல் பெருக்கி வந்த விடையில் எத்தனை 12 உள்ளதோ அதை கழித்து வருவது இராசி எண் ஆகும் (மீதம் 0 வந்தால் 12 மீனம்).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -8379,11 +8432,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
             _buildAgeRow('28 – 50 வயது', 'மத்திம பலன் உண்டாகும்', 'மத்திமம்', const Color(0xFFEF6C00)),
             const SizedBox(height: 6),
             _buildAgeRow('51 – 100 வயது', 'உத்தம பலன் / தீர்க்காயுள் உண்டாகும்', 'உத்தமம்', const Color(0xFF2E7D32)),
-            const SizedBox(height: 8),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 27 ஆல் பெருக்கி வந்த விடையில் எத்தனை 100 உள்ளதோ அதை கழித்து வரும் எண் வயது ஆகும் (மீதம் 0 வந்தால் 100).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -8509,11 +8557,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 7 ஆல் பெருக்கி வந்த விடையில் எத்தனை 12 உள்ளதோ அதை கழித்து வருவது புருஷ இராசி எண் ஆகும் (மீதம் 0 வந்தால் 12 மீனம்).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -8615,11 +8658,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 3 (முறை 1) அல்லது 9 (முறை 2) ஆல் பெருக்கி வந்த விடையில் எத்தனை 5 உள்ளதோ அதை கழித்து வருவது பூத எண் ஆகும் (மீதம் 0 வந்தால் 5 ஆகாயம்).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -8724,11 +8762,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 4),
-            const Text(
-              '※ குறிப்பு: ஆயாதி எண்ணை 7 ஆல் பெருக்கி வந்த விடையில் எத்தனை 5 உள்ளதோ அதை கழித்து வருவது சூத்திர எண் ஆகும் (மீதம் 0 வந்தால் 5 மரண சூத்திரம்).',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
-            ),
           ],
         ),
       ),
@@ -8834,11 +8867,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '※ கணக்கீட்டு விதி: வாரப்பலன் கிழமை எண்ணை (ஞாயிறு=1 .. சனி=7) 3 ஆல் பெருக்கி வரும் நட்சத்திரத்திற்கு அடுத்த நட்சத்திரத்திலிருந்து, முதல் 9 நட்சத்திரங்கள் 1-கண் (மத்திமம்), அடுத்த 12 நட்சத்திரங்கள் 2-கண் (உத்தமம்), அடுத்த 6 நட்சத்திரங்கள் 0-கண் (அதமம்) ஆகும்.',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
             ),
           ],
         ),
@@ -8972,11 +9000,6 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                   );
                 }),
               ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              '※ குறிப்பு: அமிர்த, சித்த யோகங்களே எந்த ஒரு சுபகாரியங்களுக்கும் ஏற்றதாகும். மரண யோகம், பிரபலாரிஷ்ட யோகம் சுப காரியங்களுக்கு அனுகூலம் இல்லை.',
-              style: TextStyle(fontSize: 10.5, color: Color(0xFF7A6855), fontStyle: FontStyle.italic),
             ),
           ],
         ),

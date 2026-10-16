@@ -101,7 +101,7 @@ try {
             "paymentFlow" => [
                 "type" => "PG_CHECKOUT",
                 "merchantUrls" => [
-                "redirectUrl" => "https://mediumspringgreen-shark-491803.hostingersite.com/payment_success.php?orderId=" . $orderId
+                "redirectUrl" => "https://gbastrocentre.com/api/payment_success.php?orderId=" . $orderId
             ]
         ];
 

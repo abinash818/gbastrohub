@@ -300,6 +300,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
                 child: Row(
                   children: [
                     Expanded(
+                      flex: 3,
                       child: GestureDetector(
                         onTap: () {
                           if (_showIppothu) {
@@ -308,17 +309,26 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                           decoration: BoxDecoration(
                             color: !_showIppothu ? AppColors.primary : Colors.transparent,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           alignment: Alignment.center,
-                          child: Text(AppLocalizations.of(context)!.jathagam, style: TextStyle(color: !_showIppothu ? Colors.white : AppColors.primary, fontWeight: FontWeight.bold)),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              AppLocalizations.of(context)!.localeName == 'ta'
+                                  ? "கேள்வி நேர ஜாம.பிரசன்னம்"
+                                  : (AppLocalizations.of(context)!.localeName == 'hi' ? "प्रश्न समय जामक प्रसन्नम" : "Question Time Prasannam"),
+                              style: TextStyle(color: !_showIppothu ? Colors.white : AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
+                      flex: 2,
                       child: GestureDetector(
                         onTap: () {
                           if (!_showIppothu) {
@@ -330,13 +340,19 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                           decoration: BoxDecoration(
                             color: _showIppothu ? AppColors.primary : Colors.transparent,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           alignment: Alignment.center,
-                          child: Text(AppLocalizations.of(context)!.nowTooltip, style: TextStyle(color: _showIppothu ? Colors.white : AppColors.primary, fontWeight: FontWeight.bold)),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              AppLocalizations.of(context)!.nowTooltip,
+                              style: TextStyle(color: _showIppothu ? Colors.white : AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -477,15 +493,15 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     if (subPlanets != null) {
       String getSubPlanetFullName(String name, String lang) {
         if (lang == 'ta') {
-          if (name == "Rahu") return "ரா(வ) / கோள் இராகு";
+          if (name == "Rahu") return "ராகு காலம்";
           if (name == "Yamagandan") return "எமகண்டன்";
           if (name == "Mrityu") return "மிருத்யு";
         } else if (lang == 'hi') {
-          if (name == "Rahu") return "राहु (मार्गी)";
+          if (name == "Rahu") return "राहु काल";
           if (name == "Yamagandan") return "यमगंडम";
           if (name == "Mrityu") return "मृत्यु";
         } else {
-          if (name == "Rahu") return "Rahu (Clockwise)";
+          if (name == "Rahu") return "Rahu Kalam";
           if (name == "Yamagandan") return "Yamagandan";
           if (name == "Mrityu") return "Mrityu";
         }
@@ -692,6 +708,8 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
 
           if (bhavas.isNotEmpty) ...[
             const SizedBox(height: 20),
+            _buildKathirRasiChart(strength, isTa, isHi),
+            const SizedBox(height: 25),
             // Section 2: All 12 Bhavas Ray Table
             Text(
               isTa ? "12 பாவங்களின் கதிர் அட்டவணை (கட்ட அட்டவணை சுருக்கம்):" : (isHi ? "12 भाव रश्मि विश्लेषण:" : "12 Bhavas Ray Table:"),
@@ -754,6 +772,316 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           Expanded(flex: 5, child: Text(col3, style: style.copyWith(fontSize: isHeader ? 11 : 11.5), textAlign: TextAlign.center)),
           Expanded(flex: 4, child: Text(col4, style: style.copyWith(color: isHeader ? null : const Color(0xFFE65100), fontSize: isHeader ? 11 : 13.5, fontWeight: FontWeight.w900), textAlign: TextAlign.right)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildKathirRasiChart(Map<String, dynamic> strength, bool isTa, bool isHi) {
+    final List<dynamic> bhavas = strength['bhavas'] ?? [];
+    final Map<String, Map<String, dynamic>> bhavaBySign = {};
+    for (var b in bhavas) {
+      if (b is Map<String, dynamic> && b['sign'] != null) {
+        bhavaBySign[b['sign']] = b;
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          isTa ? "கதிர் பலம் - ராசிக் கட்டம்:" : (isHi ? "रश्मि विश्लेषण - राशि चक्र:" : "Kathir Ray Chart:"),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
+        ),
+        const SizedBox(height: 10),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final double size = constraints.maxWidth;
+                final double height = size * 1.05;
+
+                return SizedBox(
+                  width: size,
+                  height: height,
+                  child: Stack(
+                    children: [
+                      // 1. Outer 4x4 Grid
+                      Container(
+                        width: size,
+                        height: height,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.orange.shade800, width: 2.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 4,
+                              childAspectRatio: (size / 4) / (height / 4),
+                            ),
+                            itemCount: 16,
+                            itemBuilder: (context, index) {
+                              final sign = RASI_ORDER[index];
+                              if (sign == null) {
+                                return const SizedBox();
+                              }
+                              final bData = bhavaBySign[sign];
+                              return _buildKathirCell(bData, isTa, isHi);
+                            },
+                          ),
+                        ),
+                      ),
+
+                      // 2. Center 2x2 Box
+                      Center(
+                        child: Container(
+                          width: (size / 2) - 4,
+                          height: (height / 2) - 4,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFFDF7),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange.shade800, width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: _buildKathirCenterWidget(strength, isTa, isHi),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildKathirCell(Map<String, dynamic>? b, bool isTa, bool isHi) {
+    if (b == null) return const SizedBox();
+
+    final bool isUdayam = b['isUdayam'] == true;
+    final bool isArudam = b['isArudam'] == true;
+    final bool isKavi = b['isKavi'] == true;
+
+    Color cellBg = Colors.white;
+    Color borderColor = Colors.orange.shade800.withOpacity(0.5);
+    if (isUdayam) {
+      cellBg = Colors.green.withOpacity(0.06);
+      borderColor = Colors.green.shade700;
+    } else if (isArudam) {
+      cellBg = Colors.blue.withOpacity(0.06);
+      borderColor = Colors.blue.shade800;
+    } else if (isKavi) {
+      cellBg = Colors.red.withOpacity(0.06);
+      borderColor = Colors.red.shade800;
+    }
+
+    String planetKathirStr = "";
+    if (b['planet'] != null && b['planetLabel'] != null && (b['planetLabel'] as String).isNotEmpty) {
+      final pLabel = b['planetLabel'];
+      final pK = b['planetKathir'] ?? 0;
+      final pKAlt = b['planetKathirAlt'] ?? pK;
+      final kStr = (pK == pKAlt) ? "$pK" : "$pK/$pKAlt";
+      planetKathirStr = "$pLabel: $kStr";
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cellBg,
+        border: Border.all(
+          color: borderColor,
+          width: (isUdayam || isArudam || isKavi) ? 1.5 : 0.8,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.5),
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // 1. Special badge (if Udayam, Arudam, or Kavi)
+              if (isUdayam) ...[
+                _buildMiniBadge(isTa ? "உத" : (isHi ? "उदय" : "Uda"), Colors.green.shade700),
+                const SizedBox(height: 3),
+              ] else if (isArudam) ...[
+                _buildMiniBadge(isTa ? "ஆரூ" : (isHi ? "आरू" : "Aru"), Colors.blue.shade800),
+                const SizedBox(height: 3),
+              ] else if (isKavi) ...[
+                _buildMiniBadge(isTa ? "கவி" : (isHi ? "कवि" : "Kav"), Colors.red.shade800),
+                const SizedBox(height: 3),
+              ],
+
+              // 2. Rasi ray
+              Text(
+                isTa
+                    ? "ராசி: ${b['rasiDisplay'] ?? b['rasi']}"
+                    : (isHi ? "राशि: ${b['rasiDisplay'] ?? b['rasi']}" : "Rasi: ${b['rasiDisplay'] ?? b['rasi']}"),
+                style: TextStyle(
+                  fontSize: 10.0,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 2),
+
+              // 3. Planet ray (if present)
+              if (planetKathirStr.isNotEmpty)
+                Text(
+                  planetKathirStr,
+                  style: const TextStyle(
+                    fontSize: 11.0,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF1565C0),
+                  ),
+                )
+              else
+                Text(
+                  "-",
+                  style: TextStyle(
+                    fontSize: 10.0,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+              const SizedBox(height: 3),
+
+              // 4. Final Total ray
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE65100).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: const Color(0xFFE65100).withOpacity(0.4)),
+                ),
+                child: Text(
+                  "${b['totalDisplay'] ?? b['total']}",
+                  style: const TextStyle(
+                    fontSize: 13.0,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFFE65100),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniBadge(String text, Color bg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(3.0),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 8.5,
+          fontWeight: FontWeight.bold,
+          height: 1.1,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKathirCenterWidget(Map<String, dynamic> strength, bool isTa, bool isHi) {
+    final jamamPlanet = (strength['jamam']?['planet'] == 'Rahu' || strength['jamam']?['planet'] == 'ராகு')
+        ? (isTa ? 'பாம்பு' : (isHi ? 'राहु' : 'Snake'))
+        : AstroTranslationService.translate(context, strength['jamam']?['planet'] ?? '', isPlanet: true);
+    final jamamTotal = strength['jamam']?['totalDisplay'] ?? strength['jamam']?['total'] ?? '-';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wb_sunny_rounded, size: 14, color: Color(0xFFE65100)),
+              const SizedBox(width: 4),
+              Text(
+                isTa ? "கதிர் பலம்" : (isHi ? "रश्मि विश्लेषण" : "Ray Strength"),
+                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Color(0xFF5D1204)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE65100).withOpacity(0.08),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFE65100).withOpacity(0.3)),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  isTa ? "ஜாமக் கிரகம்" : (isHi ? "जामम ग्रह" : "Jamam Planet"),
+                  style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  "$jamamPlanet: $jamamTotal",
+                  style: const TextStyle(fontSize: 12.0, fontWeight: FontWeight.w900, color: Color(0xFFE65100)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 5),
+          Wrap(
+            spacing: 4,
+            runSpacing: 2,
+            alignment: WrapAlignment.center,
+            children: [
+              _buildCenterLegendPill(isTa ? "உத" : "Uda", Colors.green.shade700, isTa ? "உதயம்" : "Udayam"),
+              _buildCenterLegendPill(isTa ? "ஆரூ" : "Aru", Colors.blue.shade800, isTa ? "ஆரூடம்" : "Arudam"),
+              _buildCenterLegendPill(isTa ? "கவி" : "Kav", Colors.red.shade800, isTa ? "கவிப்பு" : "Kavippu"),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCenterLegendPill(String shortLabel, Color color, String fullLabel) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
+      child: Text(
+        "$shortLabel: $fullLabel",
+        style: const TextStyle(fontSize: 8.0, color: Colors.white, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -841,6 +1169,21 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
             child: Row(
               children: [
                 GestureDetector(
+                  onTap: () => _selectDate(context),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(AppLocalizations.of(context)!.dateLabel, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      Text(
+                        "${timeToShow.day.toString().padLeft(2, '0')}/${timeToShow.month.toString().padLeft(2, '0')}/${timeToShow.year}",
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF5D1204)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+                GestureDetector(
                   onTap: () => _selectTime(context),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -849,22 +1192,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
                       const SizedBox(height: 4),
                       Text(
                         "${timeToShow.hour.toString().padLeft(2, '0')}:${timeToShow.minute.toString().padLeft(2, '0')}:${timeToShow.second.toString().padLeft(2, '0')}",
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primary),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                GestureDetector(
-                  onTap: () => _selectDate(context),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(AppLocalizations.of(context)!.dateLabel, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 4),
-                      Text(
-                        "${timeToShow.day}/${timeToShow.month}/${timeToShow.year}",
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF5D1204)),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary),
                       ),
                     ],
                   ),
@@ -1105,7 +1433,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           if (name == "Marana") return "மார";
           if (name == "Rahu") return "ரா.கா";
           if (name == "Mrityu") return "மிரு";
-          if (name == "Yamagandan") return "யம";
+          if (name == "Yamagandan") return "எம";
         } else if (lang == 'hi') {
           if (name == "Marana") return "मार";
           if (name == "Rahu") return "रा";
@@ -1156,6 +1484,17 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
       if (label.contains(tamilName)) highlightSign = s;
     });
 
+    // Find Udayathipathi for special color highlight on Jamakkol border
+    int udayamSignIdx = _results!['udayam_idx'] ?? 0;
+    String udayamSign = KPService.SIGNS[udayamSignIdx % 12];
+    String udayaLordPlanet = JamakkolService.SIGN_LORDS[udayamSign] ?? "Sun";
+    final jNamingMap = (lang == 'en')
+        ? JamakkolService.JAMAKKOL_ENGLISH_SHORT
+        : ((lang == 'hi')
+            ? JamakkolService.JAMAKKOL_HINDI_SHORT
+            : (_isAltNaming ? JamakkolService.JAMAKKOL_TAMIL_ALT : JamakkolService.JAMAKKOL_TAMIL_SHORT));
+    String udayaLordLabel = jNamingMap[udayaLordPlanet] ?? udayaLordPlanet;
+
     return Column(
       children: [
         Text(AppLocalizations.of(context)!.jamakkolChartTitle, style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primary, fontSize: 16)),
@@ -1167,6 +1506,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           highlightSign: highlightSign,
           rasiKathir: _showKathirOnChart ? (_results!['strength']?['rasi_kathir_map'] as Map<String, String>?) : null,
           heightRatio: 1.40,
+          udayaLordLabel: udayaLordLabel,
         ),
       ],
     );
@@ -1202,11 +1542,16 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     final isTa = AppLocalizations.of(context)!.localeName == 'ta';
     final isHi = AppLocalizations.of(context)!.localeName == 'hi';
 
-    // Helper: Translate planet name
+    // Helper: Translate planet name (Jamakkol graha: Rahu -> பாம்பு)
     String getPName(String name) {
       if (name.toLowerCase() == 'rahu' || name == 'ராகு') {
         return isTa ? "பாம்பு" : (isHi ? "राहु" : "Snake");
       }
+      return AstroTranslationService.translate(context, name, isPlanet: true);
+    }
+
+    // Helper: Translate star lord (நட்சத்திராதிபதி எப்போதும் ராகு/கேது - பாம்பு அல்ல)
+    String getStarLordName(String name) {
       return AstroTranslationService.translate(context, name, isPlanet: true);
     }
     
@@ -1236,7 +1581,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     double uDeg = uStar['deg'] % 30;
     int ud = uDeg.floor();
     int um = ((uDeg - ud) * 60).floor();
-    String uStarStr = "${ud.toString().padLeft(2, '0')}:${um.toString().padLeft(2, '0')} ${getRName(uStar['nakshatra'])} ${uStar['pada']} ${getPName(uStar['lord'])} ${uStar['lordship']}";
+    String uStarStr = "${ud.toString().padLeft(2, '0')}:${um.toString().padLeft(2, '0')} ${getRName(uStar['nakshatra'])} ${uStar['pada']} ${getStarLordName(uStar['lord'])} ${uStar['lordship']}";
 
     // 3. Crossed planet
     final crossed = notes['crossed_planet'] as Map?;

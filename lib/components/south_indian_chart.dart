@@ -29,6 +29,7 @@ class SouthIndianChart extends StatelessWidget {
   final bool allowScroll;
   final Map<String, String>? rasiKathir;
   final double heightRatio;
+  final String? udayaLordLabel;
 
   const SouthIndianChart({
     super.key, 
@@ -40,6 +41,7 @@ class SouthIndianChart extends StatelessWidget {
     this.allowScroll = true,
     this.rasiKathir,
     this.heightRatio = 1.0,
+    this.udayaLordLabel,
   });
 
   static double? _extractDegree(String str) {
@@ -211,6 +213,10 @@ class SouthIndianChart extends StatelessWidget {
         displayText = displayText.replaceAll(' ', '  ');
       }
 
+      bool isUdayaLord = udayaLordLabel != null && 
+          udayaLordLabel!.isNotEmpty && 
+          label.trim().startsWith(udayaLordLabel!.trim());
+
       labels.add(Positioned(
         left: anchorX,
         top: anchorY,
@@ -222,17 +228,26 @@ class SouthIndianChart extends StatelessWidget {
               vertical: isVerticalEdge ? 6 : 4
             ),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFE65100), Color(0xFFB58D3D)], // Beautiful golden orange
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: isUdayaLord
+                ? const LinearGradient(
+                    colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)], // Distinct Emerald Green for Udayathipathi
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : const LinearGradient(
+                    colors: [Color(0xFFE65100), Color(0xFFB58D3D)], // Default golden orange for other Jamakkol grahas
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white, width: 1.2),
+              border: Border.all(
+                color: isUdayaLord ? Colors.greenAccent.shade100 : Colors.white, 
+                width: isUdayaLord ? 1.8 : 1.2
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF5D1204).withOpacity(0.25),
-                  blurRadius: 4,
+                  color: (isUdayaLord ? Colors.green.shade900 : const Color(0xFF5D1204)).withOpacity(0.35),
+                  blurRadius: isUdayaLord ? 6 : 4,
                   offset: const Offset(0, 2),
                 )
               ],
@@ -348,33 +363,45 @@ class _ChartCellState extends State<_ChartCell> {
                                        (it.startsWith("रा") && !it.startsWith("राहु")) ||
                                        (it.startsWith("Rah") && !it.startsWith("Rahu"));
                 bool isSubPlanet = isYama || isMrityu || isRahuClockwise;
-                bool isSpecial = isLagna || isArudam || isKavi || isSubPlanet;
+                bool isMaanthi = it.startsWith("மாந்") || it.startsWith("மாந்தி") || it.startsWith("Maanthi") || it.startsWith("Mn") || it.startsWith("मां");
+                bool isSpecial = isLagna || isArudam || isKavi || isSubPlanet || isMaanthi;
 
                 Color highlightColor = Colors.transparent;
                 if (isLagna) highlightColor = Colors.green.shade700;
                 else if (isArudam) highlightColor = Colors.blue.shade800;
                 else if (isKavi) highlightColor = Colors.red.shade800;
                 else if (isRahuClockwise) highlightColor = Colors.purple.shade700;
-                else if (isYama) highlightColor = Colors.orange.shade900;
+                else if (isYama) highlightColor = const Color(0xFFFFB300); // Vibrant Yellow / Amber (மஞ்சள்)
                 else if (isMrityu) highlightColor = Colors.brown.shade700;
 
                 String translatedIt = AstroTranslationService.translate(context, it.trim(), isPlanet: true);
                 translatedIt = translatedIt.replaceAll(RegExp(r'''\s*\d+\s*(?:"|”|'')+$'''), '');
 
+                BoxDecoration? itemDecoration;
+                if (isMaanthi) {
+                  itemDecoration = BoxDecoration(
+                    color: const Color(0xFFF5F5F5),
+                    border: Border.all(color: Colors.black, width: 1.2),
+                    borderRadius: BorderRadius.circular(3),
+                  );
+                } else if (isSpecial) {
+                  itemDecoration = BoxDecoration(
+                    color: highlightColor,
+                    borderRadius: BorderRadius.circular(3),
+                  );
+                }
+
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 0.8),
                   padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.8),
-                  decoration: isSpecial ? BoxDecoration(
-                    color: highlightColor,
-                    borderRadius: BorderRadius.circular(3),
-                  ) : null,
+                  decoration: itemDecoration,
                   child: Text(
                     translatedIt,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 10.5,
-                      fontWeight: FontWeight.bold,
-                      color: isSpecial ? Colors.white : Colors.indigo.shade900,
+                      fontWeight: (isSpecial || isMaanthi) ? FontWeight.w900 : FontWeight.bold,
+                      color: (isMaanthi || isYama) ? Colors.black : (isSpecial ? Colors.white : Colors.indigo.shade900),
                     ),
                   ),
                 );
@@ -442,8 +469,9 @@ class _ChartCellState extends State<_ChartCell> {
                                        (it.startsWith("रा") && !it.startsWith("राहु")) ||
                                        (it.startsWith("Rah") && !it.startsWith("Rahu"));
                 bool isSubPlanet = isMarana || isYama || isMrityu || isRahuClockwise;
+                bool isMaanthi = it.startsWith("மாந்") || it.startsWith("மாந்தி") || it.startsWith("Maanthi") || it.startsWith("Mn") || it.startsWith("मां");
                 
-                bool isSpecial = isLagna || isArudam || isKavi || isSubPlanet;
+                bool isSpecial = isLagna || isArudam || isKavi || isSubPlanet || isMaanthi;
                 
                 Color highlightColor = Colors.transparent;
                 if (isLagna) highlightColor = Colors.green.shade700;
@@ -452,7 +480,7 @@ class _ChartCellState extends State<_ChartCell> {
                 else if (isMarana) highlightColor = Colors.teal.shade800;
                 else if (isRahuClockwise) highlightColor = Colors.purple.shade700;
                 else if (isMrityu) highlightColor = Colors.brown.shade700;
-                else if (isYama) highlightColor = Colors.orange.shade900;
+                else if (isYama) highlightColor = const Color(0xFFFFB300); // Vibrant Yellow / Amber (மஞ்சள்)
 
                 // Replace space with newline to save horizontal space, e.g., "சனி 17:39" -> "சனி\n17:39"
                 String translatedIt = AstroTranslationService.translate(context, it.trim(), isPlanet: true);
@@ -473,13 +501,23 @@ class _ChartCellState extends State<_ChartCell> {
                   }
                 }
 
+                BoxDecoration? itemDecoration;
+                if (isMaanthi) {
+                  itemDecoration = BoxDecoration(
+                    color: const Color(0xFFF5F5F5),
+                    border: Border.all(color: Colors.black, width: 1.2),
+                    borderRadius: BorderRadius.circular(4),
+                  );
+                } else if (isSpecial) {
+                  itemDecoration = BoxDecoration(
+                    color: highlightColor,
+                    borderRadius: BorderRadius.circular(4),
+                  );
+                }
 
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-                  decoration: isSpecial ? BoxDecoration(
-                    color: highlightColor,
-                    borderRadius: BorderRadius.circular(4),
-                  ) : null,
+                  decoration: itemDecoration,
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
@@ -487,9 +525,9 @@ class _ChartCellState extends State<_ChartCell> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: fontSize,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: (isSpecial || isMaanthi) ? FontWeight.w900 : FontWeight.bold,
                         height: 1.1, // Tighter line height for multiline
-                        color: isSpecial ? Colors.white : Colors.indigo.shade900,
+                        color: (isMaanthi || isYama) ? Colors.black : (isSpecial ? Colors.white : Colors.indigo.shade900),
                       ),
                     ),
                   ),

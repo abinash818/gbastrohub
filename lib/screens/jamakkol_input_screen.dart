@@ -176,8 +176,6 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildPlaceField(),
-                    const SizedBox(height: 20),
                     Row(
                       children: [
                         Expanded(child: _buildDateField()),
@@ -185,6 +183,8 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
                         Expanded(child: _buildTimeField()),
                       ],
                     ),
+                    const SizedBox(height: 20),
+                    _buildPlaceField(),
                     const SizedBox(height: 40),
                     Container(
                       height: 60,
@@ -250,8 +250,6 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildPlaceField(),
-              const SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(child: _buildDateField()),
@@ -259,6 +257,8 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
                   Expanded(child: _buildTimeField()),
                 ],
               ),
+              const SizedBox(height: 20),
+              _buildPlaceField(),
               const SizedBox(height: 40),
               Container(
                 height: 60,

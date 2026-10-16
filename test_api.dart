@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 void main() async {
   final response = await http.post(
-    Uri.parse("https://blueviolet-barracuda-132915.hostingersite.com/muruga_api.php"),
+    Uri.parse("https://gbastrocentre.com/api/muruga_api.php"),
     headers: {"Content-Type": "application/json"},
     body: jsonEncode({
       "action": "check_status",

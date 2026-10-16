@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import '../models/subscription_plan.dart';
 
 class SubscriptionService {
-  static const String apiUrl = "https://mediumspringgreen-shark-491803.hostingersite.com/subscription_api.php";
-  static const String userApiUrl = "https://mediumspringgreen-shark-491803.hostingersite.com/user_subscription_api.php";
+  static const String apiUrl = "https://gbastrocentre.com/api/subscription_api.php";
+  static const String userApiUrl = "https://gbastrocentre.com/api/user_subscription_api.php";
 
   Future<List<SubscriptionPlan>> getActivePlans() async {
     try {

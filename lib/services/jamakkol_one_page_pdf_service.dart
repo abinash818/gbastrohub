@@ -213,12 +213,22 @@ class JamakkolOnePagePdfService {
     final isTa = l10n.localeName == 'ta';
     final isHi = l10n.localeName == 'hi';
 
-    // Helper: Translate planet name
+    // Helper: Translate planet name (Jamakkol graha: Rahu -> பாம்பு)
     String getPName(String name) {
       if (name.toLowerCase() == 'rahu' || name == 'ராகு') {
         return isTa ? "பாம்பு" : (isHi ? "राहु" : "Snake");
       }
       return KPService.TAMIL_PLANETS[name] ?? name;
+    }
+
+    // Helper: Translate star lord (நட்சத்திராதிபதி எப்போதும் ராகு/கேது - பாம்பு அல்ல)
+    String getStarLordName(String name) {
+      if (isTa) {
+        return KPService.TAMIL_PLANETS[name] ?? name;
+      } else if (isHi) {
+        return name == 'Rahu' ? 'राहु' : (name == 'Ketu' ? 'केतु' : name);
+      }
+      return name;
     }
     
     // Helper: Translate rasi name
@@ -249,7 +259,7 @@ class JamakkolOnePagePdfService {
       double uDeg = uStar['deg'] % 30;
       int ud = uDeg.floor();
       int um = ((uDeg - ud) * 60).floor();
-      uStarStr = "${ud.toString().padLeft(2, '0')}:${um.toString().padLeft(2, '0')} ${getRName(uStar['nakshatra'])} ${uStar['pada']} ${getPName(uStar['lord'])} ${uStar['lordship']}";
+      uStarStr = "${ud.toString().padLeft(2, '0')}:${um.toString().padLeft(2, '0')} ${getRName(uStar['nakshatra'])} ${uStar['pada']} ${getStarLordName(uStar['lord'])} ${uStar['lordship']}";
     }
 
     // 3. Crossed planet
@@ -443,7 +453,7 @@ class JamakkolOnePagePdfService {
           if (name == "Marana") return "மார";
           if (name == "Rahu") return "ரா.கா";
           if (name == "Mrityu") return "மிரு";
-          if (name == "Yamagandan") return "யம";
+          if (name == "Yamagandan") return "எம";
         } else if (lang == 'hi') {
           if (name == "Marana") return "मार";
           if (name == "Rahu") return "रा";
@@ -561,15 +571,15 @@ class JamakkolOnePagePdfService {
     if (subPlanets != null) {
       String getSubPlanetFullName(String name, String lang) {
         if (lang == 'ta') {
-          if (name == "Rahu") return "ரா(வ) / கோள் இராகு";
+          if (name == "Rahu") return "ராகு காலம்";
           if (name == "Yamagandan") return "எமகண்டன்";
           if (name == "Mrityu") return "மிருத்யு";
         } else if (lang == 'hi') {
-          if (name == "Rahu") return "राहु (मार्गी)";
+          if (name == "Rahu") return "राहु काल";
           if (name == "Yamagandan") return "यमगंडम";
           if (name == "Mrityu") return "मृत्यु";
         } else {
-          if (name == "Rahu") return "Rahu (Clockwise)";
+          if (name == "Rahu") return "Rahu Kalam";
           if (name == "Yamagandan") return "Yamagandan";
           if (name == "Mrityu") return "Mrityu";
         }

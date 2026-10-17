@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:astrology_flutter/services/thalaivaasal_vaasthu_service.dart';
+import 'package:astrology_flutter/widgets/thalaivaasal_vaasthu_view.dart';
 
 void main() {
   test('Thalaivaasal Calculation for 17 feet East-facing building', () {
@@ -41,5 +43,22 @@ void main() {
     final north = ThalaivaasalVaasthuService.calculate(direction: VaasthuDirection.north, feet: 20, inches: 0);
     expect(north.startCornerShort, 'ஈசானியம்');
     expect(north.endCornerShort, 'வாயு');
+  });
+
+  testWidgets('ThalaivaasalVaasthuView renders blueprint and building diagram properly', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: ThalaivaasalVaasthuView(initialFeet: 20, initialInches: 0),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('3. சுவரின் நேரலை வரைபடம் (Wall Blueprint):'), findsOneWidget);
+    expect(find.text('கட்டிடத்தின் வரைபடம்: 4 திசைகளின் அமைவிடம்'), findsOneWidget);
+    expect(find.text('மஞ்சள்: மத்திமம்'), findsOneWidget);
+    expect(find.text('பச்சை: உத்தம வாசல் 🚪'), findsOneWidget);
+    expect(find.text('ரோஸ்: நீசம் (தவிர்க்கவும்)'), findsOneWidget);
   });
 }

@@ -573,9 +573,14 @@ class _ThalaivaasalVaasthuViewState extends State<ThalaivaasalVaasthuView> {
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            '${ThalaivaasalVaasthuService.getDirectionOnlyTamil(res.direction)} பார்த்த சுவர்: ${res.startCornerShort} ➔ ${res.endCornerShort}',
-            style: const TextStyle(fontSize: 11.5, color: Color(0xFF7A6855), fontWeight: FontWeight.w600),
+          Builder(
+            builder: (context) {
+              final bool isRtoL = (res.direction == VaasthuDirection.north || res.direction == VaasthuDirection.south);
+              return Text(
+                '${ThalaivaasalVaasthuService.getDirectionOnlyTamil(res.direction)} பார்த்த சுவர்: ${res.startCornerShort} ➔ ${res.endCornerShort} (${isRtoL ? 'வலது ➔ இடது அளவீடு' : 'மேலிருந்து கீழ் அளவீடு'})',
+                style: const TextStyle(fontSize: 11.5, color: Color(0xFF7A6855), fontWeight: FontWeight.w600),
+              );
+            },
           ),
           const SizedBox(height: 18),
 
@@ -604,47 +609,221 @@ class _ThalaivaasalVaasthuViewState extends State<ThalaivaasalVaasthuView> {
     final double f3 = ((res.ucchaFeet - res.uttamaEndFeet) / safeTotal).clamp(0.0, 1.0);
     final double f4 = ((safeTotal - res.ucchaFeet) / safeTotal).clamp(0.0, 1.0);
 
+    // North & South are measured Right to Left; East & West are Top to Bottom
+    final bool isRightToLeft = (res.direction == VaasthuDirection.north || res.direction == VaasthuDirection.south);
+
+    // Colors: Uccham = Yellow, Neesam = Pink/Rose, Uttamam = Green
+    final Color ucchaYellow = Colors.amber.shade200;
+    final Color neesaPink = const Color(0xFFFFCDD2);
+    final Color uttamaGreen = Colors.green.shade600;
+
+    // Segment Widgets
+    final Widget mathimam1Widget = Expanded(
+      flex: (f1 * 1000).round(),
+      child: Container(
+        color: ucchaYellow,
+        alignment: Alignment.center,
+        child: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            'மத்திமம்\n(0-3P)',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+          ),
+        ),
+      ),
+    );
+
+    final Widget uttamamWidget = Expanded(
+      flex: (f2 * 1000).round(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: uttamaGreen,
+          border: Border.symmetric(
+            vertical: BorderSide(color: Colors.amber.shade400, width: 2),
+          ),
+        ),
+        alignment: Alignment.center,
+        child: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.door_front_door, color: Colors.white, size: 16),
+              Text(
+                'உத்தமம்\n(தலைவாசல்)',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final Widget mathimam2Widget = Expanded(
+      flex: (f3 * 1000).round(),
+      child: Container(
+        color: ucchaYellow,
+        alignment: Alignment.center,
+        child: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            'மத்திமம்',
+            style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+          ),
+        ),
+      ),
+    );
+
+    final Widget neesamWidget = Expanded(
+      flex: (f4 * 1000).round(),
+      child: Container(
+        color: neesaPink,
+        alignment: Alignment.center,
+        child: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.close_rounded, color: Color(0xFFB71C1C), size: 14),
+              Text(
+                'நீசம் (தவிர்க்கவும்)',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Color(0xFFB71C1C)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    // Uccham & Neesam bottom divider labels with Yellow and Pink/Rose colors
+    final Widget ucchaDividerLabel = Expanded(
+      flex: 1,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF9C4),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Colors.amber.shade400),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            'மத்திம பகுதி (மஞ்சள்): 0 முதல் ${res.ucchaFeet.toStringAsFixed(2)} அடி வரை',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+          ),
+        ),
+      ),
+    );
+
+    final Widget neesaDividerLabel = Expanded(
+      flex: 1,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFEBEE),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: const Color(0xFFFFCDD2)),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            'நீசப்பகுதி (ரோஸ்): ${res.ucchaFeet.toStringAsFixed(2)} முதல் ${res.totalFeet.toStringAsFixed(2)} அடி வரை',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFFB71C1C)),
+          ),
+        ),
+      ),
+    );
+
     return Column(
       children: [
-        // Corner indicators at top
+        // Flow Direction Badge placed on its own line (zero overflow)
+        Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+          decoration: BoxDecoration(
+            color: const Color(0xFF5D1204).withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isRightToLeft ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+                size: 13,
+                color: const Color(0xFF5D1204),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                isRightToLeft ? 'வலது ➔ இடது அளவீடு (உச்சம் ➔ நீசம்)' : 'மேலிருந்து கீழ் அளவீடு (உச்சம் ➔ நீசம்)',
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+              ),
+            ],
+          ),
+        ),
+
+        // Corner indicators row
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Left Corner
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF5D1204),
+                    color: isRightToLeft ? Colors.grey.shade700 : const Color(0xFF5D1204),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    res.startCornerShort,
-                    style: const TextStyle(color: Color(0xFFFFE082), fontSize: 10, fontWeight: FontWeight.bold),
+                    isRightToLeft ? res.endCornerShort : res.startCornerShort,
+                    style: TextStyle(
+                      color: isRightToLeft ? Colors.white : const Color(0xFFFFE082),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),
-                const Text('0 அடி (தொடக்க மூலை)', style: TextStyle(fontSize: 9.5, color: Colors.grey)),
+                Text(
+                  isRightToLeft
+                      ? '${res.totalFeet.toStringAsFixed(1)} அடி (முடிவு மூலை)'
+                      : '0 அடி (தொடக்க மூலை)',
+                  style: const TextStyle(fontSize: 9.5, color: Colors.grey),
+                ),
               ],
             ),
+
+            // Right Corner
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade700,
+                    color: isRightToLeft ? const Color(0xFF5D1204) : Colors.grey.shade700,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    res.endCornerShort,
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    isRightToLeft ? res.startCornerShort : res.endCornerShort,
+                    style: TextStyle(
+                      color: isRightToLeft ? const Color(0xFFFFE082) : Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${res.totalFeet.toStringAsFixed(1)} அடி (முடிவு மூலை)',
+                  isRightToLeft
+                      ? '0 அடி (தொடக்க மூலை)'
+                      : '${res.totalFeet.toStringAsFixed(1)} அடி (முடிவு மூலை)',
                   style: const TextStyle(fontSize: 9.5, color: Colors.grey),
                 ),
               ],
@@ -663,213 +842,318 @@ class _ThalaivaasalVaasthuViewState extends State<ThalaivaasalVaasthuView> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
-              children: [
-                // 1. Mathimam Part 1 (0 to 3P)
-                Expanded(
-                  flex: (f1 * 1000).round(),
-                  child: Container(
-                    color: Colors.amber.shade200,
-                    alignment: Alignment.center,
-                    child: const FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'மத்திமம்\n(0-3P)',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.brown),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // 2. Uttamam Part (3P to 4P - Main Door)
-                Expanded(
-                  flex: (f2 * 1000).round(),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade600,
-                      border: Border.symmetric(
-                        vertical: BorderSide(color: Colors.amber.shade400, width: 2),
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: const FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.door_front_door, color: Colors.white, size: 16),
-                          Text(
-                            'உத்தமம்\n(தலைவாசல்)',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // 3. Mathimam Part 2 (4P to 4.5P)
-                Expanded(
-                  flex: (f3 * 1000).round(),
-                  child: Container(
-                    color: Colors.amber.shade200,
-                    alignment: Alignment.center,
-                    child: const FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'மத்திமம்',
-                        style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Colors.brown),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // 4. Neesam Part (Center to End)
-                Expanded(
-                  flex: (f4 * 1000).round(),
-                  child: Container(
-                    color: Colors.red.shade100,
-                    alignment: Alignment.center,
-                    child: const FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.close_rounded, color: Colors.red, size: 14),
-                          Text(
-                            'நீசம் (தவிர்க்கவும்)',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Colors.red),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              children: isRightToLeft
+                  ? [neesamWidget, mathimam2Widget, uttamamWidget, mathimam1Widget]
+                  : [mathimam1Widget, uttamamWidget, mathimam2Widget, neesamWidget],
             ),
           ),
         ),
         const SizedBox(height: 8),
 
-        // Halfway Divider Label
+        // Halfway Divider Label (Yellow for Mathimam, Pink/Rose for Neesam)
         Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 2),
-                color: Colors.green.withValues(alpha: 0.1),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    'உச்சப்பகுதி: 0 முதல் ${res.ucchaFeet.toStringAsFixed(2)} அடி வரை (மத்திமம் பலன்)',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.green.shade900),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              flex: 1,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 2),
-                color: Colors.red.withValues(alpha: 0.08),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    'நீசப்பகுதி: ${res.ucchaFeet.toStringAsFixed(2)} முதல் ${res.totalFeet.toStringAsFixed(2)} அடி வரை',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.red.shade900),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          children: isRightToLeft
+              ? [neesaDividerLabel, const SizedBox(width: 4), ucchaDividerLabel]
+              : [ucchaDividerLabel, const SizedBox(width: 4), neesaDividerLabel],
         ),
       ],
     );
   }
 
   Widget _buildBuildingCompassBox(ThalaivaasalResult res) {
+    final bool isNorth = res.direction == VaasthuDirection.north;
+    final bool isSouth = res.direction == VaasthuDirection.south;
+    final bool isEast = res.direction == VaasthuDirection.east;
+    final bool isWest = res.direction == VaasthuDirection.west;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFAF6EE),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.35)),
       ),
       child: Column(
         children: [
+          // Title
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.compass_calibration_rounded, size: 14, color: Color(0xFF5D1204)),
-              const SizedBox(width: 4),
+              const Icon(Icons.architecture_rounded, size: 16, color: Color(0xFF5D1204)),
+              const SizedBox(width: 6),
               Flexible(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    'கட்டிடத்தின் 4 மூலைகள் & உச்ச-நீச அமைவிடம்',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.brown.shade800),
+                    'கட்டிடத்தின் வரைபடம்: 4 திசைகளின் அமைவிடம்',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.brown.shade900),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
-          // 2x2 Corners Visual Box
+          // Rule Summary Capsules (Clean, single-line, impossible to overflow)
           Container(
-            height: 120,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFF5D1204), width: 1.5),
+              border: Border.all(color: const Color(0xFF5D1204).withValues(alpha: 0.15)),
             ),
-            child: Stack(
+            child: const Row(
               children: [
-                // North-West (வாயு)
-                Positioned(
-                  top: 6,
-                  left: 8,
-                  child: _buildCornerBadge('வாயு (NW)', res.direction == VaasthuDirection.west || res.direction == VaasthuDirection.north),
-                ),
-                // North-East (ஈசானியம்)
-                Positioned(
-                  top: 6,
-                  right: 8,
-                  child: _buildCornerBadge('ஈசானியம் (NE)', res.direction == VaasthuDirection.east || res.direction == VaasthuDirection.north),
-                ),
-                // South-West (கன்னி)
-                Positioned(
-                  bottom: 6,
-                  left: 8,
-                  child: _buildCornerBadge('கன்னி (SW)', res.direction == VaasthuDirection.south || res.direction == VaasthuDirection.west),
-                ),
-                // South-East (அக்னி)
-                Positioned(
-                  bottom: 6,
-                  right: 8,
-                  child: _buildCornerBadge('அக்னி (SE)', res.direction == VaasthuDirection.east || res.direction == VaasthuDirection.south),
-                ),
-
-                // Center Label
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF5D1204).withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
                     child: Text(
-                      '${ThalaivaasalVaasthuService.getDirectionOnlyTamil(res.direction)} பார்த்த கட்டிடம்\nஉச்சப்பகுதி ➔ நீசம்',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+                      '• வடக்கு & தெற்கு: வலது ➔ இடது',
+                      style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
                     ),
                   ),
+                ),
+                SizedBox(width: 6),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '• மேற்கு & கிழக்கு: மேலிருந்து கீழ்',
+                      style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // 4-Sides Blueprint Layout Box
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFF5D1204), width: 1.5),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            child: Column(
+              children: [
+                // Top Label: North (வடக்கு)
+                _buildCompactDirectionBadge(
+                  label: '▲ வடக்கு (North)  |  வலது ➔ இடது ⮜',
+                  isSelected: isNorth,
+                ),
+                const SizedBox(height: 6),
+
+                // Center Row: Left (West) | House Plan | Right (East)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Left Label: West (மேற்கு)
+                    _buildCompactSideBadge(
+                      title: 'மேற்கு (W)',
+                      subtitle: 'மேல் ➔ கீழ் ⮟',
+                      isSelected: isWest,
+                    ),
+                    const SizedBox(width: 4),
+
+                    // Central House Layout with 4 Clean Color Walls & Brahma Sthanam
+                    Expanded(
+                      child: Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFFDF9),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.brown.shade300, width: 1.0),
+                        ),
+                        child: Stack(
+                          children: [
+                            // 1. Top Wall (North Wall): Left = Neesam (Rose), Right = Mathimam (Yellow)
+                            Positioned(
+                              top: 4,
+                              left: 56,
+                              right: 56,
+                              height: 18,
+                              child: _buildCleanHorizontalWall(
+                                isNorthWall: true,
+                                isSelected: isNorth,
+                              ),
+                            ),
+
+                            // 2. Bottom Wall (South Wall): Left = Neesam (Rose), Right = Mathimam (Yellow)
+                            Positioned(
+                              bottom: 4,
+                              left: 56,
+                              right: 56,
+                              height: 18,
+                              child: _buildCleanHorizontalWall(
+                                isNorthWall: false,
+                                isSelected: isSouth,
+                              ),
+                            ),
+
+                            // 3. Left Wall (West Wall): Top = Mathimam (Yellow), Bottom = Neesam (Rose)
+                            Positioned(
+                              left: 4,
+                              top: 44,
+                              bottom: 44,
+                              width: 18,
+                              child: _buildCleanVerticalWall(
+                                isWestWall: true,
+                                isSelected: isWest,
+                              ),
+                            ),
+
+                            // 4. Right Wall (East Wall): Top = Mathimam (Yellow), Bottom = Neesam (Rose)
+                            Positioned(
+                              right: 4,
+                              top: 44,
+                              bottom: 44,
+                              width: 18,
+                              child: _buildCleanVerticalWall(
+                                isWestWall: false,
+                                isSelected: isEast,
+                              ),
+                            ),
+
+                            // 4 Corner Badges:
+                            // Top-Left (NW): வாயு
+                            Positioned(
+                              top: 2,
+                              left: 2,
+                              child: _buildCornerBadge('வாயு\n(NW)', isNorth || isWest),
+                            ),
+                            // Top-Right (NE): ஈசானியம்
+                            Positioned(
+                              top: 2,
+                              right: 2,
+                              child: _buildCornerBadge('ஈசானியம்\n(NE)', isNorth || isEast),
+                            ),
+                            // Bottom-Left (SW): கன்னி
+                            Positioned(
+                              bottom: 2,
+                              left: 2,
+                              child: _buildCornerBadge('கன்னி\n(SW)', isSouth || isWest),
+                            ),
+                            // Bottom-Right (SE): அக்னி
+                            Positioned(
+                              bottom: 2,
+                              right: 2,
+                              child: _buildCornerBadge('அக்னி\n(SE)', isSouth || isEast),
+                            ),
+
+                            // Center Courtyard / Brahma Sthanam Card
+                            Positioned(
+                              top: 30,
+                              bottom: 30,
+                              left: 26,
+                              right: 26,
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: const Color(0xFF5D1204).withValues(alpha: 0.2)),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF5D1204).withValues(alpha: 0.05),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF5D1204),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '${ThalaivaasalVaasthuService.getDirectionOnlyTamil(res.direction)} பார்த்த கட்டிடம்',
+                                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFFFE082)),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'சுவர்: ${res.startCornerShort} ➔ ${res.endCornerShort}',
+                                        style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          (isNorth || isSouth)
+                                              ? 'அளவீடு: வலது ➔ இடது'
+                                              : 'அளவீடு: மேலிருந்து கீழ்',
+                                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: Colors.brown.shade800),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+
+                    // Right Label: East (கிழக்கு)
+                    _buildCompactSideBadge(
+                      title: 'கிழக்கு (E)',
+                      subtitle: 'மேல் ➔ கீழ் ⮟',
+                      isSelected: isEast,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+
+                // Bottom Label: South (தெற்கு)
+                _buildCompactDirectionBadge(
+                  label: '▼ தெற்கு (South)  |  வலது ➔ இடது ⮜',
+                  isSelected: isSouth,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Color Legend (படம் பார்த்து கதை சொல் - சுத்தமான வண்ண விளக்கம்)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 12,
+              runSpacing: 6,
+              children: [
+                _buildLegendItem(
+                  color: Colors.amber.shade200,
+                  label: 'மஞ்சள்: மத்திமம்',
+                  borderColor: Colors.amber.shade400,
+                  textColor: const Color(0xFF5D1204),
+                ),
+                _buildLegendItem(
+                  color: Colors.green.shade600,
+                  label: 'பச்சை: உத்தம வாசல் 🚪',
+                  borderColor: Colors.green.shade800,
+                  textColor: Colors.white,
+                  icon: Icons.door_front_door,
+                ),
+                _buildLegendItem(
+                  color: const Color(0xFFFFCDD2),
+                  label: 'ரோஸ்: நீசம் (தவிர்க்கவும்)',
+                  borderColor: Colors.red.shade300,
+                  textColor: const Color(0xFFB71C1C),
                 ),
               ],
             ),
@@ -879,22 +1163,218 @@ class _ThalaivaasalVaasthuViewState extends State<ThalaivaasalVaasthuView> {
     );
   }
 
+  // Clean Horizontal Wall with pure colors, no cramped text
+  Widget _buildCleanHorizontalWall({required bool isNorthWall, required bool isSelected}) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: isSelected ? const Color(0xFF5D1204) : Colors.black26,
+          width: isSelected ? 2.0 : 1.0,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(3),
+        child: Row(
+          children: [
+            // Left Half: Neesam (Pink / Rose)
+            Expanded(
+              child: Container(
+                color: const Color(0xFFFFCDD2),
+              ),
+            ),
+            // Right Half: Mathimam (Yellow) with Green Door indicator on selected wall
+            Expanded(
+              child: Container(
+                color: Colors.amber.shade200,
+                alignment: Alignment.center,
+                child: isSelected
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade600,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: const Icon(Icons.door_front_door, color: Colors.white, size: 12),
+                      )
+                    : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Clean Vertical Wall with pure colors, no cramped text
+  Widget _buildCleanVerticalWall({required bool isWestWall, required bool isSelected}) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: isSelected ? const Color(0xFF5D1204) : Colors.black26,
+          width: isSelected ? 2.0 : 1.0,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(3),
+        child: Column(
+          children: [
+            // Top Half: Mathimam (Yellow) with Green Door indicator on selected wall
+            Expanded(
+              child: Container(
+                color: Colors.amber.shade200,
+                alignment: Alignment.center,
+                child: isSelected
+                    ? Container(
+                        padding: const EdgeInsets.all(1.5),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade600,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: const Icon(Icons.door_front_door, color: Colors.white, size: 10),
+                      )
+                    : null,
+              ),
+            ),
+            // Bottom Half: Neesam (Pink / Rose)
+            Expanded(
+              child: Container(
+                color: const Color(0xFFFFCDD2),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactDirectionBadge({
+    required String label,
+    required bool isSelected,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+      decoration: BoxDecoration(
+        color: isSelected ? const Color(0xFF5D1204) : const Color(0xFFFAF6EE),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isSelected ? const Color(0xFFFFE082) : Colors.grey.shade400,
+          width: isSelected ? 1.4 : 0.8,
+        ),
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactSideBadge({
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+  }) {
+    return Container(
+      width: 46,
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? const Color(0xFF5D1204) : const Color(0xFFFAF6EE),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isSelected ? const Color(0xFFFFE082) : Colors.grey.shade400,
+          width: isSelected ? 1.4 : 0.8,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 8.5,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 7.5,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white70 : Colors.brown.shade700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCornerBadge(String label, bool isHighlighted) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      width: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
       decoration: BoxDecoration(
         color: isHighlighted ? const Color(0xFF5D1204) : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: isHighlighted ? const Color(0xFFFFE082) : Colors.transparent),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(
+          color: isHighlighted ? const Color(0xFFFFE082) : Colors.grey.shade400,
+          width: isHighlighted ? 1.2 : 0.6,
+        ),
       ),
       child: Text(
         label,
+        textAlign: TextAlign.center,
         style: TextStyle(
-          fontSize: 9.5,
+          fontSize: 8.5,
           fontWeight: FontWeight.bold,
           color: isHighlighted ? const Color(0xFFFFE082) : Colors.black87,
+          height: 1.1,
         ),
       ),
+    );
+  }
+
+  Widget _buildLegendItem({
+    required Color color,
+    required String label,
+    required Color borderColor,
+    required Color textColor,
+    IconData? icon,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: borderColor),
+          ),
+          child: icon != null ? Icon(icon, size: 9, color: textColor) : null,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.grey.shade800),
+        ),
+      ],
     );
   }
 
@@ -1230,11 +1710,13 @@ class _ThalaivaasalVaasthuViewState extends State<ThalaivaasalVaasthuView> {
 
           const Divider(height: 18),
           const Text(
-            'முக்கிய வாஸ்து விதி:\n'
-            '• உச்சப்பகுதி என்பது மத்திம பலன் தரக்கூடிய பகுதி ஆகும்.\n'
-            '• உச்சப்பகுதியை 4.5 பங்குகளாகப் பிரித்து, 3 பங்குகள் கழித்து 4-வது பங்கு பகுதியில் தலைவாசல் நிலை வைப்பதே சாஸ்திரப்படி "உத்தம பலன்" ஆகும்.\n'
-            '• நீசப்பகுதியில் ஒருபோதும் தலைவாசல் நிலை வைக்கக் கூடாது.',
-            style: TextStyle(fontSize: 11, color: Color(0xFF5D1204), height: 1.4, fontWeight: FontWeight.w600),
+            'முக்கிய வாஸ்து வரைபட விதி:\n'
+            '• வடக்கு & தெற்கு சுவர்கள்: வலது ➔ இடது (உச்சம் முதல் நீசம் வரை அளவீடு).\n'
+            '• கிழக்கு & மேற்கு சுவர்கள்: மேலிருந்து கீழ் (உச்சம் முதல் நீசம் வரை அளவீடு).\n'
+            '• உச்சப்பகுதி (மஞ்சள் நிறம்): மத்திம பலன் தரக்கூடிய பகுதி ஆகும்.\n'
+            '• உத்தம தலைவாசல் பகுதி (பச்சை நிறம்): உச்சப்பகுதியை 4.5 பங்குகளாகப் பிரித்து, 3 பங்குகள் கழித்து 4-வது பங்கில் தலைவாசல் நிலை வைப்பதே உத்தம பலன் தரும்.\n'
+            '• நீசப்பகுதி (ரோஸ் / பிங்க் நிறம்): ஒருபோதும் தலைவாசல் நிலை வைக்கக் கூடாது.',
+            style: TextStyle(fontSize: 11, color: Color(0xFF5D1204), height: 1.45, fontWeight: FontWeight.w600),
           ),
         ],
       ),

@@ -60,7 +60,8 @@ class GpVaasthuScreen extends StatefulWidget {
 
 class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
   GpVaasthuRegion _selectedRegion = GpVaasthuRegion.madurai;
-  bool _isIrregularSides = false;
+  int _dimensionMode = 0; // 0: வெளிப்புற சுற்றளவு, 1: நேரடி ஆயாதி எண்
+  bool get _isIrregularSides => false;
 
   // Length 1 & 2 Controllers
   final TextEditingController _l1FtCtrl = TextEditingController(text: '30');
@@ -74,11 +75,14 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
   final TextEditingController _w2FtCtrl = TextEditingController(text: '20');
   final TextEditingController _w2InCtrl = TextEditingController(text: '0');
 
+  // Direct Ayadi Number Controller
+  final TextEditingController _directAyadiCtrl = TextEditingController(text: '1763');
+
   int _selectedOwnerNakshatra = 1; // Default to Ashwini
   int _selectedOwnerRasi = 1; // Default to Mesham
   int _selectedResultTab = 0; // 0: பொருத்தப் பட்டியல் (26 பலன்கள்), 1: விரிவான பலன்கள்
   int _selectedThithiMethod = 1; // 1: முதல் மரபு (ஆயாதி × 4), 2: இரண்டாவது மரபு (ஆயாதி × 9)
-  int _selectedBoothamMethod = 1; // 1: முறை 1 (ஆயாதி × 3), 2: முறை 2 (ஆயாதி × 9)
+  int _selectedBoothamMethod = 1; // 1: மரபு 1 (ஆயாதி × 3), 2: மரபு 2 (ஆயாதி × 9)
   static const bool _showCalculationDetails = false; // Hide formula breakdowns in detailed view for clean live UI
 
   GpKuzhiResult? _result;
@@ -105,31 +109,44 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
     _w1InCtrl.dispose();
     _w2FtCtrl.dispose();
     _w2InCtrl.dispose();
+    _directAyadiCtrl.dispose();
     super.dispose();
   }
 
   void _calculate() {
+    if (_dimensionMode == 1) {
+      final int directAyadi = int.tryParse(_directAyadiCtrl.text.trim()) ?? 1763;
+      setState(() {
+        _result = GpVaasthuService.calculateKuzhi(
+          region: _selectedRegion,
+          l1Ft: 0,
+          l1In: 0,
+          w1Ft: 0,
+          w1In: 0,
+          directAyadi: directAyadi,
+          ownerNakshatra: _selectedOwnerNakshatra,
+          ownerRasi: _selectedOwnerRasi,
+        );
+      });
+      return;
+    }
+
     final double l1Ft = double.tryParse(_l1FtCtrl.text.trim()) ?? 0.0;
     final double l1In = double.tryParse(_l1InCtrl.text.trim()) ?? 0.0;
     final double w1Ft = double.tryParse(_w1FtCtrl.text.trim()) ?? 0.0;
     final double w1In = double.tryParse(_w1InCtrl.text.trim()) ?? 0.0;
-
-    final double l2Ft = _isIrregularSides ? (double.tryParse(_l2FtCtrl.text.trim()) ?? l1Ft) : l1Ft;
-    final double l2In = _isIrregularSides ? (double.tryParse(_l2InCtrl.text.trim()) ?? l1In) : l1In;
-    final double w2Ft = _isIrregularSides ? (double.tryParse(_w2FtCtrl.text.trim()) ?? w1Ft) : w1Ft;
-    final double w2In = _isIrregularSides ? (double.tryParse(_w2InCtrl.text.trim()) ?? w1In) : w1In;
 
     setState(() {
       _result = GpVaasthuService.calculateKuzhi(
         region: _selectedRegion,
         l1Ft: l1Ft,
         l1In: l1In,
-        l2Ft: l2Ft,
-        l2In: l2In,
+        l2Ft: l1Ft,
+        l2In: l1In,
         w1Ft: w1Ft,
         w1In: w1In,
-        w2Ft: w2Ft,
-        w2In: w2In,
+        w2Ft: w1Ft,
+        w2In: w1In,
         ownerNakshatra: _selectedOwnerNakshatra,
         ownerRasi: _selectedOwnerRasi,
       );
@@ -633,7 +650,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Dimension Mode Segmented Switch
+          // Dimension Mode Segmented Switch (2 Modes: வெளிப்புற சுற்றளவு & நேரடி ஆயாதி எண்)
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
@@ -643,164 +660,224 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
             ),
             child: Row(
               children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () {
-                      if (_isIrregularSides) {
-                        setState(() => _isIrregularSides = false);
-                        _calculate();
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: !_isIrregularSides ? const Color(0xFF5D1204) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'வெளிப்புற சுற்றளவு',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: !_isIrregularSides ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: InkWell(
-                    onTap: () {
-                      if (!_isIrregularSides) {
-                        setState(() {
-                          _isIrregularSides = true;
-                          _l2FtCtrl.text = _l1FtCtrl.text;
-                          _l2InCtrl.text = _l1InCtrl.text;
-                          _w2FtCtrl.text = _w1FtCtrl.text;
-                          _w2InCtrl.text = _w1InCtrl.text;
-                        });
-                        _calculate();
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: _isIrregularSides ? const Color(0xFF5D1204) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '4 பக்கங்கள் (மாறுபட்டவை)',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: _isIrregularSides ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                _buildDimensionModeTab(0, 'வெளிப்புற சுற்றளவு'),
+                const SizedBox(width: 6),
+                _buildDimensionModeTab(1, 'நேரடி ஆயாதி எண்'),
               ],
             ),
           ),
-          const Divider(height: 22),
 
-          // Length Section
-          Text(
-            _isIrregularSides ? 'நீளம் 1 & நீளம் 2 (Length 1 & 2):' : 'நீளம் (Length):',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF5D1204)),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildUnitInputField(
-                  label: _isIrregularSides ? 'நீளம் 1 (அடி)' : 'அடி (Ft)',
-                  controller: _l1FtCtrl,
-                  onChanged: (v) => _calculate(),
-                ),
+          if (_dimensionMode == 1) ...[
+            const SizedBox(height: 14),
+            // Direct Ayadi Number Input Section
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6EE),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.35)),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildUnitInputField(
-                  label: _isIrregularSides ? 'நீளம் 1 (அங்குலம்)' : 'அங்குலம் (In)',
-                  controller: _l1InCtrl,
-                  onChanged: (v) => _calculate(),
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.pin_outlined, color: Color(0xFF5D1204), size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        'நேரடி ஆயாதி எண் உள்ளீடு:',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13.5,
+                          color: const Color(0xFF5D1204),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'ஆயாதி எண்ணை நேரடியாக கொடுத்து 26 பொருத்தங்களின் பலன்களை அறியலாம்.',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF7A6855),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      // -10 Button
+                      _buildAyadiStepButton(
+                        text: '-10',
+                        onTap: () {
+                          final cur = int.tryParse(_directAyadiCtrl.text.trim()) ?? 0;
+                          if (cur > 10) {
+                            _directAyadiCtrl.text = (cur - 10).toString();
+                            _calculate();
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 4),
+                      // -1 Button
+                      _buildAyadiStepButton(
+                        text: '-1',
+                        onTap: () {
+                          final cur = int.tryParse(_directAyadiCtrl.text.trim()) ?? 0;
+                          if (cur > 1) {
+                            _directAyadiCtrl.text = (cur - 1).toString();
+                            _calculate();
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 6),
+                      // Number input field
+                      Expanded(
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFF5D1204), width: 1.5),
+                          ),
+                          child: TextField(
+                            controller: _directAyadiCtrl,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.outfit(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF5D1204),
+                            ),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(vertical: 8),
+                              hintText: '1763',
+                            ),
+                            onChanged: (val) => _calculate(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      // +1 Button
+                      _buildAyadiStepButton(
+                        text: '+1',
+                        onTap: () {
+                          final cur = int.tryParse(_directAyadiCtrl.text.trim()) ?? 0;
+                          _directAyadiCtrl.text = (cur + 1).toString();
+                          _calculate();
+                        },
+                      ),
+                      const SizedBox(width: 4),
+                      // +10 Button
+                      _buildAyadiStepButton(
+                        text: '+10',
+                        onTap: () {
+                          final cur = int.tryParse(_directAyadiCtrl.text.trim()) ?? 0;
+                          _directAyadiCtrl.text = (cur + 10).toString();
+                          _calculate();
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Quick suggestion chips
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        'விரைவு எண்கள்:',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF5D1204).withValues(alpha: 0.7),
+                        ),
+                      ),
+                      ...[24, 48, 72, 108, 1763, 1872].map((num) {
+                        final bool isCur = _directAyadiCtrl.text.trim() == num.toString();
+                        return InkWell(
+                          onTap: () {
+                            _directAyadiCtrl.text = num.toString();
+                            _calculate();
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isCur ? const Color(0xFF5D1204) : Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isCur ? const Color(0xFF5D1204) : const Color(0xFFB58D3D).withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Text(
+                              '$num',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: isCur ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
-          if (_isIrregularSides) ...[
-            const SizedBox(height: 10),
+            ),
+          ] else ...[
+            const Divider(height: 22),
+
+            // Length Section
+            const Text(
+              'நீளம் (Length):',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF5D1204)),
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   child: _buildUnitInputField(
-                    label: 'நீளம் 2 (அடி)',
-                    controller: _l2FtCtrl,
+                    label: 'அடி (Ft)',
+                    controller: _l1FtCtrl,
                     onChanged: (v) => _calculate(),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _buildUnitInputField(
-                    label: 'நீளம் 2 (அங்குலம்)',
-                    controller: _l2InCtrl,
+                    label: 'அங்குலம் (In)',
+                    controller: _l1InCtrl,
                     onChanged: (v) => _calculate(),
                   ),
                 ),
               ],
             ),
-          ],
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // Width Section
-          Text(
-            _isIrregularSides ? 'அகலம் 1 & அகலம் 2 (Width 1 & 2):' : 'அகலம் (Width):',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF5D1204)),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildUnitInputField(
-                  label: _isIrregularSides ? 'அகலம் 1 (அடி)' : 'அடி (Ft)',
-                  controller: _w1FtCtrl,
-                  onChanged: (v) => _calculate(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildUnitInputField(
-                  label: _isIrregularSides ? 'அகலம் 1 (அங்குலம்)' : 'அங்குலம் (In)',
-                  controller: _w1InCtrl,
-                  onChanged: (v) => _calculate(),
-                ),
-              ),
-            ],
-          ),
-          if (_isIrregularSides) ...[
-            const SizedBox(height: 10),
+            // Width Section
+            const Text(
+              'அகலம் (Width):',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF5D1204)),
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   child: _buildUnitInputField(
-                    label: 'அகலம் 2 (அடி)',
-                    controller: _w2FtCtrl,
+                    label: 'அடி (Ft)',
+                    controller: _w1FtCtrl,
                     onChanged: (v) => _calculate(),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _buildUnitInputField(
-                    label: 'அகலம் 2 (அங்குலம்)',
-                    controller: _w2InCtrl,
+                    label: 'அங்குலம் (In)',
+                    controller: _w1InCtrl,
                     onChanged: (v) => _calculate(),
                   ),
                 ),
@@ -808,6 +885,66 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildDimensionModeTab(int mode, String label) {
+    final bool isSelected = _dimensionMode == mode;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          if (_dimensionMode != mode) {
+            setState(() {
+              _dimensionMode = mode;
+            });
+            _calculate();
+          }
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF5D1204) : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? const Color(0xFFFFE082) : const Color(0xFF5D1204),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAyadiStepButton({required String text, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 38,
+        height: 48,
+        decoration: BoxDecoration(
+          color: const Color(0xFF5D1204).withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFF5D1204).withValues(alpha: 0.2)),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF5D1204),
+          ),
+        ),
       ),
     );
   }
@@ -1015,7 +1152,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 ),
               ),
               _buildMethodChip(
-                label: 'முறை 1 (× 3)',
+                label: 'மரபு 1 (× 3)',
                 isSelected: _selectedBoothamMethod == 1,
                 onTap: () {
                   setState(() => _selectedBoothamMethod = 1);
@@ -1023,7 +1160,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ),
               const SizedBox(width: 8),
               _buildMethodChip(
-                label: 'முறை 2 (× 9)',
+                label: 'மரபு 2 (× 9)',
                 isSelected: _selectedBoothamMethod == 2,
                 onTap: () {
                   setState(() => _selectedBoothamMethod = 2);
@@ -1293,13 +1430,13 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
         statusText: statusTextBootham,
         isGood: activeBootham.isGood,
         hasMultipleMethods: true,
-        method1Title: 'முறை 1 (ஆயாதி × 3)',
+        method1Title: 'மரபு 1 (ஆயாதி × 3)',
         method1Name: '${res.bootham1Number} - ${res.bootham1.name} (${res.bootham1.tamilElementName})',
         method1Calc: 'கணக்கீடு: ${res.roundedAyadi} × 3 = ${res.bootham1Total} | கழிவு $multiple5_1 = ${res.bootham1Number}',
         method1Effect: res.bootham1.effect,
         method1Status: res.bootham1.status,
         method1IsGood: res.bootham1.isGood,
-        method2Title: 'முறை 2 (ஆயாதி × 9)',
+        method2Title: 'மரபு 2 (ஆயாதி × 9)',
         method2Name: '${res.bootham2Number} - ${res.bootham2.name} (${res.bootham2.tamilElementName})',
         method2Calc: 'கணக்கீடு: ${res.roundedAyadi} × 9 = ${res.bootham2Total} | கழிவு $multiple5_2 = ${res.bootham2Number}',
         method2Effect: res.bootham2.effect,
@@ -1811,15 +1948,19 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.analytics_rounded, color: Color(0xFF5D1204), size: 18),
                     const SizedBox(width: 6),
-                    Text(
-                      'மொத்த பொருத்தம் சுருக்கம் (Summary)',
-                      style: GoogleFonts.outfit(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF5D1204),
+                    Flexible(
+                      child: Text(
+                        'மொத்த பொருத்தம் சுருக்கம் (Summary)',
+                        style: GoogleFonts.outfit(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF5D1204),
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -2051,7 +2192,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
 
                   // Method 1 Card
                   _buildMethodDetailCard(
-                    title: item.method1Title ?? 'முறை 1',
+                    title: item.method1Title ?? 'மரபு 1',
                     name: item.method1Name ?? '',
                     calc: item.method1Calc,
                     effect: item.method1Effect ?? '',
@@ -2062,7 +2203,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
 
                   // Method 2 Card
                   _buildMethodDetailCard(
-                    title: item.method2Title ?? 'முறை 2',
+                    title: item.method2Title ?? 'மரபு 2',
                     name: item.method2Name ?? '',
                     calc: item.method2Calc,
                     effect: item.method2Effect ?? '',
@@ -2242,7 +2383,9 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '${res.region.nameTa} முறை (ம.கோல்: ${res.region.kolInches})',
+                  _dimensionMode == 1
+                      ? 'நேரடி ஆயாதி எண் முறை'
+                      : '${res.region.nameTa} முறை (ம.கோல்: ${res.region.kolInches})',
                   style: const TextStyle(
                     color: Color(0xFFFFE082),
                     fontSize: 12,
@@ -2297,7 +2440,9 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'துருவ எண்: ${res.ayadiExact} (${res.ayadiExact >= res.ayadiNumber.floor() + 0.5 ? '≥ 0.5 அடுத்த முழு எண்' : '< 0.5 முந்தைய முழு எண்'})',
+              _dimensionMode == 1
+                  ? 'நேரடி உள்ளீடு செய்யப்பட்ட எண்: ${res.roundedAyadi}'
+                  : 'துருவ எண்: ${res.ayadiExact} (${res.ayadiExact >= res.ayadiNumber.floor() + 0.5 ? '≥ 0.5 அடுத்த முழு எண்' : '< 0.5 முந்தைய முழு எண்'})',
               style: const TextStyle(
                 color: Color(0xFFFFE082),
                 fontSize: 11,
@@ -2320,7 +2465,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ),
               Container(height: 32, width: 1, color: Colors.white24),
               Expanded(
-                child: _buildResultMiniStat('துருவ எண்', '${res.ayadiExact}'),
+                child: _buildResultMiniStat(_dimensionMode == 1 ? 'ஆயாதி எண்' : 'துருவ எண்', '${res.ayadiExact}'),
               ),
             ],
           ),
@@ -4908,7 +5053,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                   border: Border.all(color: const Color(0xFFFFA000)),
                 ),
                 child: const Text(
-                  'முறை 1 & 2',
+                  'மரபு 1 & 2',
                   style: TextStyle(
                     color: Color(0xFFE65100),
                     fontSize: 10.5,
@@ -4942,7 +5087,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '1. முறை 1 (× 3): ${b1.number} – ${b1.name}',
+                        '1. மரபு 1 (× 3): ${b1.number} – ${b1.name}',
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13.5),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -4984,7 +5129,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '2. முறை 2 (× 9): ${b2.number} – ${b2.name}',
+                        '2. மரபு 2 (× 9): ${b2.number} – ${b2.name}',
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13.5),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -7306,7 +7451,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.pets_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '8 யோனிப் பலன்கள் சாஸ்திர அட்டவணை (8 Yoni Table)',
+            '8 யோனிப் பலன்கள் அட்டவணை (8 Yoni Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -7414,7 +7559,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.savings_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '12 இலாபப் பலன்கள் சாஸ்திர அட்டவணை (12 Ilaba Table)',
+            '12 இலாபப் பலன்கள் அட்டவணை (12 Ilaba Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -7513,7 +7658,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '10 செலவுப் பலன்கள் சாஸ்திர அட்டவணை (10 Selavu Table)',
+            '10 செலவுப் பலன்கள் அட்டவணை (10 Selavu Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -7618,7 +7763,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.menu_book_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '8 கற்பங்கள் சாஸ்திர அட்டவணை (8 Karpam Table)',
+            '8 கற்பங்கள் அட்டவணை (8 Karpam Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -7723,7 +7868,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.calendar_today_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '5. வாரப்பலன் சாஸ்திர அட்டவணை (7 Vaara Table)',
+            '5. வாரப்பலன் அட்டவணை (7 Vaara Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -7835,7 +7980,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.stars_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '6. அம்ச பலன் சாஸ்திர அட்டவணை (9 Amsa Table)',
+            '6. அம்ச பலன் அட்டவணை (9 Amsa Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -7938,7 +8083,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.wb_twilight_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '7 & 11. 27 நட்சத்திர பலன் & கணப் பலன் சாஸ்திர அட்டவணை',
+            'கணப் பலன் அட்டவணை',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -7963,7 +8108,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
                   ),
                   SizedBox(height: 4),
-                  Text('• தலைவன் (எஜமானன்) கணமும் மனையின் கணமும் ஒன்றாகில் ➔ நலம் உண்டாகும் (உத்தமம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                  Text('• வீட்டின் உரிமையாளரின் நட்சத்திர கணமும் மனையின் நட்சத்திர கணமும் ஒன்றாக வந்தால் உத்தமம்', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
                   Text('• தேவகணமும் மனிதகணமும் வந்தால் ➔ உத்தம பலன் (உத்தமம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
                   Text('• ராக்ஷஸகணமும் மனிதகணமும் வந்தால் ➔ மகிமையுண்டாகும் (உத்தமம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
                   Text('• ராட்சஸகணமும் தேவகணமும் வந்தால் ➔ பகையும் சத்துருக்களால் எக்காலத்திலும் கஷ்டமும் ஏற்படும் (அதமம்)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
@@ -8095,7 +8240,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.diversity_3_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '8. வம்சம் பலன் சாஸ்திர அட்டவணை (4 Vamsam Table)',
+            '8. வம்சம் பலன் அட்டவணை (4 Vamsam Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -8199,7 +8344,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.brightness_medium_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '9. திதிப் பலன் சாஸ்திர அட்டவணை (30 Thithi Table)',
+            '9. திதிப் பலன் அட்டவணை (30 Thithi Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -8314,7 +8459,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.pie_chart_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '10. இராசி பலன் சாஸ்திர அட்டவணை (12 Rasi Table)',
+            '10. இராசி பலன் அட்டவணை (12 Rasi Table)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -8418,7 +8563,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.timer_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '10 (கூடுதல்). வயது பலன் சாஸ்திர விதிகள் (Age Phalam Guide)',
+            'வயது பலன் விதிகள் (Age Phalam Guide)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -8791,7 +8936,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.remove_red_eye_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '15. நேத்திர பலன் சாஸ்திர விதிகள் (Nethira Phalam Guide)',
+            '15. நேத்திர பலன் விதிகள் (Nethira Phalam Guide)',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -9058,7 +9203,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.star_half_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '17. தாரா பலன் சாஸ்திர அட்டவணை (9 Tharas)',
+            '17. தாரா பலன் அட்டவணை (9 Tharas)',
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5, color: const Color(0xFF5D1204)),
           ),
           children: [
@@ -9124,7 +9269,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.flash_on_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '18. கரணப் பலன் சாஸ்திர அட்டவணை (11 Karanas)',
+            '18. கரணப் பலன் அட்டவணை (11 Karanas)',
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5, color: const Color(0xFF5D1204)),
           ),
           children: [
@@ -9187,7 +9332,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.nightlight_round, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '19. சந்திர பலன் சாஸ்திர அட்டவணை (12 Chandra Phalans)',
+            '19. சந்திர பலன் அட்டவணை (12 Chandra Phalans)',
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5, color: const Color(0xFF5D1204)),
           ),
           children: [
@@ -9383,7 +9528,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.psychology_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '22. குணப் பலன் சாஸ்திர அட்டவணை (3 Gunas)',
+            '22. குணப் பலன் அட்டவணை (3 Gunas)',
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5, color: const Color(0xFF5D1204)),
           ),
           children: [
@@ -9446,7 +9591,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '23. நாம யோகப் பலன் சாஸ்திர அட்டவணை (27 Nama Yogas)',
+            '23. நாம யோகப் பலன் அட்டவணை (27 Nama Yogas)',
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5, color: const Color(0xFF5D1204)),
           ),
           children: [
@@ -9509,7 +9654,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.explore_rounded, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '24. அஷ்டதிக்கு பாலகர் சாஸ்திர அட்டவணை (8 Dikpalakas)',
+            '24. அஷ்டதிக்கு பாலகர் அட்டவணை (8 Dikpalakas)',
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5, color: const Color(0xFF5D1204)),
           ),
           children: [
@@ -9572,7 +9717,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
           initiallyExpanded: false,
           leading: const Icon(Icons.shield_outlined, color: Color(0xFF5D1204), size: 20),
           title: Text(
-            '25. அதிதேவதை பலன் சாஸ்திர அட்டவணை (8 Athidevathas)',
+            '25. அதிதேவதை பலன் அட்டவணை (8 Athidevathas)',
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5, color: const Color(0xFF5D1204)),
           ),
           children: [
@@ -9761,8 +9906,8 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                 const Divider(height: 16),
                 const Text('【 14. பூதம் பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
                 const SizedBox(height: 4),
-                Text('• முறை 1 (× 3): ${res.roundedAyadi} × 3 = ${res.bootham1Total} | கழிவு $multiple5_1 = ${res.bootham1Number} (${res.bootham1.name}) ➔ ${res.bootham1.effect}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF5D1204))),
-                Text('• முறை 2 (× 9): ${res.roundedAyadi} × 9 = ${res.bootham2Total} | கழிவு $multiple5_2 = ${res.bootham2Number} (${res.bootham2.name}) ➔ ${res.bootham2.effect}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF5D1204))),
+                Text('• மரபு 1 (× 3): ${res.roundedAyadi} × 3 = ${res.bootham1Total} | கழிவு $multiple5_1 = ${res.bootham1Number} (${res.bootham1.name}) ➔ ${res.bootham1.effect}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF5D1204))),
+                Text('• மரபு 2 (× 9): ${res.roundedAyadi} × 9 = ${res.bootham2Total} | கழிவு $multiple5_2 = ${res.bootham2Number} (${res.bootham2.name}) ➔ ${res.bootham2.effect}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF5D1204))),
 
                 const Divider(height: 16),
                 const Text('【 15. சூத்திரம் பலன் கணிதம் 】', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),

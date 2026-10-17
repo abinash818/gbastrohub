@@ -27,8 +27,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Vaasthu Pooja content is displayed
-    expect(find.textContaining('வாஸ்து / பூமி பூஜை நாள் & நேரம்'), findsWidgets);
-    expect(find.textContaining('உதாரணக் கணக்கீடு'), findsOneWidget);
+    expect(find.textContaining('பூமி(வாஸ்து) பூஜை நேரம்'), findsWidgets);
+    expect(find.textContaining('8 நாட்கள் அட்டவணை'), findsWidgets);
     expect(find.textContaining('8:08:26 AM'), findsWidgets);
     expect(find.textContaining('8:26:26 AM'), findsWidgets);
   });

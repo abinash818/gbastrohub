@@ -670,23 +670,6 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
             "${strength['kavi']['totalDisplay'] ?? strength['kavi']['total']}",
             highlightColor: Colors.red.withOpacity(0.06),
           ),
-          const Divider(color: Color(0xFFB58D3D)),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "${AppLocalizations.of(context)!.jamakkolPlanet} (${(strength['jamam']['planet'] == 'Rahu' || strength['jamam']['planet'] == 'ராகு') ? (isTa ? 'பாம்பு' : (isHi ? 'राहु' : 'Snake')) : AstroTranslationService.translate(context, strength['jamam']['planet'], isPlanet: true)})",
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D1204), fontSize: 13),
-                ),
-                Text(
-                  "${strength['jamam']['totalDisplay'] ?? strength['jamam']['total']}",
-                  style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFE65100), fontSize: 16),
-                ),
-              ],
-            ),
-          ),
 
           if (bhavas.isNotEmpty) ...[
             const SizedBox(height: 20),

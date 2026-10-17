@@ -2057,7 +2057,7 @@ class GpVaasthuService {
       return {
         'status': 'உத்தமம் (நலம்)',
         'isGood': true,
-        'effect': 'தலைவன் (எஜமானன்) கணமும் மனையின் கணமும் ஒன்றாகில் நலம் உண்டாகும்.',
+        'effect': 'வீட்டின் உரிமையாளரின் நட்சத்திர கணமும் மனையின் நட்சத்திர கணமும் ஒன்றாக வந்தால் உத்தமம்.',
       };
     }
     if ((houseGana == 'தேவ கணம்' && ownerGana == 'மனித கணம்') ||
@@ -3211,6 +3211,7 @@ class GpVaasthuService {
     double w1In = 0.0,
     double? w2Ft,
     double? w2In,
+    int? directAyadi,
     int ownerNakshatra = 1,
     int ownerRasi = 1,
   }) {
@@ -3225,30 +3226,67 @@ class GpVaasthuService {
     final double totalW1InFeet = w1Ft + (w1In / 12.0);
     final double totalW2InFeet = actualW2Ft + (actualW2In / 12.0);
 
+    final bool isDirectAyadi = directAyadi != null && directAyadi > 0;
+
     // Calculate averages & areas
-    final double avgLengthFt = (totalL1InFeet + totalL2InFeet) / 2.0;
-    final double avgWidthFt = (totalW1InFeet + totalW2InFeet) / 2.0;
-
-    // Area in Sq.Ft and Sq.Inches
-    final double sqft = avgLengthFt * avgWidthFt;
-    final double sqInches = sqft * 144.0;
-
-    // Kuzhi calculation using regional divisor
-    final int divisor = region.constant;
-    final double kuzhi = sqInches / divisor;
-    final double kuzhiExact = double.parse(kuzhi.toStringAsFixed(3));
-    final int roundedKuzhi = kuzhi.round(); // >= 0.5 rounds up, < 0.5 rounds down
-    final int wholeKuzhi = kuzhi.floor();
-    final double fractionKuzhi = double.parse((kuzhi - wholeKuzhi).toStringAsFixed(3));
-
-    // Ayadi Number calculation:
-    // (Sum of Lengths + Sum of Widths) * 12 / Regional Ayadi Divisor (1.333, 1.375, 1.416, 1.500)
-    final double perimeterFt = totalL1InFeet + totalL2InFeet + totalW1InFeet + totalW2InFeet;
-    final double perimeterInches = perimeterFt * 12.0;
+    final double avgLengthFt;
+    final double avgWidthFt;
+    final double sqft;
+    final double sqInches;
+    final double perimeterFt;
+    final double perimeterInches;
     final double ayadiDivisor = region.ayadiDivisor;
-    final double ayadiNumber = perimeterInches / ayadiDivisor;
-    final double ayadiExact = double.parse(ayadiNumber.toStringAsFixed(3));
-    final int roundedAyadi = ayadiNumber.round();
+    final double ayadiNumber;
+    final double ayadiExact;
+    final int roundedAyadi;
+
+    final int divisor = region.constant;
+    final double kuzhi;
+    final double kuzhiExact;
+    final int roundedKuzhi;
+    final int wholeKuzhi;
+    final double fractionKuzhi;
+
+    if (isDirectAyadi) {
+      roundedAyadi = directAyadi;
+      ayadiNumber = directAyadi.toDouble();
+      ayadiExact = directAyadi.toDouble();
+
+      if (totalL1InFeet > 0 || totalW1InFeet > 0) {
+        avgLengthFt = (totalL1InFeet + totalL2InFeet) / 2.0;
+        avgWidthFt = (totalW1InFeet + totalW2InFeet) / 2.0;
+        perimeterFt = totalL1InFeet + totalL2InFeet + totalW1InFeet + totalW2InFeet;
+        perimeterInches = perimeterFt * 12.0;
+      } else {
+        perimeterInches = directAyadi * ayadiDivisor;
+        perimeterFt = perimeterInches / 12.0;
+        avgLengthFt = perimeterFt / 4.0;
+        avgWidthFt = perimeterFt / 4.0;
+      }
+      sqft = avgLengthFt * avgWidthFt;
+      sqInches = sqft * 144.0;
+      kuzhi = sqInches / divisor;
+      kuzhiExact = double.parse(kuzhi.toStringAsFixed(3));
+      roundedKuzhi = kuzhi.round();
+      wholeKuzhi = kuzhi.floor();
+      fractionKuzhi = double.parse((kuzhi - wholeKuzhi).toStringAsFixed(3));
+    } else {
+      avgLengthFt = (totalL1InFeet + totalL2InFeet) / 2.0;
+      avgWidthFt = (totalW1InFeet + totalW2InFeet) / 2.0;
+      sqft = avgLengthFt * avgWidthFt;
+      sqInches = sqft * 144.0;
+      kuzhi = sqInches / divisor;
+      kuzhiExact = double.parse(kuzhi.toStringAsFixed(3));
+      roundedKuzhi = kuzhi.round();
+      wholeKuzhi = kuzhi.floor();
+      fractionKuzhi = double.parse((kuzhi - wholeKuzhi).toStringAsFixed(3));
+
+      perimeterFt = totalL1InFeet + totalL2InFeet + totalW1InFeet + totalW2InFeet;
+      perimeterInches = perimeterFt * 12.0;
+      ayadiNumber = perimeterInches / ayadiDivisor;
+      ayadiExact = double.parse(ayadiNumber.toStringAsFixed(3));
+      roundedAyadi = ayadiNumber.round();
+    }
 
     // 1. Garbham (கெர்ப்ப எண் = ஆயாதி எண் % 8; மீதம் 0 என்றால் 8)
     int garbhamNum = roundedAyadi % 8;

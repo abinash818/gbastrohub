@@ -21,9 +21,8 @@ void main() {
     // Check that method selector card is visible
     expect(find.text('திதி & பூதம் கணித முறை தேர்வு:'), findsOneWidget);
     expect(find.text('மரபு 1 (× 4)'), findsOneWidget);
-    expect(find.text('மரபு 2 (× 9)'), findsOneWidget);
-    expect(find.text('முறை 1 (× 3)'), findsOneWidget);
-    expect(find.text('முறை 2 (× 9)'), findsOneWidget);
+    expect(find.text('மரபு 1 (× 3)'), findsOneWidget);
+    expect(find.text('மரபு 2 (× 9)'), findsNWidgets(2));
 
     // Tap on Thithi row to open comparison dialog
     await tester.tap(find.text('திதி').first);
@@ -45,8 +44,8 @@ void main() {
 
     // Verify Bootham dialog opened
     expect(find.textContaining('பூதம் - இரு முறைகள் ஒப்பீடு'), findsOneWidget);
-    expect(find.textContaining('முறை 1 (ஆயாதி × 3)'), findsOneWidget);
-    expect(find.textContaining('முறை 2 (ஆயாதி × 9)'), findsOneWidget);
+    expect(find.textContaining('மரபு 1 (ஆயாதி × 3)'), findsOneWidget);
+    expect(find.textContaining('மரபு 2 (ஆயாதி × 9)'), findsOneWidget);
 
     // Close dialog
     await tester.tap(find.text('சரி (சரிபார்க்கப்பட்டது)'));

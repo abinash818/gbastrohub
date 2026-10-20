@@ -35,6 +35,7 @@ class SouthIndianChart extends StatelessWidget {
   final double heightRatio;
   final String? udayaLordLabel;
   final String? chartStyle;
+  final bool isJamakkolChart;
 
   const SouthIndianChart({
     super.key, 
@@ -50,6 +51,7 @@ class SouthIndianChart extends StatelessWidget {
     this.heightRatio = 1.0,
     this.udayaLordLabel,
     this.chartStyle,
+    this.isJamakkolChart = false,
   });
 
   static double? _extractDegree(String str) {
@@ -66,14 +68,16 @@ class SouthIndianChart extends StatelessWidget {
     return null;
   }
 
-  static List<String> sortItemsByDegree(List<String> items) {
+  static List<String> sortItemsByDegree(List<String> items, {String? rasi, bool isJamakkol = false}) {
     if (items.length <= 1) return items;
     if (items.any((e) => _extractDegree(e) != null)) {
       final sorted = List<String>.from(items);
+      const reverseSigns = {"Sagittarius", "Capricorn", "Aquarius", "Pisces", "தனுசு", "மகரம்", "கும்பம்", "மீனம்"};
+      final isReverse = isJamakkol && rasi != null && reverseSigns.contains(rasi);
       sorted.sort((a, b) {
         final degA = _extractDegree(a) ?? 999.0;
         final degB = _extractDegree(b) ?? 999.0;
-        return degA.compareTo(degB);
+        return isReverse ? degB.compareTo(degA) : degA.compareTo(degB);
       });
       return sorted;
     }
@@ -146,7 +150,7 @@ class SouthIndianChart extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final rasi = RASI_ORDER[index];
                         final rawItems = rasiMap[rasi] ?? [];
-                        final items = sortItemsByDegree(rawItems);
+                        final items = isJamakkolChart ? rawItems : sortItemsByDegree(rawItems);
                         final bool isLagnaCell = items.any((e) => e.startsWith("லக்") || e.startsWith("உத") || e.startsWith("Asc") || e.startsWith("Lagna") || e.startsWith("Uda") || e.startsWith("लग्न") || e.startsWith("उदय"));
                         final bool isArudamCell = items.any((e) => e.startsWith("ஆரூ") || e.startsWith("Aru") || e.startsWith("आरू"));
                         final bool isKaviCell = items.any((e) => e.startsWith("கவி") || e.startsWith("Kav") || e.startsWith("कवि"));

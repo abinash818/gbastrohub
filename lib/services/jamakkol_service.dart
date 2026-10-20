@@ -7,12 +7,12 @@ class JamakkolService {
 
   static const Map<String, String> JAMAKKOL_TAMIL_SHORT = {
     "Sun": "சூரியன்", "Mars": "செவ்வாய்", "Jupiter": "குரு", "Mercury": "புதன்",
-    "Venus": "சுக்கிரன்", "Saturn": "சனி", "Moon": "சந்திரன்", "Rahu": "ராகு"
+    "Venus": "சுக்கிரன்", "Saturn": "சனி", "Moon": "சந்திரன்", "Rahu": "பாம்பு"
   };
 
   static const Map<String, String> JAMAKKOL_TAMIL_ALT = {
     "Sun": "சூரியன்", "Mars": "செவ்வாய்", "Jupiter": "குரு", "Mercury": "புதன்",
-    "Venus": "சுக்கிரன்", "Saturn": "சனி", "Moon": "சந்திரன்", "Rahu": "ராகு"
+    "Venus": "சுக்கிரன்", "Saturn": "சனி", "Moon": "சந்திரன்", "Rahu": "பாம்பு"
   };
 
   static const Map<String, String> JAMAKKOL_ENGLISH_SHORT = {

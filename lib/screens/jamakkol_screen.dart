@@ -1457,11 +1457,18 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
       });
     }
 
-    // Degree-wise ascending sort (lowest to highest) for each rasi box
+    // Degree-wise sort for each rasi box (Jamakkol only):
+    // Mesham to Vrischikam: 0° top to 30° bottom (column / ascending)
+    // Dhanusu to Meenam: 0° bottom to 30° top (column-reverse / descending)
+    const reverseSigns = {"Sagittarius", "Capricorn", "Aquarius", "Pisces"};
     Map<String, List<String>> rasiMap = {};
     for (var sign in KPService.SIGNS) {
       final list = rasiEntries[sign] ?? [];
-      list.sort((a, b) => (a['deg'] as double).compareTo(b['deg'] as double));
+      if (reverseSigns.contains(sign)) {
+        list.sort((a, b) => (b['deg'] as double).compareTo(a['deg'] as double));
+      } else {
+        list.sort((a, b) => (a['deg'] as double).compareTo(b['deg'] as double));
+      }
       rasiMap[sign] = list.map((e) => e['label'] as String).toList();
     }
 
@@ -1500,6 +1507,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           rasiKathir: _showKathirOnChart ? (_results!['strength']?['rasi_kathir_map'] as Map<String, String>?) : null,
           heightRatio: 1.40,
           udayaLordLabel: udayaLordLabel,
+          isJamakkolChart: true,
         ),
       ],
     );

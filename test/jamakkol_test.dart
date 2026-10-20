@@ -93,4 +93,11 @@ void main() {
     expect(subPlanets.mrityu.degree, closeTo(0.31, 0.05));
     expect(subPlanets.yamagandan.degree, closeTo(18.31, 0.05));
   });
+
+  test('Test 5: Jama planet Rahu naming maps to பாம்பு in Tamil maps', () {
+    expect(JamakkolService.JAMAKKOL_TAMIL_SHORT["Rahu"], equals("பாம்பு"));
+    expect(JamakkolService.JAMAKKOL_TAMIL_ALT["Rahu"], equals("பாம்பு"));
+    // Ensure Nakshatra / Star Lord remains untouched
+    expect(KPService.VIMSHOTTARI_LORDS.contains("Rahu"), isTrue);
+  });
 }

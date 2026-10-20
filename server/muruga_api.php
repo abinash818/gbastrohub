@@ -13,6 +13,11 @@ $password = "Gbastro@2026";
 try {
     $conn = new PDO("mysql:host=" . $host . ";dbname=" . $db_name, $username, $password);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // Auto-create custom_features column if not exists
+    try {
+        $conn->exec("ALTER TABLE app_users ADD COLUMN custom_features TEXT DEFAULT NULL");
+    } catch(PDOException $e) { /* Ignore if exists */ }
 } catch(PDOException $exception) {
     echo json_encode(array("error" => "Connection error: " . $exception->getMessage()));
     exit();
@@ -56,10 +61,10 @@ if (!empty($data->action)) {
             $access = new stdClass();
             $allowed = array();
             
-            if ($user['custom_features'] !== null) {
+            if (!empty($user['custom_features'])) {
                 // Admin manually saved custom features, so override plan features
                 $custom_arr = json_decode($user['custom_features'], true);
-                if (is_array($custom_arr)) {
+                if (is_array($custom_arr) && count($custom_arr) > 0) {
                     $allowed = $custom_arr;
                 }
             } else {

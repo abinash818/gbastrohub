@@ -37,7 +37,7 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _recalcHoursToNazhigai();
     _recalcNazhigaiToHours();
   }
@@ -116,6 +116,7 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
             Tab(text: "நாழிகை மாற்றி", icon: Icon(Icons.access_time_rounded)),
             Tab(text: "பஞ்ச பட்சி", icon: Icon(Icons.flutter_dash_rounded)),
             Tab(text: "ஹோரை / உப-ஹோரை", icon: Icon(Icons.grid_view_rounded)),
+            Tab(text: "தசா நாதனின் நால்வர்", icon: Icon(Icons.people_alt_rounded)),
           ],
         ),
       ),
@@ -134,6 +135,7 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
                 _buildNazhigaiConverterTab(),
                 _buildPanchaPakshiTab(),
                 _buildSubHoraTab(),
+                _buildDasaNalvarToolTab(),
               ],
             ),
           ),
@@ -333,6 +335,7 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
     DateTime sunriseDt = DateTime(now.year, now.month, now.day, 6, 0);
 
     final pakshiData = AstroSpecialCalculationsService.calculatePanchaPakshi(
+      nakshatraIdx: _selectedNakshatraIdx,
       moonLon: sampleMoonLon,
       currentDt: now,
       sunrise: sunriseDt,
@@ -452,24 +455,79 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("கிழமை: ", style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(width: 8),
-              DropdownButton<int>(
-                value: _horaWeekday,
-                items: List.generate(7, (idx) {
-                  return DropdownMenuItem(
-                    value: idx + 1,
-                    child: Text(weekdays[idx]),
+              // Weekday
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text("கிழமை: ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF5D1204))),
+                  DropdownButtonHideUnderline(
+                    child: DropdownButton<int>(
+                      value: _horaWeekday,
+                      isDense: true,
+                      items: List.generate(7, (idx) {
+                        return DropdownMenuItem(
+                          value: idx + 1,
+                          child: Text(weekdays[idx], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF5D1204))),
+                        );
+                      }),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _horaWeekday = val);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              // Sunrise Picker
+              InkWell(
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: _sunriseTime,
+                    helpText: "சூரிய உதயம் நேரம் தேர்ந்தெடுக்கவும்",
                   );
-                }),
-                onChanged: (val) {
-                  if (val != null) setState(() => _horaWeekday = val);
+                  if (picked != null) {
+                    setState(() => _sunriseTime = picked);
+                  }
                 },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFAF6EE),
+                    border: Border.all(color: const Color(0xFFB58D3D)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.wb_sunny_rounded, size: 15, color: Colors.orange),
+                      const SizedBox(width: 4),
+                      Text(
+                        "உதயம்: ${_sunriseTime.hour.toString().padLeft(2, '0')}:${_sunriseTime.minute.toString().padLeft(2, '0')}",
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF5D1204)),
+                      ),
+                      const SizedBox(width: 3),
+                      const Icon(Icons.edit, size: 12, color: Colors.grey),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -480,6 +538,7 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
             itemCount: horaTable.length,
             itemBuilder: (context, index) {
               final item = horaTable[index];
+              final subHoras = item['sub_horas'] as List;
               return Card(
                 elevation: 2,
                 margin: const EdgeInsets.only(bottom: 12),
@@ -501,19 +560,73 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text("உள்-ஹோரைகள் (தலா 12 நிமிடங்கள்):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF5D1204))),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 6,
-                            children: (item['sub_horas'] as List).asMap().entries.map((e) {
-                              return Chip(
-                                backgroundColor: Colors.white,
-                                side: const BorderSide(color: Color(0xFFB58D3D)),
-                                label: Text("${e.key + 1}. ${e.value}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                              );
-                            }).toList(),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "உள்-ஹோரைகள் (தலா 12 நிமிடங்கள்):",
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF5D1204)),
+                              ),
+                              Text(
+                                "${item['lord_tamil']} ஓரை",
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: Colors.grey),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 8),
+                          ...subHoras.map((subItem) {
+                            final sNum = subItem is Map ? subItem['sub_number'] : 0;
+                            final sName = subItem is Map ? subItem['lord_tamil'] : subItem.toString();
+                            final sTime = subItem is Map ? subItem['time_range'] : '';
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.35)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF5D1204),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          "$sNum",
+                                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        "$sName உப ஓரை",
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF5D1204)),
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFAF6EE),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+                                    ),
+                                    child: Text(
+                                      sTime,
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFB45309)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
                         ],
                       ),
                     ),
@@ -524,6 +637,175 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
           ),
         ),
       ],
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 4. தசா நாதனின் நால்வர் (Dasa Nalvar Tool)
+  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildDasaNalvarToolTab() {
+    final list = AstroSpecialCalculationsService.getAllDasaNalvarMasterList();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Title Card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF5D1204), Color(0xFF8B2500)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF5D1204).withOpacity(0.2),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.people_alt_rounded, color: Colors.amber, size: 24),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "தசா நாதனின் நால்வர் அட்டவணை",
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "ஒரு தசை நடக்கும் போது அந்த தசா நாதனுடன் இணைந்து செயல்படும் நான்கு முக்கிய கிரகங்கள்:\n"
+                  "• போதகன்: நன்மைகளை போதிப்பவர் / வழிகாட்டுபவர் (பச்சை)\n"
+                  "• வேதகன்: தடைகள் / சோதனைகளை உருவாக்குபவர் (சிகப்பு)\n"
+                  "• பாசகன்: ஈர்ப்பு / பற்றுதலை ஏற்படுத்துபவர் (ஆரஞ்சு)\n"
+                  "• காரகன்: காரகத்துவங்களை நிறைவேற்றுபவர் (நீலம்)",
+                  style: TextStyle(color: Colors.white70, fontSize: 12.5, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Master Table
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.4), width: 1.0),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                  color: const Color(0xFF5D1204),
+                  child: const Text(
+                    "9 கிரகங்களின் நால்வர் அட்டவணை (Dasa Nalvar Matrix)",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14.5),
+                  ),
+                ),
+                Table(
+                  border: TableBorder.all(color: const Color(0xFFB58D3D).withOpacity(0.3), width: 0.8),
+                  columnWidths: const {
+                    0: FlexColumnWidth(1.3),
+                    1: FlexColumnWidth(1.2),
+                    2: FlexColumnWidth(1.2),
+                    3: FlexColumnWidth(1.2),
+                    4: FlexColumnWidth(1.2),
+                  },
+                  children: [
+                    TableRow(
+                      decoration: const BoxDecoration(color: Color(0xFFFAF0DC)),
+                      children: const [
+                        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text("தசை", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.w900, fontSize: 12)))),
+                        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text("போதகன்", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.w900, fontSize: 12)))),
+                        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text("வேதகன்", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFC62828), fontWeight: FontWeight.w900, fontSize: 12)))),
+                        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text("பாசகன்", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFE65100), fontWeight: FontWeight.w900, fontSize: 12)))),
+                        TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text("காரகன்", textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF1565C0), fontWeight: FontWeight.w900, fontSize: 12)))),
+                      ],
+                    ),
+                    ...list.map((row) {
+                      final b = row['bodhaka'] as Map<String, dynamic>;
+                      final v = row['vedhaka'] as Map<String, dynamic>;
+                      final p = row['pachaka'] as Map<String, dynamic>;
+                      final k = row['karaka'] as Map<String, dynamic>;
+
+                      return TableRow(
+                        decoration: const BoxDecoration(color: Colors.white),
+                        children: [
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                              child: Text(
+                                "• ${row['dasa_tamil']}",
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Color(0xFF5D1204)),
+                              ),
+                            ),
+                          ),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+                              child: Text(
+                                "${b['full_tamil']}",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF2E7D32)),
+                              ),
+                            ),
+                          ),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+                              child: Text(
+                                "${v['full_tamil']}",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFFC62828)),
+                              ),
+                            ),
+                          ),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+                              child: Text(
+                                "${p['full_tamil']}",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFFE65100)),
+                              ),
+                            ),
+                          ),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+                              child: Text(
+                                "${k['full_tamil']}",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF1565C0)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 30),
+        ],
+      ),
     );
   }
 }

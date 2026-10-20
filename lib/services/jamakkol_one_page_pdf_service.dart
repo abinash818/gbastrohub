@@ -423,26 +423,40 @@ class JamakkolOnePagePdfService {
     String arudamLabel = langCode == 'en' ? 'Ar' : (langCode == 'hi' ? 'आ' : 'ஆரூ');
     String kaviLabel = langCode == 'en' ? 'Ka' : (langCode == 'hi' ? 'क' : 'கவி');
 
-    // Inner Planets
-    details.forEach((pKey, pVal) {
-      String sign = pVal['rasi'];
-      double pLon = (pVal['longitude'] ?? 0.0) % 30;
-      int d = pLon.floor();
-      int m = ((pLon - d) * 60).floor();
-      
-      if (pKey == 'lagna') {
-        String jUdayamSign = KPService.SIGNS[udayamIdx % 12];
-        double jUdayamDeg = (outer['udayam_abs_deg'] ?? 0.0) % 30;
-        int jd = jUdayamDeg.floor();
-        int jm = ((jUdayamDeg - jd) * 60).floor();
-        rasiEntries[jUdayamSign]?.add({
-          'label': "<span style='color:green; font-weight:bold'>$udayamLabel&nbsp;${jd.toString().padLeft(2, '0')}:${jm.toString().padLeft(2, '0')}</span>",
-          'deg': jUdayamDeg,
-        });
-      } else {
+    // 1. Jamakkol Udayam (Always compulsory and visible)
+    String jUdayamSign = KPService.SIGNS[udayamIdx % 12];
+    double jUdayamDeg = (outer['udayam_abs_deg'] ?? 0.0) % 30;
+    int jd = jUdayamDeg.floor();
+    int jm = ((jUdayamDeg - jd) * 60).floor();
+    rasiEntries[jUdayamSign]?.add({
+      'label': "<span style='color:green; font-weight:bold'>$udayamLabel&nbsp;${jd.toString().padLeft(2, '0')}:${jm.toString().padLeft(2, '0')}</span>",
+      'deg': jUdayamDeg,
+    });
+
+    // 2. Lagna (Shown when Jamakkol planet switch is OFF)
+    String lagnaLabel = langCode == 'en' ? 'Asc' : (langCode == 'hi' ? 'लग्न' : 'லக்');
+    if (!isAltNaming && details['lagna'] != null) {
+      String lSign = details['lagna']['rasi'] ?? KPService.SIGNS[0];
+      double lLon = (details['lagna']['longitude'] ?? 0.0) % 30;
+      int ld = lLon.floor();
+      int lm = ((lLon - ld) * 60).floor();
+      rasiEntries[lSign]?.add({
+        'label': "<span style='color:#1565C0; font-weight:bold'>$lagnaLabel&nbsp;${ld.toString().padLeft(2, '0')}:${lm.toString().padLeft(2, '0')}</span>",
+        'deg': lLon,
+      });
+    }
+
+    // 3. Inner Planets (Shown when Jamakkol planet switch is OFF)
+    if (!isAltNaming) {
+      details.forEach((pKey, pVal) {
         String k = pKey.toString();
-        if (k == 'fortuna') return; // Skip Fortuna in PDF Jamakkol Chart
+        if (k == 'lagna' || k == 'fortuna' || k == 'maanthi') return; // Skip Lagna, Fortuna & Maanthi (handled as Upagraha)
         
+        String sign = pVal['rasi'];
+        double pLon = (pVal['longitude'] ?? 0.0) % 30;
+        int d = pLon.floor();
+        int m = ((pLon - d) * 60).floor();
+          
         bool isRetro = pInfo[k[0].toUpperCase() + k.substring(1)]?['isRetro'] ?? false;
         double planetLon = (pVal['longitude'] ?? 0.0).toDouble();
         double sunLon = (details['sun']?['longitude'] ?? 0.0).toDouble();
@@ -458,7 +472,7 @@ class JamakkolOnePagePdfService {
         }
         if (isCombust) {
           if (suffix.isNotEmpty) suffix += ",";
-          suffix += (langCode == 'en') ? "C" : ((langCode == 'hi') ? "अ" : "அ");
+          suffix += (langCode == 'en') ? "C" : ((langCode == 'hi') ? "அ" : "அ");
         }
         if (suffix.isNotEmpty) {
           pName = "$pName($suffix)";
@@ -468,8 +482,8 @@ class JamakkolOnePagePdfService {
           'label': "$pName&nbsp;${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}",
           'deg': pLon,
         });
-      }
-    });
+      });
+    }
 
     double aDeg = (outer['arudam_abs_deg'] ?? 0.0).toDouble();
     double aDegInSign = aDeg % 30.0;
@@ -534,6 +548,19 @@ class JamakkolOnePagePdfService {
       addSubPlanet(subPlanets.rahu);
       addSubPlanet(subPlanets.mrityu);
       addSubPlanet(subPlanets.yamagandan);
+    }
+
+    // Add Maanthi as Upagraha (Always visible in both states)
+    if (details.containsKey('maanthi') && details['maanthi'] != null) {
+      double mLon = (details['maanthi']['longitude'] ?? 0.0) % 30;
+      String mSign = details['maanthi']['rasi'] ?? KPService.SIGNS[0];
+      int md = mLon.floor();
+      int mm = ((mLon - md) * 60).floor();
+      String mLabel = langCode == 'en' ? 'Maa' : (langCode == 'hi' ? 'मां' : 'மாந்');
+      rasiEntries[mSign]?.add({
+        'label': "<span style='color:#795548; font-weight:bold'>$mLabel&nbsp;${md.toString().padLeft(2, '0')}:${mm.toString().padLeft(2, '0')}</span>",
+        'deg': mLon,
+      });
     }
 
     // Degree-wise ascending sort (lowest to highest) for each rasi box

@@ -643,7 +643,7 @@ abstract class AppLocalizations {
   /// No description provided for @tabDasavarga.
   ///
   /// In en, this message translates to:
-  /// **'Dasavarga'**
+  /// **'Varga Charts'**
   String get tabDasavarga;
 
   /// No description provided for @tabPalangal.

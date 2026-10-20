@@ -161,6 +161,10 @@ class AstroTranslationService {
       tMap["கேது"] = "Ketu";
       tMap["மாந்தி"] = "Maanthi";
       tMap["மாந்"] = "Maanthi";
+      tMap[" (வ)"] = " (R)";
+      tMap["(வ)"] = "(R)";
+      tMap[" (அ)"] = " (C)";
+      tMap["(அ)"] = "(C)";
       
       tMap["கிரகம்"] = "Planet";
       tMap["நட்சத்திரம் பாதம்"] = "Star Pada";
@@ -348,6 +352,10 @@ class AstroTranslationService {
       tMap["யோனி"] = "Yoni";
       tMap["ஆதியந்த பரம நாழிகை"] = "Aadhiyantha Parama Nazhigai";
       tMap["பிறக்கும் போது தசா இருப்பு"] = "Dasa Balance at Birth";
+      tMap["அதிக பாகை பெற்ற கிரகம்"] = "Highest Degree Planet";
+      tMap["குறைந்த பாகை பெற்ற கிரகம்"] = "Lowest Degree Planet";
+      tMap["ஆகமி கிரகம்"] = "Aagami Planet(s)";
+      tMap["ஆகாமி கிரகம்"] = "Aagami Planet(s)";
       tMap["வரு"] = "Y";
       tMap["மா"] = "M";
       tMap["நா"] = "D";
@@ -626,6 +634,10 @@ class AstroTranslationService {
       tMap["நாடி"] = "नाड़ी (Naadi)";
       tMap["யோனி"] = "योनि (Yoni)";
       tMap["ஆதியந்த பரம நாழிகை"] = "आदियन्त परम नाड़िगै (Aadhiyantha Nazhigai)";
+      tMap["அதிக பாகை பெற்ற கிரகம்"] = "अधिकतम अंश वाला ग्रह (Highest Degree Planet)";
+      tMap["குறைந்த பாகை பெற்ற கிரகம்"] = "न्यूनतम अंश वाला ग्रह (Lowest Degree Planet)";
+      tMap["ஆகமி கிரகம்"] = "आगामी ग्रह (Aagami Grahas)";
+      tMap["ஆகாமி கிரகம்"] = "आगामी ग्रह (Aagami Grahas)";
       tMap["வரு"] = "वर्ष";
       tMap["மா"] = "माह";
       tMap["நா"] = "दिन";

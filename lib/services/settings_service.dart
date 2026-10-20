@@ -1,6 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsService {
+  static const String _keyChartStyle = 'chart_style'; // 'south_indian' or 'north_indian'
+  static final ValueNotifier<String> chartStyleNotifier = ValueNotifier<String>('south_indian');
+
   static const String _keyLocationName = 'default_location_name';
   static const String _keyLat = 'default_latitude';
   static const String _keyLon = 'default_longitude';
@@ -22,6 +26,19 @@ class SettingsService {
   static const String _keyUdayamMethod = 'udayam_method';
   static const String _keyMaandiMethod = 'maandi_method';
   static const String _keyIncludeLagnaAshtakavarga = 'include_lagna_ashtakavarga';
+
+  static Future<void> saveChartStyle(String style) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyChartStyle, style);
+    chartStyleNotifier.value = style;
+  }
+
+  static Future<String> getChartStyle() async {
+    final prefs = await SharedPreferences.getInstance();
+    final style = prefs.getString(_keyChartStyle) ?? 'south_indian';
+    chartStyleNotifier.value = style;
+    return style;
+  }
 
   static Future<void> saveIncludeLagnaAshtakavarga(bool value) async {
     final prefs = await SharedPreferences.getInstance();

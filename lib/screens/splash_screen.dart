@@ -81,11 +81,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     }
 
     if (user != null) {
+      await AccessService().init();
       // Check device status if user is already logged in with Firebase
       
       // --- PLAY STORE REVIEWER BACKDOOR ---
       if (user.email?.toLowerCase() == 'playstore@aadhiguru.com') {
-        await AccessService().init();
         await AccessService().updateAccess({});
         targetScreen = const DashboardScreen();
       } else {
@@ -107,61 +107,48 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           Map<String, dynamic> finalAccessMap = {};
   
           // 1. Add Admin Panel Features (if any)
-        if (statusData.containsKey('access') && statusData['access'] != null) {
-          try {
-            var accessData = statusData['access'];
-            if (accessData is Map) {
-              finalAccessMap.addAll(accessData.cast<String, dynamic>());
+          if (statusData.containsKey('access') && statusData['access'] != null) {
+            try {
+              var accessData = statusData['access'];
+              if (accessData is Map) {
+                finalAccessMap.addAll(accessData.cast<String, dynamic>());
+              }
+            } catch(e){
+              debugPrint("Error parsing admin access data: $e");
             }
-          } catch(e){
-            debugPrint("Error parsing admin access data: $e");
           }
-        }
 
-        // 2. Add Subscription Info (is_premium, dates)
-        if (subStatus['success'] == true && subStatus['is_premium'] == true && subStatus['subscription'] != null) {
-          final subscription = subStatus['subscription'];
-          finalAccessMap['is_premium'] = true;
-          finalAccessMap['start_date'] = subscription['start_date'];
-          finalAccessMap['end_date'] = subscription['end_date'];
-          finalAccessMap['last_online_check'] = DateTime.now().toIso8601String();
-        }
+          // 2. Add Subscription Info (is_premium, dates)
+          if (subStatus['success'] == true && subStatus['is_premium'] == true && subStatus['subscription'] != null) {
+            final subscription = subStatus['subscription'];
+            finalAccessMap['is_premium'] = true;
+            finalAccessMap['start_date'] = subscription['start_date'];
+            finalAccessMap['end_date'] = subscription['end_date'];
+            finalAccessMap['last_online_check'] = DateTime.now().toIso8601String();
+          }
 
-        await AccessService().init();
+          // 3. Decide navigation based on final access map
+          bool hasAnyFeature = finalAccessMap.keys.any((key) => 
+            (finalAccessMap[key] == true || finalAccessMap[key] == 1 || finalAccessMap[key] == "1") &&
+            key != 'is_premium' && key != 'start_date' && key != 'end_date' && key != 'last_online_check'
+          );
 
-        // 3. Decide navigation based on final access map
-        bool hasAnyFeature = finalAccessMap.keys.any((key) => 
-          (finalAccessMap[key] == true || finalAccessMap[key] == 1 || finalAccessMap[key] == "1") &&
-          key != 'is_premium' && key != 'start_date' && key != 'end_date' && key != 'last_online_check'
-        );
-
-        if (hasAnyFeature || finalAccessMap['is_premium'] == true) {
-          await AccessService().updateAccess(finalAccessMap);
-          targetScreen = const DashboardScreen();
-        } else if (subStatus['error'] == true) {
-          // Offline or API error: rely on cached access
-          if (AccessService().hasAccess('is_premium') || AccessService().getActiveFeatures().isNotEmpty) {
-            if (AccessService().isOfflineExpired(15)) {
-              // 15 days passed without internet check
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(AppLocalizations.of(context)!.noInternetSub),
-                  duration: const Duration(seconds: 5),
-                ));
-              });
-              targetScreen = const SubscriptionPlansScreen();
-            } else {
+          if (hasAnyFeature || finalAccessMap['is_premium'] == true) {
+            await AccessService().updateAccess(finalAccessMap);
+            targetScreen = const DashboardScreen();
+          } else if (subStatus['error'] == true || status == 'ERROR') {
+            // Offline or API error: rely on cached access
+            if (AccessService().hasAccess('is_premium') || AccessService().getActiveFeatures().isNotEmpty) {
               targetScreen = const DashboardScreen();
+            } else {
+              targetScreen = const SubscriptionPlansScreen();
             }
           } else {
+            // Clear access only if both are confirmed empty online
+            await AccessService().updateAccess({'is_premium': false});
             targetScreen = const SubscriptionPlansScreen();
           }
-        } else {
-          // Clear access only if both are empty
-          await AccessService().updateAccess({'is_premium': false});
-          targetScreen = const SubscriptionPlansScreen();
         }
-       }
       }
     }
 

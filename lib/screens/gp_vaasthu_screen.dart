@@ -1981,8 +1981,10 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                             const Text('உத்தமம் (உ) ✓', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
                             const SizedBox(height: 2),
                             Text('$uCount', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF2E7D32))),
-                            const SizedBox(height: 1),
-                            Text('$uCount × 4 = $uPercent%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                            if (_showCalculationDetails) ...[
+                              const SizedBox(height: 1),
+                              Text('$uCount × 4 = $uPercent%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                            ],
                           ],
                         ),
                       ),
@@ -2001,8 +2003,10 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                             const Text('மத்திமம் (ம) =', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFFEF6C00))),
                             const SizedBox(height: 2),
                             Text('$mCount', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFFEF6C00))),
-                            const SizedBox(height: 1),
-                            Text('$mCount × 2 = $mPercent%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFEF6C00))),
+                            if (_showCalculationDetails) ...[
+                              const SizedBox(height: 1),
+                              Text('$mCount × 2 = $mPercent%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFEF6C00))),
+                            ],
                           ],
                         ),
                       ),
@@ -2021,8 +2025,10 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                             const Text('அதமம் (அ) ✗', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
                             const SizedBox(height: 2),
                             Text('$aCount', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFFC62828))),
-                            const SizedBox(height: 1),
-                            Text('$aCount × 0 = 0%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
+                            if (_showCalculationDetails) ...[
+                              const SizedBox(height: 1),
+                              Text('$aCount × 0 = 0%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFC62828))),
+                            ],
                           ],
                         ),
                       ),
@@ -2089,11 +2095,13 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'கணக்கீடு: ($uCount × 4%) + ($mCount × 2%) + ($aCount × 0%) = $totalPercent%',
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
+                      if (_showCalculationDetails) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          'கணக்கீடு: ($uCount × 4%) + ($mCount × 2%) + ($aCount × 0%) = $totalPercent%',
+                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -2339,7 +2347,7 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               style: const TextStyle(fontSize: 11.5, color: Color(0xFF555555), fontWeight: FontWeight.w500),
             ),
           ],
-          if (calc != null && calc.isNotEmpty) ...[
+          if (_showCalculationDetails && calc != null && calc.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
               calc,

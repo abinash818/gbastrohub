@@ -291,7 +291,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get tabAshtakavarga => 'அஷ்டவர்க்கம்';
 
   @override
-  String get tabDasavarga => 'தசவர்க்கம்';
+  String get tabDasavarga => 'வர்க்கச் சக்கரங்கள்';
 
   @override
   String get tabPalangal => 'பலன்கள்';

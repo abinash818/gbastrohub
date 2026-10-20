@@ -289,7 +289,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabAshtakavarga => 'Ashtakavarga';
 
   @override
-  String get tabDasavarga => 'Dasavarga';
+  String get tabDasavarga => 'Varga Charts';
 
   @override
   String get tabPalangal => 'Predictions';

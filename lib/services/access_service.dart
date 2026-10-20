@@ -24,7 +24,10 @@ class AccessService {
 
   Future<void> updateAccess(Map<String, dynamic>? accessData) async {
     if (accessData != null) {
-      _accessMap = accessData;
+      _accessMap = Map<String, dynamic>.from(accessData);
+      if (!_accessMap.containsKey('last_online_check')) {
+        _accessMap['last_online_check'] = DateTime.now().toIso8601String();
+      }
       try {
         await _secureStorage.write(key: 'user_access_map', value: jsonEncode(_accessMap));
       } catch (e) {
@@ -101,14 +104,14 @@ class AccessService {
   String? get endDate => _accessMap['end_date'];
 
   bool isOfflineExpired(int daysLimit) {
-    if (!_accessMap.containsKey('last_online_check')) return true;
+    if (!_accessMap.containsKey('last_online_check')) return false;
     
     try {
       DateTime lastCheck = DateTime.parse(_accessMap['last_online_check']);
       DateTime now = DateTime.now();
       return now.difference(lastCheck).inDays >= daysLimit;
     } catch (e) {
-      return true; // If parsing fails, force online check
+      return false; // If parsing fails, do not force lockout
     }
   }
 }

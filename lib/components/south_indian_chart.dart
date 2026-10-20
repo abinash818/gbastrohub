@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/astro_translation_service.dart';
+import '../services/settings_service.dart';
+import 'north_indian_chart.dart';
 
 // RASI BOX ORDER (0-15 grid indices)
 // 0  1  2  3  (Top row: Meenam to Rishabham)
@@ -26,10 +28,13 @@ class SouthIndianChart extends StatelessWidget {
   final Widget? centerWidget;
   final Map<String, String>? borderLabels;
   final String? highlightSign;
+  final String? highlightSignLabel;
+  final Color? highlightColor;
   final bool allowScroll;
   final Map<String, String>? rasiKathir;
   final double heightRatio;
   final String? udayaLordLabel;
+  final String? chartStyle;
 
   const SouthIndianChart({
     super.key, 
@@ -38,10 +43,13 @@ class SouthIndianChart extends StatelessWidget {
     this.centerWidget,
     this.borderLabels,
     this.highlightSign,
+    this.highlightSignLabel,
+    this.highlightColor,
     this.allowScroll = true,
     this.rasiKathir,
     this.heightRatio = 1.0,
     this.udayaLordLabel,
+    this.chartStyle,
   });
 
   static double? _extractDegree(String str) {
@@ -74,23 +82,40 @@ class SouthIndianChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-        final double size = constraints.maxWidth;
-        final double height = size * heightRatio;
+    return ValueListenableBuilder<String>(
+      valueListenable: SettingsService.chartStyleNotifier,
+      builder: (context, globalStyle, _) {
+        final activeStyle = chartStyle ?? globalStyle;
+        if (activeStyle == 'north_indian' && (borderLabels == null || borderLabels!.isEmpty)) {
+          return NorthIndianChart(
+            rasiMap: rasiMap,
+            centerLabel: centerLabel,
+            centerWidget: centerWidget,
+            highlightSign: highlightSign,
+            highlightSignLabel: highlightSignLabel,
+            highlightColor: highlightColor,
+            allowScroll: allowScroll,
+            heightRatio: heightRatio,
+          );
+        }
 
-        final bool hasBorderLabels = borderLabels != null && borderLabels!.isNotEmpty;
-        final double pad = hasBorderLabels ? 24.0 : 0.0;
-        final double innerW = size - (pad * 2);
-        final double innerH = height - (pad * 2);
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+            final double size = constraints.maxWidth;
+            final double height = size * heightRatio;
 
-        return Container(
-          width: size,
-          height: height,
-          child: Stack(
+            final bool hasBorderLabels = borderLabels != null && borderLabels!.isNotEmpty;
+            final double pad = hasBorderLabels ? 24.0 : 0.0;
+            final double innerW = size - (pad * 2);
+            final double innerH = height - (pad * 2);
+
+            return Container(
+              width: size,
+              height: height,
+              child: Stack(
             clipBehavior: Clip.none,
             children: [
               // 1. Grid
@@ -126,11 +151,15 @@ class SouthIndianChart extends StatelessWidget {
                         final bool isArudamCell = items.any((e) => e.startsWith("ஆரூ") || e.startsWith("Aru") || e.startsWith("आरू"));
                         final bool isKaviCell = items.any((e) => e.startsWith("கவி") || e.startsWith("Kav") || e.startsWith("कवि"));
                         final bool isSpecialCell = isLagnaCell || isArudamCell || isKaviCell;
+                        final bool isHighlighted = rasi != null && highlightSign != null && rasi.toLowerCase() == highlightSign!.toLowerCase();
                         return _ChartCell(
                           rasi: rasi,
                           items: items,
                           allowScroll: allowScroll,
                           kathir: (rasi != null && rasiKathir != null) ? rasiKathir![rasi] : null,
+                          isHighlighted: isHighlighted,
+                          highlightLabel: isHighlighted ? highlightSignLabel : null,
+                          highlightColor: isHighlighted ? highlightColor : null,
                         );
                       },
                     ),
@@ -166,6 +195,8 @@ class SouthIndianChart extends StatelessWidget {
           },
         ),
       ),
+    );
+      },
     );
   }
 
@@ -276,12 +307,18 @@ class _ChartCell extends StatefulWidget {
   final List<String> items;
   final bool allowScroll;
   final String? kathir;
+  final bool isHighlighted;
+  final String? highlightLabel;
+  final Color? highlightColor;
 
   const _ChartCell({
     required this.rasi, 
     required this.items, 
     this.allowScroll = true,
     this.kathir,
+    this.isHighlighted = false,
+    this.highlightLabel,
+    this.highlightColor,
   });
 
   @override
@@ -303,33 +340,69 @@ class _ChartCellState extends State<_ChartCell> {
 
     final bool isLagnaCell = widget.items.any((e) => e.startsWith("லக்") || e.startsWith("உத") || e.startsWith("Asc") || e.startsWith("Lagna") || e.startsWith("Uda") || e.startsWith("लग्न") || e.startsWith("उदय"));
     final bool isArudamCell = widget.items.any((e) => e.startsWith("ஆரூ") || e.startsWith("Aru") || e.startsWith("आरू"));
-    final bool isKaviCell = widget.items.any((e) => e.startsWith("கவி") || e.startsWith("Kav") || e.startsWith("कவி"));
+    final bool isKaviCell = widget.items.any((e) => e.startsWith("கவி") || e.startsWith("Kav") || e.startsWith("कवि"));
     final bool isSpecialCell = isLagnaCell || isArudamCell || isKaviCell;
 
     // Check if cell is a single number (e.g. Ashtakavarga points)
     final bool isSingleNumber = widget.items.length == 1 && int.tryParse(widget.items.first.trim()) != null;
     if (isSingleNumber) {
+      final bool isHighlighted = widget.isHighlighted;
       return Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isHighlighted 
+              ? (widget.highlightColor ?? const Color(0xFFFFECC2)) 
+              : Colors.white,
           border: Border.all(
-            color: Colors.orange.shade800,
-            width: 1.5,
+            color: isHighlighted ? const Color(0xFFD84315) : Colors.orange.shade800,
+            width: isHighlighted ? 2.5 : 1.5,
           ),
         ),
         padding: const EdgeInsets.all(4),
         child: Center(
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
-              widget.items.first.trim(),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 26.0,
-                fontWeight: FontWeight.w900,
-                color: Colors.indigo.shade900,
-              ),
-            ),
+            child: widget.highlightLabel != null && isHighlighted
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF5D1204),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          widget.highlightLabel!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        widget.items.first.trim(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 24.0,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF5D1204),
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    widget.items.first.trim(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 26.0,
+                      fontWeight: FontWeight.w900,
+                      color: isHighlighted ? const Color(0xFF5D1204) : Colors.indigo.shade900,
+                    ),
+                  ),
           ),
         ),
       );
@@ -493,11 +566,16 @@ class _ChartCellState extends State<_ChartCell> {
                 if (match != null) {
                   displayText = "${match.group(1)}\n${match.group(2)}";
                 } else {
-                  int firstSpaceIndex = translatedIt.indexOf(' ');
-                  if (firstSpaceIndex != -1) {
-                    displayText = translatedIt.substring(0, firstSpaceIndex) + '\n' + translatedIt.substring(firstSpaceIndex + 1);
-                  } else {
+                  final flagOnlyMatch = RegExp(r'^(.*?)\s+(\([வஅRC]\))$').firstMatch(translatedIt);
+                  if (flagOnlyMatch != null) {
                     displayText = translatedIt;
+                  } else {
+                    int firstSpaceIndex = translatedIt.indexOf(' ');
+                    if (firstSpaceIndex != -1) {
+                      displayText = translatedIt.substring(0, firstSpaceIndex) + '\n' + translatedIt.substring(firstSpaceIndex + 1);
+                    } else {
+                      displayText = translatedIt;
+                    }
                   }
                 }
 

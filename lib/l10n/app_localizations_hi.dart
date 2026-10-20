@@ -289,7 +289,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get tabAshtakavarga => 'अष्टकवर्ग';
 
   @override
-  String get tabDasavarga => 'दशवर्ग';
+  String get tabDasavarga => 'वर्ग चक्र';
 
   @override
   String get tabPalangal => 'फल';

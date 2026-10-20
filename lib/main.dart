@@ -41,6 +41,7 @@ void main() async {
   appFontScaleNotifier.value = initialFontScale;
   final String initialLang = await SettingsService.getLanguage();
   appLocaleNotifier.value = Locale(initialLang);
+  await SettingsService.getChartStyle();
   runApp(const AstrologyApp());
 }
 

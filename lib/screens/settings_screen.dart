@@ -35,6 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   double _fontSize = 1.0;
   bool _useTrueNode = false;
   String _selectedLang = 'ta';
+  String _chartStyle = 'south_indian';
   int _udayamMethod = 0;
   int _maandiMethod = 4;
   bool _includeLagnaAshtakavarga = false;
@@ -80,6 +81,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final fs = await SettingsService.getFontSize();
     final utn = await SettingsService.getTrueNodeMode();
     final lang = await SettingsService.getLanguage();
+    final cs = await SettingsService.getChartStyle();
     final um = await SettingsService.getUdayamMethod();
     final ila = await SettingsService.getIncludeLagnaAshtakavarga();
     
@@ -94,6 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _fontSize = fs;
         _useTrueNode = utn;
         _selectedLang = lang;
+        _chartStyle = cs;
         _udayamMethod = um;
         _maandiMethod = 4;
         _includeLagnaAshtakavarga = ila;
@@ -127,6 +130,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await SettingsService.saveFontSize(_fontSize);
     await SettingsService.saveTrueNodeMode(_useTrueNode);
     await SettingsService.saveLanguage(_selectedLang);
+    await SettingsService.saveChartStyle(_chartStyle);
     await SettingsService.saveUdayamMethod(_udayamMethod);
     await SettingsService.saveMaandiMethod(_maandiMethod);
     await SettingsService.saveIncludeLagnaAshtakavarga(_includeLagnaAshtakavarga);
@@ -204,6 +208,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 32),
             _buildSectionTitle(AstroTranslationService.translate(context, "கணக்கீடு அமைப்புகள் (Calculation Settings)")),
             const SizedBox(height: 16),
+            _buildChartStyleSelector(),
+            const SizedBox(height: 24),
             _buildNodeSelector(),
             const SizedBox(height: 24),
             _buildYearLengthSelector(),
@@ -312,6 +318,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildTextField(_astroAddressController, AstroTranslationService.translate(context, "முகவரி (Address)"), Icons.location_city_outlined, maxLines: 3),
         ],
       ),
+    );
+  }
+
+  Widget _buildChartStyleSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.grid_view_rounded, color: Color(0xFFB58D3D), size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                AstroTranslationService.translate(context, "ஜாதகக் கட்ட நடைமுறை (Chart Style)"),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<String>(
+            segments: [
+              ButtonSegment(
+                value: 'south_indian',
+                label: Text(AstroTranslationService.translate(context, "தென்னிந்திய முறை")),
+                icon: const Icon(Icons.grid_on_rounded, size: 18),
+              ),
+              ButtonSegment(
+                value: 'north_indian',
+                label: Text(AstroTranslationService.translate(context, "வடஇந்திய முறை")),
+                icon: const Icon(Icons.diamond_outlined, size: 18),
+              ),
+            ],
+            selected: {_chartStyle},
+            onSelectionChanged: (Set<String> newSelection) {
+              setState(() {
+                _chartStyle = newSelection.first;
+              });
+              SettingsService.saveChartStyle(newSelection.first);
+            },
+            style: SegmentedButton.styleFrom(
+              selectedBackgroundColor: AppColors.primary,
+              selectedForegroundColor: Colors.white,
+              backgroundColor: Colors.white,
+              side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.4)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          AstroTranslationService.translate(context, "* தேர்ந்தெடுக்கப்படும் கட்ட நடைமுறை அனைத்து ஜாதகப் பக்கங்களிலும் உடனே பயன்பாட்டிற்கு வரும்."),
+          style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontStyle: FontStyle.italic),
+        ),
+      ],
     );
   }
 

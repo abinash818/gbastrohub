@@ -95,7 +95,22 @@ try {
                 $sub = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 if ($sub) {
-                    $sub['features'] = $sub['features'] ? explode(',', $sub['features']) : [];
+                    $featuresList = [];
+                    if (!empty($data->email)) {
+                        $manStmt = $conn->prepare("SELECT custom_features FROM app_users WHERE email = :email LIMIT 1");
+                        $manStmt->execute([':email' => $data->email]);
+                        $customFeat = $manStmt->fetchColumn();
+                        if (!empty($customFeat)) {
+                            $custom_arr = json_decode($customFeat, true);
+                            if (is_array($custom_arr) && count($custom_arr) > 0) {
+                                $featuresList = $custom_arr;
+                            }
+                        }
+                    }
+                    if (empty($featuresList)) {
+                        $featuresList = $sub['features'] ? explode(',', $sub['features']) : [];
+                    }
+                    $sub['features'] = $featuresList;
 
                     // Sync with app_users so the admin panel shows them as APPROVED
                     if (!empty($data->email)) {
@@ -122,14 +137,24 @@ try {
                         // Keep manual approval active, don't reset to PENDING.
                         $plan_id = $manCheck['plan_id'] ?? 0;
                         $plan_name = 'Manual Plan';
-                        $features = '';
+                        $featuresList = [];
+                        
+                        if (!empty($manCheck['custom_features'])) {
+                            $custom_arr = json_decode($manCheck['custom_features'], true);
+                            if (is_array($custom_arr) && count($custom_arr) > 0) {
+                                $featuresList = $custom_arr;
+                            }
+                        }
+
                         if ($plan_id) {
                             $pStmt = $conn->prepare("SELECT name, features FROM subscription_plans WHERE id = :plan_id LIMIT 1");
                             $pStmt->execute([':plan_id' => $plan_id]);
                             $planData = $pStmt->fetch(PDO::FETCH_ASSOC);
                             if ($planData) {
                                 $plan_name = $planData['name'];
-                                $features = $planData['features'];
+                                if (empty($featuresList) && !empty($planData['features'])) {
+                                    $featuresList = array_map('trim', explode(',', $planData['features']));
+                                }
                             }
                         }
 
@@ -140,7 +165,7 @@ try {
                             'end_date' => $manCheck['expiry_date'],
                             'status' => 'active',
                             'plan_name' => $plan_name,
-                            'features' => $features ? explode(',', $features) : []
+                            'features' => $featuresList
                         ];
 
                         echo json_encode(["success" => true, "is_premium" => true, "subscription" => $sub]);

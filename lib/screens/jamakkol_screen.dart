@@ -1314,27 +1314,41 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     final outer = _results!['outer'];
     final udayamIdx = _results!['udayam_idx'] ?? 0;
 
-    // Inner Planets
-    final Map<String, dynamic> pDetails = _results!['inner']['planet_details'];
-    pDetails.forEach((pKey, pVal) {
-      String sign = pVal['rasi'];
-      double lon = (pVal['longitude'] ?? 0.0) % 30;
-      int d = lon.floor();
-      int m = ((lon - d) * 60).floor();
-      
-      if (pKey == 'lagna') {
-        // Use Jamakkol Udayam instead of KP Lagna for consistency in Jamakkol Chart
-        String jUdayamSign = KPService.SIGNS[udayamIdx % 12];
-        double jUdayamDeg = (outer['udayam_abs_deg'] ?? 0.0) % 30;
-        int jd = jUdayamDeg.floor();
-        int jm = ((jUdayamDeg - jd) * 60).floor();
-        rasiEntries[jUdayamSign]?.add({
-          'label': "${AppLocalizations.of(context)!.udaShort}\u00A0${jd.toString().padLeft(2, '0')}:${jm.toString().padLeft(2, '0')}",
-          'deg': jUdayamDeg,
-        });
-      } else {
-        if (pKey == 'fortuna') return; // Skip Fortuna in Jamakkol Chart
+    // 1. Jamakkol Udayam (Always compulsory and visible)
+    String jUdayamSign = KPService.SIGNS[udayamIdx % 12];
+    double jUdayamDeg = (outer['udayam_abs_deg'] ?? 0.0) % 30;
+    int jd = jUdayamDeg.floor();
+    int jm = ((jUdayamDeg - jd) * 60).floor();
+    rasiEntries[jUdayamSign]?.add({
+      'label': "${AppLocalizations.of(context)!.udaShort}\u00A0${jd.toString().padLeft(2, '0')}:${jm.toString().padLeft(2, '0')}",
+      'deg': jUdayamDeg,
+    });
+
+    // 2. Lagna (Shown when Jamakkol planet switch is OFF)
+    final Map<String, dynamic> pDetails = _results!['inner']['planet_details'] ?? {};
+    if (!_isAltNaming && pDetails['lagna'] != null) {
+      final lagnaVal = pDetails['lagna'];
+      String lSign = lagnaVal['rasi'] ?? KPService.SIGNS[0];
+      double lLon = (lagnaVal['longitude'] ?? 0.0) % 30;
+      int ld = lLon.floor();
+      int lm = ((lLon - ld) * 60).floor();
+      String lagnaPrefix = AstroTranslationService.translate(context, KPService.TAMIL_PLANET_SHORT['Lagna'] ?? 'லக்', isPlanet: true);
+      rasiEntries[lSign]?.add({
+        'label': "$lagnaPrefix\u00A0${ld.toString().padLeft(2, '0')}:${lm.toString().padLeft(2, '0')}",
+        'deg': lLon,
+      });
+    }
+
+    // 3. Inner Planets (Shown when Jamakkol planet switch is OFF)
+    if (!_isAltNaming) {
+      pDetails.forEach((pKey, pVal) {
+        if (pKey == 'lagna' || pKey == 'fortuna' || pKey == 'maanthi') return; // Skip Lagna, Fortuna & Maanthi (handled as Upagraha)
         
+        String sign = pVal['rasi'];
+        double lon = (pVal['longitude'] ?? 0.0) % 30;
+        int d = lon.floor();
+        int m = ((lon - d) * 60).floor();
+
         final Map<String, dynamic> pInfo = _results!['inner']['planet_info'] ?? {};
         bool isRetro = pInfo[pKey[0].toUpperCase() + pKey.substring(1)]?['isRetro'] ?? false;
         double pLon = (pVal['longitude'] ?? 0.0).toDouble();
@@ -1363,8 +1377,8 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           'label': "$name\u00A0${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}",
           'deg': lon,
         });
-      }
-    });
+      });
+    }
 
     // Arudam and Kavi
     int arudamIdx = _results?['arudam_idx'] ?? 0;
@@ -1429,6 +1443,20 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
       addSubPlanet(subPlanets.yamagandan);
     }
 
+    // Add Maanthi as Upagraha (Always visible in both states)
+    if (pDetails.containsKey('maanthi') && pDetails['maanthi'] != null) {
+      final mVal = pDetails['maanthi'];
+      String mSign = mVal['rasi'] ?? KPService.SIGNS[0];
+      double mLon = (mVal['longitude'] ?? 0.0) % 30;
+      int md = mLon.floor();
+      int mm = ((mLon - md) * 60).floor();
+      String mPrefix = (lang == 'en') ? 'Maa' : ((lang == 'hi') ? 'मां' : 'மாந்');
+      rasiEntries[mSign]?.add({
+        'label': "$mPrefix\u00A0${md.toString().padLeft(2, '0')}:${mm.toString().padLeft(2, '0')}",
+        'deg': mLon,
+      });
+    }
+
     // Degree-wise ascending sort (lowest to highest) for each rasi box
     Map<String, List<String>> rasiMap = {};
     for (var sign in KPService.SIGNS) {
@@ -1437,7 +1465,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
       rasiMap[sign] = list.map((e) => e['label'] as String).toList();
     }
 
-    // Border Labels
+    // Border Labels (Always visible in both states)
     final Map<String, String> borderLabels = Map<String, String>.from(_results!['outer']['border_planets']);
     
     // Find the sign for highlight
@@ -1474,31 +1502,6 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           udayaLordLabel: udayaLordLabel,
         ),
       ],
-    );
-  }
-
-  Widget _buildKaviInfo() {
-    int kaviIdx = _results?['kavi_idx'] ?? 0;
-    String kaviSign = KPService.TAMIL_SIGNS[KPService.SIGNS[kaviIdx % 12]] ?? "மேஷம்";
-    String udayamSign = "-";
-    try {
-      udayamSign = KPService.TAMIL_SIGNS[(_results?['inner']?['planet_details']?['lagna']?['rasi'])] ?? "-";
-    } catch (e) {
-      debugPrint("Udayam Sign Error: $e");
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.05), borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.primary.withOpacity(0.1))),
-      child: Column(
-        children: [
-          _buildInfoRow(AppLocalizations.of(context)!.udayam, udayamSign),
-          const Divider(),
-          _buildInfoRow(AppLocalizations.of(context)!.arudam, KPService.TAMIL_SIGNS[KPService.SIGNS[_results!['arudam_idx']]]!),
-          const Divider(),
-          _buildInfoRow(AppLocalizations.of(context)!.kavippu, kaviSign, isPrimary: true),
-        ],
-      ),
     );
   }
 

@@ -255,10 +255,25 @@ class AstroSpecialCalculationsService {
     // உபயோகி / பகர்ப்பு யோகி (Sahayogi): Yogi Rasi Lord
     String upaYogi = yogiRasiLord;
 
+    // நித்திய யோகம் (Nithya Yoga / நாம யோகம்)
+    int nithyaYogaIdx = (((sunLon + moonLon) % 360) / (360.0 / 27.0)).floor() % 27;
+    const List<String> TAMIL_YOGAS = [
+      "விஷ்கம்பம்", "ப்ரீதி", "ஆயுஷ்மான்", "சௌபாக்கியம்", "சோபனம்",
+      "அதிகண்டம்", "சுகர்மம்", "திருதி", "சூலம்", "கண்டம்",
+      "விருத்தி", "துருவம்", "வியாகாதம்", "ஹர்ஷணம்", "வஜ்ரம்",
+      "சித்தி", "வியதிபாதம்", "வரியான்", "பரிகம்", "சிவம்",
+      "சித்தம்", "சாத்தியம்", "சுபம்", "சுப்பிரம்", "பிராமியம்",
+      "மஹேந்திரம்", "வைதிருதி"
+    ];
+
     // முடக்கு ராசி, நட்சத்திரம் & அதிபர் (சூரியன் நின்ற நட்சத்திர அடிப்படை)
     final mudakkuData = calculateMudakku(sunLon);
 
     return {
+      'yoga_idx': nithyaYogaIdx,
+      'yoga_name_tamil': TAMIL_YOGAS[nithyaYogaIdx],
+      'yogi_planet_tamil': KPService.TAMIL_PLANETS[yogiPlanet] ?? yogiPlanet,
+      'avayogi_planet_tamil': KPService.TAMIL_PLANETS[avayogiPlanet] ?? avayogiPlanet,
       'yogi': {
         'planet': yogiPlanet,
         'planet_tamil': KPService.TAMIL_PLANETS[yogiPlanet] ?? yogiPlanet,
@@ -591,21 +606,268 @@ class AstroSpecialCalculationsService {
     };
   }
 
+  /// 3.1b அதிக & குறைந்த பாகை பெற்ற கிரகங்கள் (Highest & Lowest Degree Planets)
+  /// 12 ராசிகளுக்குள் 0° முதல் 30° வரை கணக்கிடப்பட்டு, அதிக மற்றும் குறைந்த பாகை பெற்ற கிரகங்கள் கண்டறியப்படுகின்றன.
+  /// ராகு மற்றும் கேது அதிக/குறைந்த பாகை பெற்று சமமாக இருக்கும் போது, அவற்றின் வீட்டு அதிபதியின் பாகை ஒப்பீடு செய்யப்பட்டு
+  /// எந்த அதிபதி அதிக/குறைந்த பாகை பெற்றுள்ளாரோ, அந்த ராகு/கேது தேர்ந்தெடுக்கப்படுகிறது.
+  static Map<String, dynamic> calculateExtremeDegreePlanets(Map<String, double> planetLons) {
+    const List<String> eligiblePlanets = [
+      'Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'
+    ];
+    const List<String> signLords = [
+      'Mars',    // 0: Mesham
+      'Venus',   // 1: Rishabham
+      'Mercury', // 2: Mithunam
+      'Moon',    // 3: Kadagam
+      'Sun',     // 4: Simmam
+      'Mercury', // 5: Kanni
+      'Venus',   // 6: Thulaam
+      'Mars',    // 7: Viruchigam
+      'Jupiter', // 8: Dhanusu
+      'Saturn',  // 9: Magaram
+      'Saturn',  // 10: Kumbam
+      'Jupiter', // 11: Meenam
+    ];
+
+    double getLon(String p) {
+      if (planetLons.containsKey(p)) return planetLons[p]!;
+      for (var entry in planetLons.entries) {
+        if (entry.key.toLowerCase() == p.toLowerCase()) return entry.value;
+      }
+      return 0.0;
+    }
+
+    List<Map<String, dynamic>> planetData = [];
+    for (var p in eligiblePlanets) {
+      double lon = getLon(p);
+      double degInRasi = lon % 30.0;
+      if (degInRasi < 0) degInRasi += 30.0;
+      int rasiIdx = (lon / 30).floor() % 12;
+      String lord = signLords[rasiIdx];
+      double lordLon = getLon(lord);
+      double lordDegInRasi = lordLon % 30.0;
+      if (lordDegInRasi < 0) lordDegInRasi += 30.0;
+
+      planetData.add({
+        'planet': p,
+        'planet_tamil': KPService.TAMIL_PLANETS[p] ?? p,
+        'lon': lon,
+        'deg': degInRasi,
+        'deg_formatted': KPService.formatDegrees(degInRasi),
+        'rasi_idx': rasiIdx,
+        'rasi_tamil': KPService.TAMIL_SIGNS[KPService.SIGNS[rasiIdx]] ?? KPService.SIGNS[rasiIdx],
+        'lord': lord,
+        'lord_tamil': KPService.TAMIL_PLANETS[lord] ?? lord,
+        'lord_deg': lordDegInRasi,
+        'lord_deg_formatted': KPService.formatDegrees(lordDegInRasi),
+      });
+    }
+
+    Map<String, dynamic> findHighest() {
+      double maxDeg = -1.0;
+      for (var p in planetData) {
+        if ((p['deg'] as double) > maxDeg) maxDeg = p['deg'] as double;
+      }
+      var topPlanets = planetData.where((p) => ((p['deg'] as double) - maxDeg).abs() < 0.001).toList();
+
+      if (topPlanets.length == 1) {
+        return {
+          ...topPlanets.first,
+          'tie_breaker': false,
+        };
+      }
+
+      bool hasRahu = topPlanets.any((p) => p['planet'] == 'Rahu');
+      bool hasKetu = topPlanets.any((p) => p['planet'] == 'Ketu');
+      if (hasRahu && hasKetu) {
+        var rahu = topPlanets.firstWhere((p) => p['planet'] == 'Rahu');
+        var ketu = topPlanets.firstWhere((p) => p['planet'] == 'Ketu');
+        if ((rahu['lord_deg'] as double) >= (ketu['lord_deg'] as double)) {
+          return {
+            ...rahu,
+            'tie_breaker': true,
+            'tie_note': ' (வீட்டு அதிபதி ${rahu['lord_tamil']} ${rahu['lord_deg_formatted']})',
+          };
+        } else {
+          return {
+            ...ketu,
+            'tie_breaker': true,
+            'tie_note': ' (வீட்டு அதிபதி ${ketu['lord_tamil']} ${ketu['lord_deg_formatted']})',
+          };
+        }
+      }
+
+      return {
+        ...topPlanets.first,
+        'tie_breaker': false,
+      };
+    }
+
+    Map<String, dynamic> findLowest() {
+      double minDeg = 999.0;
+      for (var p in planetData) {
+        if ((p['deg'] as double) < minDeg) minDeg = p['deg'] as double;
+      }
+      var bottomPlanets = planetData.where((p) => ((p['deg'] as double) - minDeg).abs() < 0.001).toList();
+
+      if (bottomPlanets.length == 1) {
+        return {
+          ...bottomPlanets.first,
+          'tie_breaker': false,
+        };
+      }
+
+      bool hasRahu = bottomPlanets.any((p) => p['planet'] == 'Rahu');
+      bool hasKetu = bottomPlanets.any((p) => p['planet'] == 'Ketu');
+      if (hasRahu && hasKetu) {
+        var rahu = bottomPlanets.firstWhere((p) => p['planet'] == 'Rahu');
+        var ketu = bottomPlanets.firstWhere((p) => p['planet'] == 'Ketu');
+        if ((rahu['lord_deg'] as double) <= (ketu['lord_deg'] as double)) {
+          return {
+            ...rahu,
+            'tie_breaker': true,
+            'tie_note': ' (வீட்டு அதிபதி ${rahu['lord_tamil']} ${rahu['lord_deg_formatted']})',
+          };
+        } else {
+          return {
+            ...ketu,
+            'tie_breaker': true,
+            'tie_note': ' (வீட்டு அதிபதி ${ketu['lord_tamil']} ${ketu['lord_deg_formatted']})',
+          };
+        }
+      }
+
+      return {
+        ...bottomPlanets.first,
+        'tie_breaker': false,
+      };
+    }
+
+    final highest = findHighest();
+    final lowest = findLowest();
+
+    String highestDisplay = "${highest['planet_tamil']} - ${highest['deg_formatted']} (${highest['rasi_tamil']})${highest['tie_note'] ?? ''}";
+    String lowestDisplay = "${lowest['planet_tamil']} - ${lowest['deg_formatted']} (${lowest['rasi_tamil']})${lowest['tie_note'] ?? ''}";
+
+    List<Map<String, dynamic>> sortedAll = List.from(planetData);
+    sortedAll.sort((a, b) => (b['deg'] as double).compareTo(a['deg'] as double));
+
+    return {
+      'highest': highest,
+      'lowest': lowest,
+      'highest_display': highestDisplay,
+      'lowest_display': lowestDisplay,
+      'all_degrees': sortedAll,
+    };
+  }
+
+  /// 3.1c ஆகமி கிரகம் (Aagami Grahas)
+  /// ஒரு கிரகத்தின் நட்சத்திர பாதங்களில் (3 நட்சத்திரங்கள் / 12 பாதங்கள்) நவகிரகங்கள்
+  /// எதுவும் அமையவில்லை என்றால் அந்த கிரகங்கள் 'ஆகமி கிரகங்கள்' ஆகும்.
+  static Map<String, dynamic> calculateAagamiPlanets(Map<String, double> planetLons) {
+    const List<String> ninePlanets = [
+      'Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'
+    ];
+    
+    const Map<String, List<String>> planetStars = {
+      'Ketu': ['அஸ்வினி', 'மகம்', 'மூலம்'],
+      'Venus': ['பரணி', 'பூரம்', 'பூராடம்'],
+      'Sun': ['கார்த்திகை', 'உத்திரம்', 'உத்திராடம்'],
+      'Moon': ['ரோகிணி', 'அஸ்தம்', 'திருவோணம்'],
+      'Mars': ['மிருகசீரிஷம்', 'சித்திரை', 'அவிட்டம்'],
+      'Rahu': ['திருவாதிரை', 'சுவாதி', 'சதயம்'],
+      'Jupiter': ['புனர்பூசம்', 'விசாகம்', 'பூரட்டாதி'],
+      'Saturn': ['பூசம்', 'அனுஷம்', 'உத்திரட்டாதி'],
+      'Mercury': ['ஆயில்யம்', 'கேட்டை', 'ரேவதி'],
+    };
+
+    double getLon(String p) {
+      if (planetLons.containsKey(p)) return planetLons[p]!;
+      for (var entry in planetLons.entries) {
+        if (entry.key.toLowerCase() == p.toLowerCase()) return entry.value;
+      }
+      return 0.0;
+    }
+
+    Map<String, List<String>> occupiedStars = {};
+    for (var p in ninePlanets) {
+      occupiedStars[p] = [];
+    }
+
+    for (var p in ninePlanets) {
+      double lon = getLon(p);
+      final lords = KPService.getKPLords(lon);
+      String starLord = lords['nakLord'] ?? '';
+      
+      String matchedLord = ninePlanets.firstWhere(
+        (np) => np.toLowerCase() == starLord.toLowerCase(),
+        orElse: () => starLord,
+      );
+      if (occupiedStars.containsKey(matchedLord)) {
+        occupiedStars[matchedLord]!.add(KPService.TAMIL_PLANETS[p] ?? p);
+      }
+    }
+
+    List<String> aagamiPlanets = [];
+    List<String> aagamiPlanetsTamil = [];
+    List<Map<String, dynamic>> detailedList = [];
+
+    for (var p in ninePlanets) {
+      List<String> occupyingPlanets = occupiedStars[p] ?? [];
+      bool isAagami = occupyingPlanets.isEmpty;
+      String pTamil = KPService.TAMIL_PLANETS[p] ?? p;
+      if (isAagami) {
+        aagamiPlanets.add(p);
+        aagamiPlanetsTamil.add(pTamil);
+      }
+      detailedList.add({
+        'planet': p,
+        'planet_tamil': pTamil,
+        'is_aagami': isAagami,
+        'stars_tamil': (planetStars[p] ?? []).join(', '),
+        'occupying_planets': occupyingPlanets,
+        'status_text': isAagami
+            ? 'ஆகமி கிரகம் (எந்தக் கிரகமும் அமையவில்லை)'
+            : 'அமர்ந்துள்ள கிரகங்கள்: ${occupyingPlanets.join(", ")}',
+      });
+    }
+
+    String displayText = aagamiPlanetsTamil.isNotEmpty
+        ? aagamiPlanetsTamil.join(', ')
+        : 'இல்லை';
+
+    return {
+      'aagami_planets': aagamiPlanets,
+      'aagami_planets_tamil': aagamiPlanetsTamil,
+      'display_text': displayText,
+      'details': detailedList,
+    };
+  }
+
   /// 3.2 கிரக அவஸ்தைகள் (Planetary Avasthas: Baladi, Deeptadi, Jagradadi, Dignity & Digbala)
   static Map<String, dynamic> calculatePlanetaryAvasthas(Map<String, double> planetLons, double lagnaLon) {
     int lagnaRasi = (lagnaLon / 30).floor() % 12;
     Map<String, dynamic> avasthas = {};
     List<Map<String, dynamic>> detailedList = [];
 
-    const Map<String, int> uchamRasis = {
-      'Sun': 0, 'Moon': 1, 'Mars': 9, 'Mercury': 5, 'Jupiter': 3, 'Venus': 11, 'Saturn': 6, 'Rahu': 1, 'Ketu': 7
+    const Map<String, List<int>> uchamRasis = {
+      'Sun': [0], 'Moon': [1], 'Mars': [9], 'Mercury': [5], 'Jupiter': [3], 'Venus': [11], 'Saturn': [6],
+      'Rahu': [7],
+      'Ketu': [7],
+      'Maanthi': [8, 0],
     };
-    const Map<String, int> neesamRasis = {
-      'Sun': 6, 'Moon': 7, 'Mars': 3, 'Mercury': 11, 'Jupiter': 9, 'Venus': 5, 'Saturn': 0, 'Rahu': 7, 'Ketu': 1
+    const Map<String, List<int>> neesamRasis = {
+      'Sun': [6], 'Moon': [7], 'Mars': [3], 'Mercury': [11], 'Jupiter': [9], 'Venus': [5], 'Saturn': [0],
+      'Rahu': [1],
+      'Ketu': [1],
+      'Maanthi': [2, 6],
     };
     const Map<String, List<int>> aatchiRasis = {
       'Sun': [4], 'Moon': [3], 'Mars': [0, 7], 'Mercury': [2, 5],
-      'Jupiter': [8, 11], 'Venus': [1, 6], 'Saturn': [9, 10], 'Rahu': [10], 'Ketu': [7]
+      'Jupiter': [8, 11], 'Venus': [1, 6], 'Saturn': [9, 10],
+      'Rahu': [10, 2],
+      'Ketu': [7],
+      'Maanthi': [5, 9],
     };
     const Map<String, List<int>> natpuRasis = {
       'Sun': [0, 3, 7, 8, 11],
@@ -615,8 +877,9 @@ class AstroSpecialCalculationsService {
       'Jupiter': [0, 3, 4, 7],
       'Venus': [2, 5, 9, 10],
       'Saturn': [1, 2, 5, 6],
-      'Rahu': [1, 2, 5, 6],
+      'Rahu': [5, 6, 8, 9, 11],
       'Ketu': [0, 7, 8, 11],
+      'Maanthi': [7, 3],
     };
     const Map<String, List<int>> pagaiRasis = {
       'Sun': [1, 5, 6, 9, 10],
@@ -627,7 +890,8 @@ class AstroSpecialCalculationsService {
       'Venus': [4, 7],
       'Saturn': [0, 3, 4, 7],
       'Rahu': [0, 3, 4],
-      'Ketu': [1, 2, 5, 6],
+      'Ketu': [1, 2, 3, 4, 5, 6],
+      'Maanthi': [1, 4, 11, 10],
     };
 
     // திக்பலம்: 1st house - Merc, Jup; 4th house - Moon, Ven; 7th house - Sat; 10th house - Sun, Mars
@@ -638,7 +902,7 @@ class AstroSpecialCalculationsService {
       'Sun': 10, 'Mars': 10
     };
 
-    const List<String> pOrder = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
+    const List<String> pOrder = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu', 'Maanthi'];
 
     for (var planet in pOrder) {
       if (!planetLons.containsKey(planet)) continue;
@@ -650,9 +914,9 @@ class AstroSpecialCalculationsService {
 
       // 1. Dignity Status
       String status = "சமம்";
-      if (uchamRasis[planet] == rasi) {
+      if (uchamRasis[planet]?.contains(rasi) ?? false) {
         status = "உச்சம்";
-      } else if (neesamRasis[planet] == rasi) {
+      } else if (neesamRasis[planet]?.contains(rasi) ?? false) {
         status = "நீசம்";
       } else if (aatchiRasis[planet]?.contains(rasi) ?? false) {
         status = "ஆட்சி";
@@ -1003,7 +1267,7 @@ class AstroSpecialCalculationsService {
     const List<String> tharaiNames = [
       "1. ஜென்ம தாரை", "2. சம்பத் தாரை", "3. விபத்து தாரை",
       "4. க்ஷேம தாரை", "5. பிரத்யக் தாரை", "6. சாதக தாரை",
-      "7. வதை / நைதன தாரை", "8. மித்ர தாரை", "9. பரம மித்ர தாரை"
+      "7. வதை தாரை", "8. மித்ர தாரை", "9. பரம மித்ர தாரை"
     ];
 
     Map<String, dynamic> planetTharais = {};
@@ -1035,8 +1299,13 @@ class AstroSpecialCalculationsService {
   // 4. கணித முறைகள் & அட்டவணைகள் (Calculations & Divisions)
   // ──────────────────────────────────────────────────────────────────────────
 
-  /// 4.1 உபகிரகங்கள் (Upagrahas - 5 Aprakash based on Sun & Time-based)
-  static Map<String, dynamic> calculateUpagrahas(double sunLon, DateTime birthDt, String sunriseStr) {
+  /// 4.1 உபகிரகங்கள் (Upagrahas - 5 Aprakash based on Sun & Time-based: Yamagandan, Mrityu)
+  static Map<String, dynamic> calculateUpagrahas(
+    double sunLon, 
+    DateTime birthDt, 
+    String sunriseStr, 
+    {bool? isDayBirth, String? sunsetStr}
+  ) {
     // 1. தூமன் (Dhuma) = Sun + 133° 20' (133.333333°)
     double dhuma = (sunLon + 133.3333333333) % 360.0;
 
@@ -1052,12 +1321,57 @@ class AstroSpecialCalculationsService {
     // 5. உபகேது / தூமகோது (Upaketu) = Indrachapa + 16° 40' (16.666667°)
     double upaketu = (indrachapa + 16.6666666667) % 360.0;
 
+    // 6 & 7. எமகண்டன் (Yamagandan) & மிருத்யு (Mrityu)
+    DateTime srDt = DateTime(birthDt.year, birthDt.month, birthDt.day, 6, 0);
+    DateTime ssDt = DateTime(birthDt.year, birthDt.month, birthDt.day, 18, 0);
+    try {
+      final srClean = sunriseStr.replaceAll(RegExp(r'[^\d:]'), '');
+      final srParts = srClean.split(':');
+      int srh = int.parse(srParts[0]);
+      int srm = int.parse(srParts[1]);
+      if (sunriseStr.toUpperCase().contains('PM') && srh < 12) srh += 12;
+      if (sunriseStr.toUpperCase().contains('AM') && srh == 12) srh = 0;
+      srDt = DateTime(birthDt.year, birthDt.month, birthDt.day, srh, srm);
+
+      if (sunsetStr != null && sunsetStr.isNotEmpty) {
+        final ssClean = sunsetStr.replaceAll(RegExp(r'[^\d:]'), '');
+        final ssParts = ssClean.split(':');
+        int ssh = int.parse(ssParts[0]);
+        int ssm = int.parse(ssParts[1]);
+        if (sunsetStr.toUpperCase().contains('PM') && ssh < 12) ssh += 12;
+        if (sunsetStr.toUpperCase().contains('AM') && ssh == 12) ssh = 0;
+        ssDt = DateTime(birthDt.year, birthDt.month, birthDt.day, ssh, ssm);
+      }
+    } catch (_) {}
+
+    bool isDay = isDayBirth ?? (birthDt.isAfter(srDt) && birthDt.isBefore(ssDt));
+    DateTime astroDay = birthDt.isBefore(srDt) ? birthDt.subtract(const Duration(days: 1)) : birthDt;
+    int weekday = astroDay.weekday % 7; // 0=Sunday, 1=Monday, ..., 6=Saturday
+
+    // எமகண்டன் (Yamagandan)
+    // ஞா = +108°, தி = +84°, செ = +60°, பு = +36°, வி = +12°, வெ = +156°, சனி = +132°
+    const List<double> yamaDayDegrees = [108.0, 84.0, 60.0, 36.0, 12.0, 156.0, 132.0];
+    // ஞா = +192°, தி = +336°, செ = +312°, பு = +288°, வி = +264°, வெ = +240°, சனி = +216°
+    const List<double> yamaNightDegrees = [192.0, 336.0, 312.0, 288.0, 264.0, 240.0, 216.0];
+    double yamaOffset = isDay ? yamaDayDegrees[weekday] : yamaNightDegrees[weekday];
+    double yamagandan = (sunLon + yamaOffset) % 360.0;
+
+    // மிருத்யு (Mrityu)
+    // ஞா = +60°, தி = +36°, செ = +12°, பு = +156°, வி = +132°, வெ = +108°, சனி = +84°
+    const List<double> mrityuDayDegrees = [60.0, 36.0, 12.0, 156.0, 132.0, 108.0, 84.0];
+    // ஞா = +312°, தி = +288°, செ = +264°, பு = +240°, வி = +216°, வெ = +192°, சனி = +336°
+    const List<double> mrityuNightDegrees = [312.0, 288.0, 264.0, 240.0, 216.0, 192.0, 336.0];
+    double mrityuOffset = isDay ? mrityuDayDegrees[weekday] : mrityuNightDegrees[weekday];
+    double mrityu = (sunLon + mrityuOffset) % 360.0;
+
     Map<String, Map<String, dynamic>> upagrahaMap = {
       'தூமன் (Dhuma)': _formatPoint(dhuma),
       'வ்யதீபாதன் (Vyatipata)': _formatPoint(vyatipata),
       'பரிவேடன் (Parivesha)': _formatPoint(parivesha),
       'இந்திரசாபம் (Indrachapa)': _formatPoint(indrachapa),
       'உபகேது (Upaketu)': _formatPoint(upaketu),
+      'எமகண்டன் (Yamagandan)': _formatPoint(yamagandan),
+      'மிருத்யு (Mrityu)': _formatPoint(mrityu),
     };
 
     return upagrahaMap;
@@ -1083,8 +1397,12 @@ class AstroSpecialCalculationsService {
     const List<String> horaCycle = [
       'Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter', 'Mars'
     ];
+    // உப-ஓரைகள் கிழமை வரிசையில் (Weekday order) 5 கிரகங்கள் சுழற்சியாக வரும்
+    const List<String> weekdayCycle = [
+      'Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'
+    ];
 
-    int dayIdx = (weekday == 7) ? 0 : weekday;
+    int dayIdx = (weekday == 7) ? 0 : weekday % 7;
     String firstHora = horaLordsByDay[dayIdx];
     int startCycleIdx = horaCycle.indexOf(firstHora);
 
@@ -1095,10 +1413,24 @@ class AstroSpecialCalculationsService {
       String lord = horaCycle[(startCycleIdx + h) % 7];
       DateTime horaEnd = currentTime.add(const Duration(hours: 1));
 
-      int subStartIdx = horaCycle.indexOf(lord);
-      List<String> subHoras = [];
+      int subStartIdx = weekdayCycle.indexOf(lord);
+      List<Map<String, dynamic>> subHoras = [];
       for (int s = 0; s < 5; s++) {
-        subHoras.add(KPService.TAMIL_PLANETS[horaCycle[(subStartIdx + s) % 7]] ?? horaCycle[(subStartIdx + s) % 7]);
+        String sLord = weekdayCycle[(subStartIdx + s) % 7];
+        DateTime sStart = currentTime.add(Duration(minutes: s * 12));
+        DateTime sEnd = sStart.add(const Duration(minutes: 12));
+        String sLordTamil = KPService.TAMIL_PLANETS[sLord] ?? sLord;
+        String sLordShort = KPService.TAMIL_PLANETS_SHORT[sLord] ?? sLordTamil;
+
+        subHoras.add({
+          'sub_number': s + 1,
+          'lord': sLord,
+          'lord_tamil': sLordTamil,
+          'lord_short': sLordShort,
+          'start_time': "${sStart.hour.toString().padLeft(2, '0')}:${sStart.minute.toString().padLeft(2, '0')}",
+          'end_time': "${sEnd.hour.toString().padLeft(2, '0')}:${sEnd.minute.toString().padLeft(2, '0')}",
+          'time_range': "${sStart.hour.toString().padLeft(2, '0')}:${sStart.minute.toString().padLeft(2, '0')} - ${sEnd.hour.toString().padLeft(2, '0')}:${sEnd.minute.toString().padLeft(2, '0')}",
+        });
       }
 
       table.add({
@@ -1107,6 +1439,7 @@ class AstroSpecialCalculationsService {
         'end_time': "${horaEnd.hour.toString().padLeft(2, '0')}:${horaEnd.minute.toString().padLeft(2, '0')}",
         'lord': lord,
         'lord_tamil': KPService.TAMIL_PLANETS[lord] ?? lord,
+        'lord_short': KPService.TAMIL_PLANETS_SHORT[lord] ?? lord,
         'sub_horas': subHoras,
       });
 
@@ -1118,37 +1451,155 @@ class AstroSpecialCalculationsService {
 
   /// 4.3 பஞ்ச பட்சி காலம் (Pancha Pakshi Kalam)
   static Map<String, dynamic> calculatePanchaPakshi({
-    required double moonLon,
+    int? nakshatraIdx,
+    double? moonLon,
     required DateTime currentDt,
     required DateTime sunrise,
     required bool isShuklaPaksha,
   }) {
-    int nakIdx = (moonLon / (360.0 / 27.0)).floor() % 27;
+    int nakIdx = nakshatraIdx ?? (moonLon != null ? (moonLon / (360.0 / 27.0)).floor() % 27 : 0);
+
+    // 27 நட்சத்திரங்களின் 5 குழுக்கள் (5, 6, 5, 5, 6):
+    // குழு 0 (5 நட்சத்திரங்கள்: 0..4): அஸ்வினி முதல் மிருகசீரிடம் வரை
+    // குழு 1 (6 நட்சத்திரங்கள்: 5..10): திருவாதிரை முதல் பூரம் வரை
+    // குழு 2 (5 நட்சத்திரங்கள்: 11..15): உத்திரம் முதல் விசாகம் வரை
+    // குழு 3 (5 நட்சத்திரங்கள்: 16..20): அனுஷம் முதல் உத்திராடம் வரை
+    // குழு 4 (6 நட்சத்திரங்கள்: 21..26): திருவோணம் முதல் ரேவதி வரை
+    int nakGroup;
+    if (nakIdx < 5) {
+      nakGroup = 0;
+    } else if (nakIdx < 11) {
+      nakGroup = 1;
+    } else if (nakIdx < 16) {
+      nakGroup = 2;
+    } else if (nakIdx < 21) {
+      nakGroup = 3;
+    } else {
+      nakGroup = 4;
+    }
 
     const List<String> pakshis = ["வல்லூறு", "ஆந்தை", "காகம்", "கோழி", "மயில்"];
-    int pakshiIdx;
-    if (nakIdx < 5) pakshiIdx = 0;
-    else if (nakIdx < 11) pakshiIdx = 1;
-    else if (nakIdx < 17) pakshiIdx = 2;
-    else if (nakIdx < 22) pakshiIdx = 3;
-    else pakshiIdx = 4;
-
+    // வளர்பிறை (சுக்ல பக்ஷம்): வல்லூறு, ஆந்தை, காகம், கோழி, மயில்
+    // தேய்பிறை (கிருஷ்ண பக்ஷம்): மயில், கோழி, காகம், ஆந்தை, வல்லூறு (நேர் எதிர் வரிசை)
+    int pakshiIdx = isShuklaPaksha ? nakGroup : (4 - nakGroup);
     String myPakshi = pakshis[pakshiIdx];
-    const List<String> activities = ["ஊண் (உணவு)", "நடை (பயணம்)", "அரசு (ஆட்சி)", "துயில் (தூக்கம்)", "மரணம் (செயலிழப்பு)"];
+
+    const List<String> activities = [
+      "ஊண் (உணவு)",
+      "நடை (பயணம்)",
+      "அரசு (ஆட்சி)",
+      "துயில் (தூக்கம்)",
+      "சாவு (செயலிழப்பு)",
+    ];
 
     double hoursFromSunrise = currentDt.difference(sunrise).inMinutes / 60.0;
     if (hoursFromSunrise < 0) hoursFromSunrise += 24.0;
-    int yamaIdx = (hoursFromSunrise / 2.4).floor() % 5;
+    bool isDay = hoursFromSunrise < 12.0;
+    int yamaIdx = ((isDay ? hoursFromSunrise : (hoursFromSunrise - 12.0)) / 2.4).floor() % 5;
+    int weekday = currentDt.weekday; // 1=Monday ... 7=Sunday
 
-    int actIdx = (pakshiIdx + yamaIdx) % 5;
+    int actIdx;
+    if (isShuklaPaksha) {
+      if (isDay) {
+        // வளர்பிறை பகல் வரிசை: ஊண்(0), நடை(1), அரசு(2), துயில்(3), சாவு(4)
+        List<int> startActs;
+        if (weekday == DateTime.sunday || weekday == DateTime.tuesday) {
+          startActs = [0, 1, 2, 3, 4];
+        } else if (weekday == DateTime.monday || weekday == DateTime.wednesday) {
+          startActs = [4, 0, 1, 2, 3];
+        } else if (weekday == DateTime.thursday) {
+          startActs = [1, 2, 3, 4, 0];
+        } else if (weekday == DateTime.friday) {
+          startActs = [3, 4, 0, 1, 2];
+        } else {
+          startActs = [2, 3, 4, 0, 1];
+        }
+        actIdx = (startActs[pakshiIdx] + yamaIdx) % 5;
+      } else {
+        // வளர்பிறை இரவு
+        List<int> seq = [0, 2, 4, 1, 3];
+        List<int> startSeq;
+        if (weekday == DateTime.sunday || weekday == DateTime.tuesday) {
+          startSeq = [0, 1, 2, 3, 4];
+        } else if (weekday == DateTime.monday || weekday == DateTime.wednesday) {
+          startSeq = [1, 2, 3, 4, 0];
+        } else if (weekday == DateTime.thursday) {
+          startSeq = [2, 3, 4, 0, 1];
+        } else if (weekday == DateTime.friday) {
+          startSeq = [3, 4, 0, 1, 2];
+        } else {
+          startSeq = [4, 0, 1, 2, 3];
+        }
+        actIdx = seq[(startSeq[pakshiIdx] + yamaIdx) % 5];
+      }
+    } else {
+      if (isDay) {
+        // தேய்பிறை பகல்
+        List<int> seq = [0, 4, 3, 2, 1];
+        List<int> startSeq;
+        if (weekday == DateTime.sunday || weekday == DateTime.friday) {
+          startSeq = [0, 1, 2, 3, 4];
+        } else if (weekday == DateTime.monday || weekday == DateTime.saturday) {
+          startSeq = [4, 0, 1, 2, 3];
+        } else if (weekday == DateTime.tuesday) {
+          startSeq = [3, 4, 0, 1, 2];
+        } else if (weekday == DateTime.wednesday) {
+          startSeq = [2, 3, 4, 0, 1];
+        } else {
+          startSeq = [1, 2, 3, 4, 0];
+        }
+        actIdx = seq[(startSeq[pakshiIdx] + yamaIdx) % 5];
+      } else {
+        // தேய்பிறை இரவு
+        List<int> seq = [0, 3, 1, 4, 2];
+        List<int> startSeq;
+        if (weekday == DateTime.sunday || weekday == DateTime.friday) {
+          startSeq = [0, 1, 2, 3, 4];
+        } else if (weekday == DateTime.monday || weekday == DateTime.saturday) {
+          startSeq = [1, 2, 3, 4, 0];
+        } else if (weekday == DateTime.tuesday) {
+          startSeq = [2, 3, 4, 0, 1];
+        } else if (weekday == DateTime.wednesday) {
+          startSeq = [3, 4, 0, 1, 2];
+        } else {
+          startSeq = [4, 0, 1, 2, 3];
+        }
+        actIdx = seq[(startSeq[pakshiIdx] + yamaIdx) % 5];
+      }
+    }
+
     String currentActivity = activities[actIdx];
+    bool isFavorable = actIdx == 0 || actIdx == 2; // ஊண் அல்லது அரசு
+
+    String description;
+    switch (actIdx) {
+      case 2: // அரசு
+        description = "மிகவும் உன்னதமான நேரம் (அரசு) - காரிய வெற்றி, முக்கிய முடிவுகளுக்கு உகந்தது.";
+        break;
+      case 0: // ஊண்
+        description = "சுப காரியங்களுக்கு உகந்தது (ஊண்) - புதிய முயற்சிகள், நற்காரியங்கள் செய்ய நன்று.";
+        break;
+      case 1: // நடை
+        description = "சாதாரண பலன் (நடை) - சாதாரண பணிகளைச் செய்யலாம், முக்கிய முடிவுகளைத் தவிர்க்கவும்.";
+        break;
+      case 3: // துயில்
+        description = "மந்தமான நேரம் (துயில்) - காரியத் தடை அல்லது தாமதம் ஏற்படலாம், ஓய்வு நன்று.";
+        break;
+      case 4: // சாவு
+      default:
+        description = "எச்சரிக்கையான நேரம் (சாவு) - சுப காரியங்களைத் தவிர்க்கவும், முக்கிய முடிவுகள் வேண்டாம்.";
+        break;
+    }
 
     return {
       'pakshi': myPakshi,
+      'pakshi_idx': pakshiIdx,
       'paksha': isShuklaPaksha ? "வளர்பிறை" : "தேய்பிறை",
+      'is_day': isDay,
+      'yama_idx': yamaIdx + 1,
       'current_activity': currentActivity,
-      'is_favorable': actIdx == 0 || actIdx == 2,
-      'activity_description': actIdx == 2 ? "மிகவும் உன்னதமான நேரம் (அரசு)" : (actIdx == 0 ? "சுப காரியங்களுக்கு உகந்தது (ஊண்)" : "முக்கிய முடிவுகளைத் தவிர்க்கவும்"),
+      'is_favorable': isFavorable,
+      'activity_description': description,
     };
   }
 

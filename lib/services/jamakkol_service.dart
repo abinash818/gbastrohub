@@ -6,13 +6,13 @@ class JamakkolService {
   ];
 
   static const Map<String, String> JAMAKKOL_TAMIL_SHORT = {
-    "Sun": "சூரி", "Mars": "செ", "Jupiter": "குரு", "Mercury": "புத",
-    "Venus": "சுக்", "Saturn": "சனி", "Moon": "சந்", "Rahu": "பாம்பு"
+    "Sun": "சூரியன்", "Mars": "செவ்வாய்", "Jupiter": "குரு", "Mercury": "புதன்",
+    "Venus": "சுக்கிரன்", "Saturn": "சனி", "Moon": "சந்திரன்", "Rahu": "ராகு"
   };
 
   static const Map<String, String> JAMAKKOL_TAMIL_ALT = {
-    "Sun": "கதிர்", "Mars": "சேய்", "Jupiter": "பொன்", "Mercury": "மால்",
-    "Venus": "புகர்", "Saturn": "மந்தன்", "Moon": "மதி", "Rahu": "பாம்பு"
+    "Sun": "சூரியன்", "Mars": "செவ்வாய்", "Jupiter": "குரு", "Mercury": "புதன்",
+    "Venus": "சுக்கிரன்", "Saturn": "சனி", "Moon": "சந்திரன்", "Rahu": "ராகு"
   };
 
   static const Map<String, String> JAMAKKOL_ENGLISH_SHORT = {
@@ -52,8 +52,8 @@ class JamakkolService {
   };
 
   static int getPlanetMultiplier(String planet, String sign) {
-    if (planet == "Rahu" || planet == "பாம்பு") {
-      // பாம்பு (ராகு/கேது): எப்போதும் 4 கதிர்கள் மட்டுமே
+    if (planet == "Rahu" || planet == "பாம்பு" || planet == "ராகு") {
+      // ராகு/பாம்பு (ராகு/கேது): எப்போதும் 4 கதிர்கள் மட்டுமே
       return 1;
     }
     if (UCHAM[planet] == sign) {

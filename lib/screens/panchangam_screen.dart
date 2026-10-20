@@ -31,9 +31,11 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
   // Month-wise Explorer & Local Cache State
   DateTime _explorerMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
   List<MaitraMuhurthamSlot> _monthMaitraSlots = [];
+  List<AbhijitMuhurthamSlot> _monthAbhijitSlots = [];
   List<DhanishtaDaySlot> _monthDhanishtaSlots = [];
+  AbhijitMuhurthamSlot? _todayAbhijitSlot;
   bool _isMonthDataLoading = false;
-  int _explorerSubTab = 0; // 0: மைத்ர, 1: தனிஷ்டா, 2: 13 நட்சத்திர அடைப்பு
+  int _explorerSubTab = 0; // 0: மைத்ர, 1: அபிஜித், 2: தனிஷ்டா, 3: 13 நட்சத்திர அடைப்பு
 
   static const List<List<String>> AMIRTHATHI_YOGAM_TABLE = [
     // Sun (0)
@@ -108,11 +110,13 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
       final double lon = (loc['lon'] as num?)?.toDouble() ?? 80.2707;
 
       final maitra = await MaitraDhanishtaService.getMonthMaitraMuhurthams(monthDt.year, monthDt.month, lat, lon);
+      final abhijit = await MaitraDhanishtaService.getMonthAbhijitMuhurthams(monthDt.year, monthDt.month, lat, lon);
       final dhanishta = await MaitraDhanishtaService.getMonthDhanishtaDays(monthDt.year, monthDt.month, lat, lon);
 
       if (mounted) {
         setState(() {
           _monthMaitraSlots = maitra;
+          _monthAbhijitSlots = abhijit;
           _monthDhanishtaSlots = dhanishta;
           _isMonthDataLoading = false;
         });
@@ -261,11 +265,13 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
 
       final dhanishta = MaitraDhanishtaService.getDhanishtaInfo(moonNakIdx);
       final todayMaitra = MaitraDhanishtaService.getTodayMaitraMuhurthams(_selectedDate, lat, lon);
+      final todayAbhijit = MaitraDhanishtaService.calculateAbhijitMuhurthamForDate(_selectedDate, sunriseDt, sunsetDt);
 
       setState(() {
         _chartResults = results;
         _dhanishtaInfo = dhanishta;
         _todayMaitraSlots = todayMaitra;
+        _todayAbhijitSlot = todayAbhijit;
         _panchangamData = {
           ...pancha,
           'location_name': locName,
@@ -467,7 +473,7 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
             tabs: const [
               Tab(text: "விவரம் (Details)"),
               Tab(text: "கோச்சாரம் (Chart)"),
-              Tab(text: "மைத்ர / தனிஷ்டா"),
+              Tab(text: "மைத்ர / அபிஜித் / தனிஷ்டா"),
             ],
           ),
         ),
@@ -502,7 +508,7 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
                                   tabs: const [
                                     Tab(text: "விவரம் (Details)"),
                                     Tab(text: "கோச்சாரம் (Chart)"),
-                                    Tab(text: "மைத்ர / தனிஷ்டா"),
+                                    Tab(text: "மைத்ர / அபிஜித் / தனிஷ்டா"),
                                   ],
                                 ),
                               ),
@@ -1018,6 +1024,59 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
             ],
           ),
         ),
+        if (_todayAbhijitSlot != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: _todayAbhijitSlot!.isWednesday ? const Color(0xFFFFF3E0) : const Color(0xFFF1F8E9),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: _todayAbhijitSlot!.isWednesday ? const Color(0xFFFFB74D) : const Color(0xFFA5D6A7),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  _todayAbhijitSlot!.isWednesday ? Icons.warning_amber_rounded : Icons.star_rounded,
+                  color: _todayAbhijitSlot!.isWednesday ? const Color(0xFFE65100) : const Color(0xFF2E7D32),
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _todayAbhijitSlot!.isWednesday
+                            ? "அபிஜித் முகூர்த்தம் (புதன்கிழமை - தவிர்க்கவும்)"
+                            : "அபிஜித் முகூர்த்தம் (சர்வ சுப முகூர்த்தம்)",
+                        style: TextStyle(
+                          color: _todayAbhijitSlot!.isWednesday ? const Color(0xFFE65100) : const Color(0xFF1B5E20),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          _todayAbhijitSlot!.formattedTime,
+                          style: GoogleFonts.outfit(
+                            color: _todayAbhijitSlot!.isWednesday ? const Color(0xFFE65100) : const Color(0xFF2E7D32),
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 8),
 
         // Inauspicious Grid (Rahu, Yemagandam, Kuligai)
@@ -1412,7 +1471,7 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
             if (details == null) return const SizedBox();
 
             final engName = _getEnglishPlanetName(pKey);
-            final isRetro = engName.isNotEmpty && engName != "Lagna" && (_chartResults?['planet_info']?[engName]?['isRetro'] ?? false);
+            final isRetro = engName.isNotEmpty && engName != "Lagna" && engName != "Rahu" && engName != "Ketu" && (_chartResults?['planet_info']?[engName]?['isRetro'] ?? false);
             
             final tamilName = AstroTranslationService.translate(context, KPService.TAMIL_PLANETS[engName] ?? (pKey == "lagna" ? AppLocalizations.of(context)!.lagna : pKey), isPlanet: true);
             final rasiNameEnglish = details['rasi'] as String? ?? "Aries";
@@ -1843,6 +1902,88 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
                     ],
                   ),
                 ),
+
+                // Abhijit Status Row
+                if (_todayAbhijitSlot != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: _todayAbhijitSlot!.isWednesday
+                          ? const Color(0xFFFFF3E0)
+                          : const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _todayAbhijitSlot!.isWednesday
+                            ? const Color(0xFFFFB74D)
+                            : const Color(0xFFA5D6A7),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _todayAbhijitSlot!.isWednesday
+                              ? Icons.warning_amber_rounded
+                              : Icons.stars_rounded,
+                          color: _todayAbhijitSlot!.isWednesday
+                              ? const Color(0xFFE65100)
+                              : const Color(0xFF2E7D32),
+                          size: 22,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "இன்றைய அபிஜித் முகூர்த்தம்: ${_todayAbhijitSlot!.formattedTime}",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: _todayAbhijitSlot!.isWednesday
+                                      ? const Color(0xFFE65100)
+                                      : const Color(0xFF1B5E20),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _todayAbhijitSlot!.isWednesday
+                                    ? "புதன்கிழமை என்பதால் இந்த முகூர்த்தம் தவிர்க்கப்பட வேண்டும்"
+                                    : "ஸ்ரீ ராமர் அவதரித்த சுப முகூர்த்தம் • சர்வ காரிய வெற்றி",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 11.5,
+                                  color: _todayAbhijitSlot!.isWednesday
+                                      ? const Color(0xFFE65100)
+                                      : const Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: _todayAbhijitSlot!.isWednesday
+                                ? const Color(0xFFFFCC80)
+                                : const Color(0xFFC8E6C9),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _todayAbhijitSlot!.isWednesday ? "தவிர்க்கவும்" : "சுப முகூர்த்தம்",
+                            style: GoogleFonts.outfit(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: _todayAbhijitSlot!.isWednesday
+                                  ? const Color(0xFFD84315)
+                                  : const Color(0xFF1B5E20),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -2000,14 +2141,19 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
           // Sub-Tab Segmented Selector
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-            child: Row(
-              children: [
-                _buildSegmentButton(0, "🪙 மைத்ர (${_monthMaitraSlots.length})"),
-                const SizedBox(width: 6),
-                _buildSegmentButton(1, "🪔 தனிஷ்டா (${_monthDhanishtaSlots.length})"),
-                const SizedBox(width: 6),
-                _buildSegmentButton(2, "📜 அடைப்பு அட்டவணை"),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildSegmentButton(0, "🪙 மைத்ர (${_monthMaitraSlots.length})"),
+                  const SizedBox(width: 6),
+                  _buildSegmentButton(1, "⭐ அபிஜித் (${_monthAbhijitSlots.length})"),
+                  const SizedBox(width: 6),
+                  _buildSegmentButton(2, "🪔 தனிஷ்டா (${_monthDhanishtaSlots.length})"),
+                  const SizedBox(width: 6),
+                  _buildSegmentButton(3, "📜 அடைப்பு அட்டவணை"),
+                ],
+              ),
             ),
           ),
 
@@ -2025,28 +2171,26 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
 
   Widget _buildSegmentButton(int index, String label) {
     bool isSelected = _explorerSubTab == index;
-    return Expanded(
-      child: InkWell(
-        onTap: () => setState(() => _explorerSubTab = index),
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : const Color(0xFFF5F5F5),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.3),
-              width: 1.2,
-            ),
+    return InkWell(
+      onTap: () => setState(() => _explorerSubTab = index),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.3),
+            width: 1.2,
           ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
-              fontSize: 11.5,
-              fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-            ),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.outfit(
+            fontSize: 11.5,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
         ),
       ),
@@ -2079,10 +2223,213 @@ class _PanchangamScreenState extends State<PanchangamScreen> {
     if (_explorerSubTab == 0) {
       return _buildMonthMaitraView();
     } else if (_explorerSubTab == 1) {
+      return _buildMonthAbhijitView();
+    } else if (_explorerSubTab == 2) {
       return _buildMonthDhanishtaView();
     } else {
       return _buildAdaippuReferenceView();
     }
+  }
+
+  // Sub-Tab 1: அபிஜித் முகூர்த்தப் பட்டியல்
+  Widget _buildMonthAbhijitView() {
+    String monthTamil = MONTH_NAMES_TAMIL[_explorerMonth.month - 1];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_monthAbhijitSlots.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFDE7),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFFF59D)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Color(0xFFF57F17)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "இந்த $monthTamil ${_explorerMonth.year} மாதத்திற்கான அபிஜித் முகூர்த்த விவரங்கள் கணக்கிடப்படுகின்றன...",
+                    style: GoogleFonts.outfit(fontSize: 13, color: const Color(0xFFE65100)),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFA5D6A7)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.stars_rounded, color: Color(0xFF2E7D32), size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "$monthTamil ${_explorerMonth.year} - தினசரி அபிஜித் முகூர்த்த நேரம் (நண்பகல் 8-வது முகூர்த்தம்)",
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1B5E20),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          for (var slot in _monthAbhijitSlots) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: slot.isWednesday ? const Color(0xFFFFF8E1) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: slot.isWednesday
+                      ? const Color(0xFFFFB74D).withValues(alpha: 0.6)
+                      : const Color(0xFF2E7D32).withValues(alpha: 0.25),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: slot.isWednesday
+                          ? const Color(0xFFFFE0B2)
+                          : const Color(0xFFE8F5E9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        slot.isWednesday ? Icons.warning_amber_rounded : Icons.wb_sunny_rounded,
+                        color: slot.isWednesday ? const Color(0xFFE65100) : const Color(0xFF2E7D32),
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              "${slot.date.day.toString().padLeft(2, '0')}/${slot.date.month.toString().padLeft(2, '0')}/${slot.date.year} • ${slot.weekday}",
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: slot.isWednesday ? const Color(0xFFD84315) : AppColors.textPrimary,
+                              ),
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                              decoration: BoxDecoration(
+                                color: slot.isWednesday
+                                    ? const Color(0xFFFFCC80)
+                                    : const Color(0xFFC8E6C9),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                slot.isWednesday ? "புதன் தோஷம்" : "உத்தமம்",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: slot.isWednesday ? const Color(0xFFD84315) : const Color(0xFF1B5E20),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time_rounded, size: 14, color: AppColors.primary),
+                            const SizedBox(width: 4),
+                            Text(
+                              slot.formattedTime,
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "உதயம்: ${slot.sunrise} • மறைவு: ${slot.sunset}",
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+
+        const SizedBox(height: 16),
+
+        // Abhijit Muhurtham Shastra Notes
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3E5F5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFCE93D8)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.menu_book_rounded, color: Color(0xFF6A1B9A), size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    "அபிஜித் முகூர்த்த சாஸ்திரக் குறிப்புகள்:",
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF4A148C),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              _buildBulletPoint("அபிஜித் என்பது ஒரு பகல் பொழுதின் (சூரிய உதயம் முதல் அஸ்தமனம் வரை) 15 முகூர்த்தங்களில் 8-வது உன்னத முகூர்த்தமாகும்."),
+              _buildBulletPoint("பகவான் ஸ்ரீ மகாவிஷ்ணு மற்றும் ஸ்ரீ ராமச்சந்திர மூர்த்தி அவதரித்த மகா புண்ணிய முகூர்த்தம் இது."),
+              _buildBulletPoint("தினசரி வழிபாடுகள், கடன் அடைத்தல், புதிய காரியங்கள் தொடங்குதல், சுப ஒப்பந்தங்கள் போன்றவற்றிற்கு எவ்வித தோஷமும் இன்றி வெற்றி தரும்."),
+              _buildBulletPoint("புதன்கிழமைகளில் மட்டும் அபிஜித் முகூர்த்தம் தோஷமுடையதாகக் கருதப்படுவதால் அன்றைய தினம் தவிர்ப்பது உத்தமம்."),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   // Sub-Tab 0: மைத்ர முகூர்த்தப் பட்டியல்

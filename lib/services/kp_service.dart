@@ -218,26 +218,77 @@ class KPService {
 
   static String getPlanetDignity(String planet, String rasi) {
     if (planet == 'Lagna') return "-";
+    String p = planet.trim();
+    if (p.toLowerCase() == 'mandi' || p.toLowerCase() == 'maanthi' || p == 'மாந்தி' || p == 'மா') {
+      p = 'Maanthi';
+    } else if (p.toLowerCase() == 'rahu' || p == 'ராகு') {
+      p = 'Rahu';
+    } else if (p.toLowerCase() == 'ketu' || p == 'கேது') {
+      p = 'Ketu';
+    } else if (p.isNotEmpty) {
+      p = p[0].toUpperCase() + p.substring(1).toLowerCase();
+    }
+
+    String r = rasi.trim();
+    for (var entry in TAMIL_SIGNS.entries) {
+      if (entry.value == r || entry.key.toLowerCase() == r.toLowerCase()) {
+        r = entry.key;
+        break;
+      }
+    }
+
     final Map<String, List<String>> ownHouses = {
       'Sun': ['Leo'], 'Moon': ['Cancer'], 'Mars': ['Aries', 'Scorpio'],
       'Mercury': ['Gemini', 'Virgo'], 'Jupiter': ['Sagittarius', 'Pisces'],
-      'Venus': ['Taurus', 'Libra'], 'Saturn': ['Capricorn', 'Aquarius']
+      'Venus': ['Taurus', 'Libra'], 'Saturn': ['Capricorn', 'Aquarius'],
+      'Rahu': ['Aquarius', 'Gemini'],
+      'Ketu': ['Scorpio'],
+      'Maanthi': ['Virgo', 'Capricorn'],
     };
-    final Map<String, String> exaltation = {
-      'Sun': 'Aries', 'Moon': 'Taurus', 'Mars': 'Capricorn',
-      'Mercury': 'Virgo', 'Jupiter': 'Cancer', 'Venus': 'Pisces', 'Saturn': 'Libra'
+    final Map<String, List<String>> exaltation = {
+      'Sun': ['Aries'], 'Moon': ['Taurus'], 'Mars': ['Capricorn'],
+      'Mercury': ['Virgo'], 'Jupiter': ['Cancer'], 'Venus': ['Pisces'], 'Saturn': ['Libra'],
+      'Rahu': ['Scorpio'],
+      'Ketu': ['Scorpio'],
+      'Maanthi': ['Sagittarius', 'Aries'],
     };
-    final Map<String, String> debilitation = {
-      'Sun': 'Libra', 'Moon': 'Scorpio', 'Mars': 'Cancer',
-      'Mercury': 'Pisces', 'Jupiter': 'Capricorn', 'Venus': 'Virgo', 'Saturn': 'Aries'
+    final Map<String, List<String>> debilitation = {
+      'Sun': ['Libra'], 'Moon': ['Scorpio'], 'Mars': ['Cancer'],
+      'Mercury': ['Pisces'], 'Jupiter': ['Capricorn'], 'Venus': ['Virgo'], 'Saturn': ['Aries'],
+      'Rahu': ['Taurus'],
+      'Ketu': ['Taurus'],
+      'Maanthi': ['Gemini', 'Libra'],
     };
-    final Map<String, List<String>> friends = { 'Sun': ['Aries', 'Leo', 'Sagittarius', 'Scorpio'], 'Moon': ['Taurus', 'Cancer', 'Pisces'] };
-    final Map<String, List<String>> enemies = { 'Sun': ['Taurus', 'Libra', 'Capricorn', 'Aquarius'], 'Moon': ['Scorpio', 'Leo'] };
-    if (exaltation[planet] == rasi) return "உச்சம்";
-    if (debilitation[planet] == rasi) return "நீசம்";
-    if (ownHouses[planet]?.contains(rasi) ?? false) return "ஆட்சி";
-    if (friends[planet]?.contains(rasi) ?? false) return "நட்பு";
-    if (enemies[planet]?.contains(rasi) ?? false) return "பகை";
+    final Map<String, List<String>> friends = {
+      'Sun': ['Aries', 'Leo', 'Sagittarius', 'Scorpio', 'Cancer', 'Pisces'],
+      'Moon': ['Taurus', 'Cancer', 'Pisces', 'Gemini', 'Virgo', 'Leo'],
+      'Mars': ['Cancer', 'Leo', 'Sagittarius', 'Pisces'],
+      'Mercury': ['Aries', 'Taurus', 'Leo', 'Libra', 'Scorpio'],
+      'Jupiter': ['Aries', 'Cancer', 'Leo', 'Scorpio'],
+      'Venus': ['Gemini', 'Virgo', 'Capricorn', 'Aquarius'],
+      'Saturn': ['Taurus', 'Gemini', 'Virgo', 'Libra'],
+      'Rahu': ['Virgo', 'Libra', 'Sagittarius', 'Capricorn', 'Pisces'],
+      'Ketu': ['Aries', 'Sagittarius', 'Pisces'],
+      'Maanthi': ['Scorpio', 'Cancer'],
+    };
+    final Map<String, List<String>> enemies = {
+      'Sun': ['Taurus', 'Libra', 'Capricorn', 'Aquarius'],
+      'Moon': ['Scorpio', 'Leo'],
+      'Mars': ['Gemini', 'Virgo'],
+      'Mercury': ['Cancer'],
+      'Jupiter': ['Gemini', 'Virgo', 'Libra'],
+      'Venus': ['Leo', 'Scorpio'],
+      'Saturn': ['Aries', 'Cancer', 'Leo', 'Scorpio'],
+      'Rahu': ['Aries', 'Cancer', 'Leo'],
+      'Ketu': ['Cancer', 'Leo', 'Taurus', 'Gemini', 'Virgo', 'Libra'],
+      'Maanthi': ['Taurus', 'Leo', 'Pisces', 'Aquarius'],
+    };
+
+    if (exaltation[p]?.contains(r) ?? false) return "உச்சம்";
+    if (debilitation[p]?.contains(r) ?? false) return "நீசம்";
+    if (ownHouses[p]?.contains(r) ?? false) return "ஆட்சி";
+    if (friends[p]?.contains(r) ?? false) return "நட்பு";
+    if (enemies[p]?.contains(r) ?? false) return "பகை";
     return "சமம்";
   }
 
@@ -347,7 +398,8 @@ class KPService {
       double adjustedLon = (p.siderealDegree + ayanamsaOffsetDeg) % 360.0;
       if (adjustedLon < 0) adjustedLon += 360.0;
       planetLons[targetName] = adjustedLon;
-      planetInfo[targetName] = {'lon': adjustedLon, 'speed': p.speed, 'isRetro': p.isRetrograde};
+      bool isRetro = (targetName == 'Rahu' || targetName == 'Ketu') ? false : p.isRetrograde;
+      planetInfo[targetName] = {'lon': adjustedLon, 'speed': p.speed, 'isRetro': isRetro};
     }
 
     final pancha = await _calculatePanchangam(jd, planetLons, dt, lat, lon, timezone, engine);
@@ -429,7 +481,7 @@ class KPService {
 
     planetLons.forEach((pName, pLon) {
       String pDeg = formatDegrees(pLon);
-      bool isRetro = planetInfo[pName]?['isRetro'] == true;
+      bool isRetro = (pName != 'Rahu' && pName != 'Ketu') && (planetInfo[pName]?['isRetro'] == true);
       bool isCombust = isPlanetCombust(pName, pLon, planetLons['Sun']!, isRetro);
 
       String flags = "";
@@ -481,7 +533,7 @@ class KPService {
       if (houseNum == 0) houseNum = 12;
       planetInfo[pName]!['house'] = houseNum;
       planetInfo[pName]!['lords'] = getKPLords(pLon);
-      bool isRetro = planetInfo[pName]?['isRetro'] == true;
+      bool isRetro = (pName != 'Rahu' && pName != 'Ketu') && (planetInfo[pName]?['isRetro'] == true);
       bool isCombust = isPlanetCombust(pName, pLon, planetLons['Sun']!, isRetro);
       String flags = "";
       if (isRetro) flags += " (வ)";
@@ -492,7 +544,7 @@ class KPService {
     finalResults['dasa'] = _calculateDasaList(planetLons['Moon']!, dt, actualYearLength);
     final bool includeLagnaAV = await SettingsService.getIncludeLagnaAshtakavarga();
     finalResults['ashtakavarga'] = _calculateAshtakavarga(planetLons, lagnaLon, includeLagnaAV: includeLagnaAV);
-    finalResults['divisional_charts'] = _calculateAllVargas(planetLons, lagnaLon);
+    finalResults['divisional_charts'] = _calculateAllVargas(planetLons, lagnaLon, planetInfo);
     finalResults['significators'] = _calculateSignificators(planetLons, siderealCusps);
     finalResults['old_significators'] = _calculateOldKPSignificators(planetLons, siderealCusps);
 
@@ -630,6 +682,8 @@ class KPService {
     finalResults['kala_natpu_pagai_age'] = AstroSpecialCalculationsService.checkKalaNatpuAndPagaiAges(dasaList: finalResults['dasa'] ?? [], birthDt: dt);
 
     finalResults['jaimini_karakas'] = AstroSpecialCalculationsService.calculateJaiminiKarakas(planetLons);
+    finalResults['extreme_degrees'] = AstroSpecialCalculationsService.calculateExtremeDegreePlanets(planetLons);
+    finalResults['aagami_planets'] = AstroSpecialCalculationsService.calculateAagamiPlanets(planetLons);
     finalResults['planetary_avasthas'] = AstroSpecialCalculationsService.calculatePlanetaryAvasthas(planetLons, lagnaLon);
     finalResults['parivarthana'] = AstroSpecialCalculationsService.checkParivarthana(planetLons);
     finalResults['visha_amrita'] = AstroSpecialCalculationsService.checkVishaAmritaGhatika(planetLons);
@@ -638,7 +692,13 @@ class KPService {
     finalResults['chandrashtama'] = AstroSpecialCalculationsService.calculateChandrashtama(planetLons['Moon']!);
     finalResults['navatara'] = AstroSpecialCalculationsService.checkNavataraPositions(planetLons['Moon']!, planetLons);
 
-    finalResults['upagrahas'] = AstroSpecialCalculationsService.calculateUpagrahas(planetLons['Sun']!, dt, pancha['sunrise'] ?? "06:00");
+    finalResults['upagrahas'] = AstroSpecialCalculationsService.calculateUpagrahas(
+      planetLons['Sun']!, 
+      dt, 
+      pancha['sunrise'] ?? "06:00",
+      isDayBirth: isDayBirth,
+      sunsetStr: pancha['sunset'] ?? "18:00",
+    );
     finalResults['lagna_change'] = AstroSpecialCalculationsService.calculateLagnaTimeChange(lagnaLon, dt);
 
     bool isShukla = ((planetLons['Moon']! - planetLons['Sun']! + 360) % 360) < 180;
@@ -1251,7 +1311,11 @@ class KPService {
      'Lagna': { 'Sun': [3,4,6,10,11,12], 'Moon': [3,6,10,11,12], 'Mars': [1,3,6,10,11], 'Mercury': [1,2,4,6,8,10,11], 'Jupiter': [1,2,4,5,6,7,9,10,11], 'Venus': [1,2,3,4,5,8,9], 'Saturn': [1,3,4,6,10,11], 'Lagna': [3,6,10,11] }
   };
 
-  static Map<String, dynamic> _calculateAllVargas(Map<String, double> planetLons, double lagnaLon) {
+  static Map<String, dynamic> _calculateAllVargas(
+    Map<String, double> planetLons, 
+    double lagnaLon, 
+    [Map<String, dynamic>? planetInfo]
+  ) {
     List<int> divs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 20, 24, 27, 30, 40, 45, 60];
     List<String> names = [
       "ராசி\n(D1)", "ஹோரை\n(D2)", "திரேக்காணம்\n(D3)", "சதுர்த்தாம்சம்\n(D4)", "பஞ்சாம்சம்\n(D5)", 
@@ -1263,12 +1327,25 @@ class KPService {
     Map<String, Map<String, List<String>>> vargas = {};
     for (int i = 0; i < divs.length; i++) {
         Map<String, List<String>> chart = {}; for (var s in SIGNS) chart[s] = [];
-        planetLons.forEach((pN, l) { chart[SIGNS[_calculateVargaSign(l, divs[i])]]!.add(TAMIL_PLANETS_SHORT[pN]!); });
+        planetLons.forEach((pN, l) {
+          String pLabel = TAMIL_PLANETS_SHORT[pN]!;
+          bool isRetro = false;
+          if (planetInfo != null) {
+            if (planetInfo[pN]?['isRetro'] == true) isRetro = true;
+            else if (planetInfo[pN.toLowerCase()]?['isRetro'] == true) isRetro = true;
+          }
+          if (pN != 'Rahu' && pN != 'Ketu' && isRetro) {
+            pLabel += " (வ)";
+          }
+          chart[SIGNS[_calculateVargaSign(l, divs[i])]]!.add(pLabel);
+        });
         chart[SIGNS[_calculateVargaSign(lagnaLon, divs[i])]]!.add(TAMIL_PLANETS_SHORT['Lagna']!);
         vargas[names[i]] = chart;
     }
     return vargas;
   }
+
+  static Map<String, dynamic> calculateAllVargasForTest(Map<String, double> planetLons, double lagnaLon, [Map<String, dynamic>? planetInfo]) => _calculateAllVargas(planetLons, lagnaLon, planetInfo);
 
   static int calculateVargaSignForTest(double lon, int division) => _calculateVargaSign(lon, division);
 
@@ -1828,7 +1905,7 @@ class KPService {
     return engList[idx];
   }
 
-  static String _calculateHora(String sunrise, DateTime birthDt, int weekday, {String? sunset}) {
+  static String calculateBirthHoraAndSubHora(String sunrise, DateTime birthDt, int weekday, {String? sunset}) {
     try {
       DateTime? parseTimeStr(String? str) {
         if (str == null || str.isEmpty || str == "-") return null;
@@ -1847,53 +1924,37 @@ class KPService {
 
       DateTime? riseTime = parseTimeStr(sunrise);
       if (riseTime == null) return "-";
-      DateTime? setTime = parseTimeStr(sunset);
 
-      int horaIdx = 0;
-      if (setTime != null) {
-        if (!birthDt.isBefore(riseTime) && birthDt.isBefore(setTime)) {
-          // Daytime (0 to 11)
-          double dayMins = setTime.difference(riseTime).inMinutes.toDouble();
-          if (dayMins <= 0) dayMins = 720.0;
-          double horaiSlotMins = dayMins / 12.0;
-          double elapsedMins = birthDt.difference(riseTime).inMinutes.toDouble();
-          horaIdx = (elapsedMins / horaiSlotMins).floor().clamp(0, 11);
-        } else if (!birthDt.isBefore(setTime)) {
-          // Nighttime after sunset (12 to 23)
-          DateTime nextRise = riseTime.add(const Duration(days: 1));
-          double nightMins = nextRise.difference(setTime).inMinutes.toDouble();
-          if (nightMins <= 0) nightMins = 720.0;
-          double horaiSlotMins = nightMins / 12.0;
-          double elapsedMins = birthDt.difference(setTime).inMinutes.toDouble();
-          horaIdx = 12 + (elapsedMins / horaiSlotMins).floor().clamp(0, 11);
-        } else {
-          // Nighttime before sunrise (12 to 23)
-          DateTime prevSet = setTime.subtract(const Duration(days: 1));
-          double nightMins = riseTime.difference(prevSet).inMinutes.toDouble();
-          if (nightMins <= 0) nightMins = 720.0;
-          double horaiSlotMins = nightMins / 12.0;
-          double elapsedMins = birthDt.difference(prevSet).inMinutes.toDouble();
-          horaIdx = 12 + (elapsedMins / horaiSlotMins).floor().clamp(0, 11);
-        }
-      } else {
-        double diffHours = birthDt.difference(riseTime).inMinutes / 60.0;
-        if (diffHours < 0) diffHours += 24;
-        horaIdx = diffHours.floor() % 24;
+      // Calculate elapsed minutes from sunrise
+      int elapsedMinutes = birthDt.difference(riseTime).inMinutes;
+      if (elapsedMinutes < 0) {
+        elapsedMinutes += 24 * 60;
       }
+
+      // 1 Hora = 60 minutes, 1 Sub-Hora = 12 minutes (5 sub-horas per hora)
+      int horaIdx = (elapsedMinutes ~/ 60) % 24;
+      int minuteInHora = elapsedMinutes % 60;
+      int subHoraIdx = (minuteInHora ~/ 12).clamp(0, 4);
 
       // 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
       const horaLordsByDay = [
-        'Sun',     // Sunday
-        'Moon',    // Monday
-        'Mars',    // Tuesday
-        'Mercury', // Wednesday
-        'Jupiter', // Thursday
-        'Venus',   // Friday
-        'Saturn',  // Saturday
+        'Sun',     // Sunday (0)
+        'Moon',    // Monday (1)
+        'Mars',    // Tuesday (2)
+        'Mercury', // Wednesday (3)
+        'Jupiter', // Thursday (4)
+        'Venus',   // Friday (5)
+        'Saturn',  // Saturday (6)
       ];
 
+      // 24-Hora planetary order (Chaldean order)
       const horaCycle = [
         'Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter', 'Mars'
+      ];
+
+      // 5 உப-ஹோரைகள் கிழமை வரிசையில் (Weekday order) சுழற்சியாக வரும்
+      const weekdayCycle = [
+        'Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'
       ];
 
       int dayIdx = (weekday == 7) ? 0 : weekday % 7;
@@ -1903,11 +1964,21 @@ class KPService {
       int targetPlanetIdx = (startCycleIdx + horaIdx) % 7;
       final targetPlanet = horaCycle[targetPlanetIdx];
 
-      return TAMIL_PLANETS[targetPlanet] ?? targetPlanet;
+      int subStartIdx = weekdayCycle.indexOf(targetPlanet);
+      final subPlanet = weekdayCycle[(subStartIdx + subHoraIdx) % 7];
+
+      final horaShort = TAMIL_PLANETS_SHORT[targetPlanet] ?? targetPlanet;
+      final subHoraShort = TAMIL_PLANETS_SHORT[subPlanet] ?? subPlanet;
+
+      // Returns short format e.g. "சூரி - சந்" or "சனி - புத"
+      return "$horaShort - $subHoraShort";
     } catch (e) {
       return "-";
     }
   }
+
+  static String _calculateHora(String sunrise, DateTime birthDt, int weekday, {String? sunset}) =>
+      calculateBirthHoraAndSubHora(sunrise, birthDt, weekday, sunset: sunset);
 
   static String _engPlanetFromIdx(int idx) {
     const list = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];

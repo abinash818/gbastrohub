@@ -246,8 +246,16 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         await AccessService().updateAccess(finalAccessMap);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('சந்தா புதுப்பிக்கப்பட்டது! (Subscription updated!)')));
         Navigator.pushReplacementNamed(context, '/dashboard');
-      } else if (subStatus['error'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Network error. Please try again.')));
+      } else if (subStatus['error'] == true || statusData['status'] == 'ERROR') {
+        if (AccessService().getActiveFeatures().isNotEmpty || AccessService().hasAccess('is_premium')) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('இணைப்பில் தாமதம். நீங்கள் முதன்மைப் பக்கத்திற்குச் செல்லலாம்.'),
+            backgroundColor: Colors.orange,
+          ));
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Network error. Please try again.')));
+        }
       } else {
         await AccessService().updateAccess({'is_premium': false});
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('உங்களுக்கு Active Premium சந்தா எதுவும் இல்லை.')));
@@ -448,6 +456,26 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                           textAlign: TextAlign.center,
                         ),
                       ),
+
+                      if (AccessService().hasAccess('is_premium') || AccessService().getActiveFeatures().isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton.icon(
+                            onPressed: () => Navigator.pushReplacementNamed(context, '/dashboard'),
+                            icon: const Icon(Icons.dashboard_rounded, color: Color(0xFFF3D99F), size: 20),
+                            label: const Text(
+                              "முதன்மைப் பக்கத்திற்குச் செல்க (Open Dashboard)",
+                              style: TextStyle(color: Color(0xFFF3D99F), fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFFF3D99F), width: 1.5),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 );

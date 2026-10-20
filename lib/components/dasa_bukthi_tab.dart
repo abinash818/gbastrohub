@@ -338,6 +338,70 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
     );
   }
 
+  String _getAgeHeaderTitle() {
+    String lang = Localizations.localeOf(context).languageCode;
+    if (lang == 'en') return "Age";
+    if (lang == 'hi') return "आयु";
+    return "வயது";
+  }
+
+  String _getAgeHeaderSubtitle() {
+    String lang = Localizations.localeOf(context).languageCode;
+    if (lang == 'en') return "(From - To)";
+    if (lang == 'hi') return "(से - तक)";
+    return "(முதல் - வரை)";
+  }
+
+  String _formatAgeRange(dynamic startRaw, dynamic endRaw) {
+    if (startRaw == null || endRaw == null) return "-";
+    final DateTime? start = startRaw is DateTime ? startRaw : DateTime.tryParse(startRaw.toString());
+    final DateTime? end = endRaw is DateTime ? endRaw : DateTime.tryParse(endRaw.toString());
+    if (start == null || end == null) return "-";
+
+    final dob = widget.fullData['birth_dt'] as DateTime? ?? (widget.fullData['dasa'] as List?)?.firstOrNull?['start'] as DateTime?;
+    if (dob == null) return "-";
+
+    int startYears = start.year - dob.year;
+    int startMonths = start.month - dob.month;
+    int startDays = start.day - dob.day;
+    if (startDays < 0) {
+      startMonths--;
+      startDays += DateTime(start.year, start.month, 0).day;
+    }
+    if (startMonths < 0) {
+      startYears--;
+      startMonths += 12;
+    }
+    if (startYears < 0) startYears = 0;
+    if (startMonths < 0) startMonths = 0;
+
+    int endYears = end.year - dob.year;
+    int endMonths = end.month - dob.month;
+    int endDays = end.day - dob.day;
+    if (endDays < 0) {
+      endMonths--;
+      endDays += DateTime(end.year, end.month, 0).day;
+    }
+    if (endMonths < 0) {
+      endYears--;
+      endMonths += 12;
+    }
+    if (endYears < 0) endYears = 0;
+    if (endMonths < 0) endMonths = 0;
+
+    final lang = Localizations.localeOf(context).languageCode;
+    final mStr = lang == 'en' ? 'm' : (lang == 'hi' ? 'म' : 'மா');
+    final yStr = lang == 'en' ? 'y' : (lang == 'hi' ? 'व' : 'வ');
+
+    if (startYears != endYears) {
+      return "$startYears - $endYears";
+    } else if (startMonths != endMonths) {
+      return "$startYears$yStr ($startMonths - $endMonths$mStr)";
+    } else {
+      return "$startYears$yStr $startMonths$mStr";
+    }
+  }
+
   Widget _buildDasaSection(
     String title,
     List<dynamic> periods,
@@ -373,10 +437,11 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
               width: 0.8,
             ),
             columnWidths: const {
-              0: FixedColumnWidth(35),
-              1: FlexColumnWidth(1.2),
-              2: FlexColumnWidth(1.5),
-              3: FlexColumnWidth(1.5),
+              0: FixedColumnWidth(30),
+              1: FlexColumnWidth(1.1),
+              2: FlexColumnWidth(1.3),
+              3: FlexColumnWidth(1.4),
+              4: FlexColumnWidth(1.4),
             },
             children: [
               TableRow(
@@ -385,8 +450,8 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
                   const TableCell(
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 4,
+                        vertical: 8,
+                        horizontal: 2,
                       ),
                       child: Text(
                         "No",
@@ -394,7 +459,7 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -402,8 +467,8 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
                   TableCell(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 4,
+                        vertical: 8,
+                        horizontal: 2,
                       ),
                       child: Text(
                         _getTranslatedText("அதிபதி"),
@@ -411,7 +476,7 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -419,8 +484,38 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
                   TableCell(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 4,
+                        vertical: 4,
+                        horizontal: 2,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _getAgeHeaderTitle(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                          Text(
+                            _getAgeHeaderSubtitle(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 8.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  TableCell(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 2,
                       ),
                       child: Text(
                         _getTranslatedText("ஆரம்பம்"),
@@ -428,7 +523,7 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -436,8 +531,8 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
                   TableCell(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 4,
+                        vertical: 8,
+                        horizontal: 2,
                       ),
                       child: Text(
                         _getTranslatedText("முடிவு"),
@@ -445,7 +540,7 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -470,6 +565,12 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
                     ),
                     _buildInteractiveCell(
                       AstroTranslationService.translate(context, p['lord']?.toString().trim() ?? "-", isPlanet: true),
+                      onTap: () => onSelect(p),
+                      isToday: isToday,
+                      isSelected: isHeaderStyle,
+                    ),
+                    _buildInteractiveCell(
+                      _formatAgeRange(p['start'], p['end']),
                       onTap: () => onSelect(p),
                       isToday: isToday,
                       isSelected: isHeaderStyle,
@@ -505,21 +606,24 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
         decoration: BoxDecoration(
           color: isToday
               ? const Color(0xFFFFD54F).withOpacity(0.3)
               : (isSelected ? const Color(0xFFFAF6EE) : Colors.white),
         ),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: const Color(0xFF5D1204),
-            fontWeight: (isToday || isSelected)
-                ? FontWeight.w900
-                : FontWeight.w500,
-            fontSize: 12,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: const Color(0xFF5D1204),
+              fontWeight: (isToday || isSelected)
+                  ? FontWeight.w900
+                  : FontWeight.w500,
+              fontSize: 12,
+            ),
           ),
         ),
       ),
@@ -802,9 +906,10 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
               width: 0.8,
             ),
             columnWidths: const {
-              0: FlexColumnWidth(1.2),
-              1: FlexColumnWidth(1.5),
-              2: FlexColumnWidth(1.5),
+              0: FlexColumnWidth(1.1),
+              1: FlexColumnWidth(1.3),
+              2: FlexColumnWidth(1.4),
+              3: FlexColumnWidth(1.4),
             },
             children: [
               TableRow(
@@ -821,6 +926,33 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
+                      ),
+                    ),
+                  ),
+                  TableCell(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _getAgeHeaderTitle(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Color(0xFF5D1204),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                          Text(
+                            _getAgeHeaderSubtitle(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Color(0xFF8D6E63),
+                              fontSize: 8.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -864,6 +996,12 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
                   children: [
                     _buildInteractiveCellWide(
                       AstroTranslationService.translate(context, p['lord']?.toString().trim() ?? "-", isPlanet: true),
+                      onTap: () => onSelect(p),
+                      isToday: isToday,
+                      isSelected: isSelected,
+                    ),
+                    _buildInteractiveCellWide(
+                      _formatAgeRange(p['start'], p['end']),
                       onTap: () => onSelect(p),
                       isToday: isToday,
                       isSelected: isSelected,

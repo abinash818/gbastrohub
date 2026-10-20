@@ -8,18 +8,51 @@ class SubscriptionService {
 
   Future<List<SubscriptionPlan>> getActivePlans() async {
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(Uri.parse(apiUrl)).timeout(const Duration(seconds: 4));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
           final List<dynamic> plansList = data['plans'];
-          return plansList.map((planMap) => SubscriptionPlan.fromMap(planMap, planMap['id'].toString())).toList();
+          final plans = plansList.map((planMap) => SubscriptionPlan.fromMap(planMap, planMap['id'].toString())).toList();
+          if (plans.isNotEmpty) return plans;
         }
       }
     } catch (e) {
       print("Error fetching plans from PHP API: $e");
     }
-    return [];
+    return _getDefaultPlans();
+  }
+
+  List<SubscriptionPlan> _getDefaultPlans() {
+    return [
+      SubscriptionPlan(
+        id: "1",
+        name: "1 Month Plan",
+        price: 499.0,
+        durationDays: 30,
+        features: ["ஜாதகம்", "பொருத்தம்", "எண் கணிதம்", "ஜாமக்கோள்", "வாஸ்து"],
+        isActive: true,
+        order: 1,
+      ),
+      SubscriptionPlan(
+        id: "2",
+        name: "6 Months Plan",
+        price: 1999.0,
+        durationDays: 180,
+        features: ["ஜாதகம்", "பொருத்தம்", "எண் கணிதம்", "ஜாமக்கோள்", "வாஸ்து", "பஞ்சாங்கம்"],
+        isActive: true,
+        order: 2,
+      ),
+      SubscriptionPlan(
+        id: "3",
+        name: "1 Year Plan",
+        price: 3499.0,
+        durationDays: 365,
+        features: ["அனைத்து வசதிகளும் (All Features)"],
+        isActive: true,
+        order: 3,
+      ),
+    ];
   }
 
   Future<Map<String, dynamic>> checkUserSubscription(String userId, [String? email]) async {

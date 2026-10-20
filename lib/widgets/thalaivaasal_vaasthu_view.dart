@@ -17,6 +17,7 @@ class ThalaivaasalVaasthuView extends StatefulWidget {
 }
 
 class _ThalaivaasalVaasthuViewState extends State<ThalaivaasalVaasthuView> {
+  static const bool _showCalculationDetails = false;
   VaasthuDirection _selectedDirection = VaasthuDirection.east;
   late final TextEditingController _ftCtrl;
   late final TextEditingController _inCtrl;
@@ -79,8 +80,10 @@ class _ThalaivaasalVaasthuViewState extends State<ThalaivaasalVaasthuView> {
           const SizedBox(height: 18),
 
           // 7. Step-by-Step Mathematical Explanation Card
-          _buildStepByStepMathCard(res),
-          const SizedBox(height: 18),
+          if (_showCalculationDetails) ...[
+            _buildStepByStepMathCard(res),
+            const SizedBox(height: 18),
+          ],
 
           // 8. Vaasthu Corner Guidelines Card
           _buildCornerGuidelinesCard(),
@@ -1430,15 +1433,14 @@ class _ThalaivaasalVaasthuViewState extends State<ThalaivaasalVaasthuView> {
           const Divider(height: 16),
 
           _buildRowItem(
-            title: 'ஒரு பகுதி உண்டான அளவு (1/4.5)',
+            title: 'ஒரு பகுதி உண்டான அளவு',
             value: ThalaivaasalResult.toFeetAndInchesDetailed(res.onePartFeet),
-            subtitle: 'உச்சப்பகுதி ÷ 4.5',
             color: Colors.indigo.shade800,
           ),
           const Divider(height: 16),
 
           _buildRowItem(
-            title: 'உத்தம ஆரம்ப அளவு (3 × ஒரு பகுதி)',
+            title: 'உத்தம ஆரம்ப அளவு',
             value: ThalaivaasalResult.toFeetAndInchesDetailed(res.uttamaStartFeet),
             subtitle: '${res.startCornerShort}-லிருந்து இந்த தூரத்தில் தலைவாசல் ஆரம்பிக்க வேண்டும்',
             color: Colors.green.shade900,
@@ -1447,7 +1449,7 @@ class _ThalaivaasalVaasthuViewState extends State<ThalaivaasalVaasthuView> {
           const Divider(height: 16),
 
           _buildRowItem(
-            title: 'உத்தம முடிவு அளவு (ஆரம்பம் + ஒரு பகுதி)',
+            title: 'உத்தம முடிவு அளவு',
             value: ThalaivaasalResult.toFeetAndInchesDetailed(res.uttamaEndFeet),
             subtitle: '${res.startCornerShort}-லிருந்து இந்த தூரம் வரை தலைவாசல் பகுதி அமையும்',
             color: Colors.green.shade900,

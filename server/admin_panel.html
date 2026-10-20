@@ -268,15 +268,21 @@
             <button class="close-btn" onclick="closeFeaturesModal()">&times;</button>
         </div>
         <input type="hidden" id="modal-user-id">
+        <div style="margin-bottom: 15px; padding: 10px 12px; background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
+            <label class="feature-item" style="cursor: pointer; font-size: 14px; font-weight: 700; color: var(--primary);">
+                <input type="checkbox" id="select-all-features" onchange="toggleSelectAllFeatures(this.checked)"> Select All (அனைத்தும் தேர்வு)
+            </label>
+            <span id="features-counter" style="font-size: 12px; color: var(--text-dim); font-weight: 600;">0 / 8 Selected</span>
+        </div>
         <div class="feature-grid">
-            <label class="feature-item"><input type="checkbox" class="feature-cb" value="jathagam"> Jathagam</label>
-            <label class="feature-item"><input type="checkbox" class="feature-cb" value="porutham"> Porutham</label>
-            <label class="feature-item"><input type="checkbox" class="feature-cb" value="jamakkol"> Jamakkol</label>
-            <label class="feature-item"><input type="checkbox" class="feature-cb" value="nadi"> Nadi Astrology</label>
-            <label class="feature-item"><input type="checkbox" class="feature-cb" value="numerology"> Numerology</label>
-            <label class="feature-item"><input type="checkbox" class="feature-cb" value="muhurtham"> Muhurtham</label>
-            <label class="feature-item"><input type="checkbox" class="feature-cb" value="kp_astrology"> KP Astrology</label>
-            <label class="feature-item"><input type="checkbox" class="feature-cb" value="panchangam"> Panchangam</label>
+            <label class="feature-item"><input type="checkbox" class="feature-cb" value="jathagam" onchange="updateSelectAllState()"> Jathagam</label>
+            <label class="feature-item"><input type="checkbox" class="feature-cb" value="porutham" onchange="updateSelectAllState()"> Porutham</label>
+            <label class="feature-item"><input type="checkbox" class="feature-cb" value="jamakkol" onchange="updateSelectAllState()"> Jamakkol</label>
+            <label class="feature-item"><input type="checkbox" class="feature-cb" value="nadi" onchange="updateSelectAllState()"> Nadi Astrology</label>
+            <label class="feature-item"><input type="checkbox" class="feature-cb" value="numerology" onchange="updateSelectAllState()"> Numerology</label>
+            <label class="feature-item"><input type="checkbox" class="feature-cb" value="muhurtham" onchange="updateSelectAllState()"> Muhurtham</label>
+            <label class="feature-item"><input type="checkbox" class="feature-cb" value="kp_astrology" onchange="updateSelectAllState()"> KP Astrology</label>
+            <label class="feature-item"><input type="checkbox" class="feature-cb" value="panchangam" onchange="updateSelectAllState()"> Panchangam</label>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 10px;">
             <button class="btn-sm btn-save" style="font-size:14px; padding: 12px; flex: 1; margin-top: 0;" onclick="saveFeatures()">Save Features</button>
@@ -430,8 +436,12 @@
                 body: JSON.stringify(body)
             });
             const data = await res.json();
-            if(data.success) fetchUsers();
-            else alert(data.message);
+            if(data.success) {
+                if (body.action === 'update_features' || body.action === 'update_features_and_approve') {
+                    alert('User features saved successfully! / அனுமதிகள் வெற்றிகரமாக சேமிக்கப்பட்டன!');
+                }
+                fetchUsers();
+            } else alert(data.message);
         } catch(e) { alert('Error: ' + e); }
         showLoader(false);
     }
@@ -458,6 +468,7 @@
         checkboxes.forEach(cb => {
             cb.checked = userFeatures.includes(cb.value);
         });
+        updateSelectAllState();
 
         // Disable Save & Approve if already APPROVED
         const btnSaveApprove = document.getElementById('btn-save-approve');
@@ -474,6 +485,28 @@
         }
 
         document.getElementById('features-modal').style.display = 'flex';
+    }
+
+    function toggleSelectAllFeatures(checked) {
+        const checkboxes = document.querySelectorAll('.feature-cb');
+        checkboxes.forEach(cb => {
+            cb.checked = checked;
+        });
+        updateSelectAllState();
+    }
+
+    function updateSelectAllState() {
+        const checkboxes = document.querySelectorAll('.feature-cb');
+        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const selectAllCb = document.getElementById('select-all-features');
+        if (selectAllCb) {
+            selectAllCb.checked = (checkedCount === checkboxes.length);
+            selectAllCb.indeterminate = (checkedCount > 0 && checkedCount < checkboxes.length);
+        }
+        const counter = document.getElementById('features-counter');
+        if (counter) {
+            counter.innerText = `${checkedCount} / ${checkboxes.length} Selected`;
+        }
     }
 
     function closeFeaturesModal() {

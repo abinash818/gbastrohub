@@ -338,7 +338,7 @@ class OnePagePdfService {
               <div class="detail-row"><span class="detail-label">${l10n.nameLabel}</span>: <span style="color:var(--text-red)">$name</span></div>
               <div class="detail-row"><span class="detail-label">${l10n.genderLabel}</span>: <span style="color:#333">${(gender.toLowerCase().contains('male') || gender == 'ஆண்' || gender == 'Male') ? l10n.male : l10n.female}</span></div>
               <div class="detail-row"><span class="detail-label">${l10n.ageFormat(0,0,0).split(':')[0]}</span>: <span style="color:#333">$age</span></div>
-              <div class="detail-row"><span class="detail-label">${l10n.nakshatraLabel}</span>: <span style="color:#333">$nakshatraStr - $padaStr</span></div>
+              <div class="detail-row"><span class="detail-label">${langCode == 'hi' ? 'जन्म नक्षत्र' : (langCode == 'en' ? 'Janma Nakshatra' : 'ஜென்ம நட்சத்திரம்')}</span>: <span style="color:#333">$nakshatraStr - $padaStr</span></div>
               <div class="detail-row"><span class="detail-label">${l10n.rasiLabel}</span>: <span style="color:#333">$rasiStr</span></div>
               <div class="detail-row"><span class="detail-label">${l10n.day}</span>: <span style="color:#333">$weekdayStr</span></div>
               <div class="detail-row"><span class="detail-label">${l10n.dasa}</span>: <span style="color:var(--text-red)">$dasaBalance</span></div>

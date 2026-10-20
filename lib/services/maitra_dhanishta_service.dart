@@ -127,6 +127,65 @@ class MaitraMuhurthamSlot {
   );
 }
 
+class AbhijitMuhurthamSlot {
+  final DateTime date;
+  final DateTime startTime;
+  final DateTime endTime;
+  final String sunrise;
+  final String sunset;
+  final String weekday;
+  final bool isWednesday;
+  final String ratingText;
+  final bool isAuspicious;
+
+  AbhijitMuhurthamSlot({
+    required this.date,
+    required this.startTime,
+    required this.endTime,
+    required this.sunrise,
+    required this.sunset,
+    required this.weekday,
+    required this.isWednesday,
+    required this.ratingText,
+    required this.isAuspicious,
+  });
+
+  String get formattedTime {
+    String format(DateTime dt) {
+      int h = dt.hour % 12;
+      if (h == 0) h = 12;
+      String m = dt.minute.toString().padLeft(2, '0');
+      String ampm = dt.hour >= 12 ? "PM" : "AM";
+      return "$h:$m $ampm";
+    }
+    return "${format(startTime)} - ${format(endTime)}";
+  }
+
+  Map<String, dynamic> toJson() => {
+    'date': date.toIso8601String(),
+    'startTime': startTime.toIso8601String(),
+    'endTime': endTime.toIso8601String(),
+    'sunrise': sunrise,
+    'sunset': sunset,
+    'weekday': weekday,
+    'isWednesday': isWednesday,
+    'ratingText': ratingText,
+    'isAuspicious': isAuspicious,
+  };
+
+  factory AbhijitMuhurthamSlot.fromJson(Map<String, dynamic> json) => AbhijitMuhurthamSlot(
+    date: DateTime.parse(json['date'] as String),
+    startTime: DateTime.parse(json['startTime'] as String),
+    endTime: DateTime.parse(json['endTime'] as String),
+    sunrise: json['sunrise'] as String,
+    sunset: json['sunset'] as String,
+    weekday: json['weekday'] as String,
+    isWednesday: json['isWednesday'] as bool,
+    ratingText: json['ratingText'] as String,
+    isAuspicious: json['isAuspicious'] as bool,
+  );
+}
+
 class MaitraDhanishtaService {
   static const List<String> TAMIL_NAKSHATRAS = [
     "அஸ்வினி", "பரணி", "கார்த்திகை", "ரோகிணி", "மிருகசீரிஷம்", "திருவாதிரை",
@@ -502,6 +561,116 @@ class MaitraDhanishtaService {
     }
 
     _memoryDhanishtaCache[cacheKey] = results;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = jsonEncode(results.map((e) => e.toJson()).toList());
+      await prefs.setString(cacheKey, jsonString);
+    } catch (_) {}
+
+    return results;
+  }
+
+  static final Map<String, List<AbhijitMuhurthamSlot>> _memoryAbhijitCache = {};
+
+  /// நாளுக்குரிய அபிஜித் முகூர்த்தத்தைக் கணக்கிடுதல் (சூரிய உதயத்திலிருந்து 15-ல் 8-வது பாகம்)
+  static AbhijitMuhurthamSlot calculateAbhijitMuhurthamForDate(
+    DateTime date,
+    DateTime sunriseDt,
+    DateTime sunsetDt,
+  ) {
+    double durationSeconds = sunsetDt.difference(sunriseDt).inSeconds.toDouble();
+    if (durationSeconds <= 0) durationSeconds = 12 * 3600;
+
+    int startSeconds = (7 * durationSeconds / 15.0).round();
+    int endSeconds = (8 * durationSeconds / 15.0).round();
+    DateTime start = sunriseDt.add(Duration(seconds: startSeconds));
+    DateTime end = sunriseDt.add(Duration(seconds: endSeconds));
+
+    int wkIdx = date.weekday == 7 ? 0 : date.weekday;
+    bool isWed = date.weekday == DateTime.wednesday;
+
+    String ratingText = isWed
+        ? "புதன்கிழமை தோஷம் (தவிர்ப்பது நன்று)"
+        : "100% மகா உத்தம சுப முகூர்த்தம்";
+
+    String formatTime(DateTime dt) {
+      int h = dt.hour % 12;
+      if (h == 0) h = 12;
+      String m = dt.minute.toString().padLeft(2, '0');
+      String ampm = dt.hour >= 12 ? "PM" : "AM";
+      return "$h:$m $ampm";
+    }
+
+    return AbhijitMuhurthamSlot(
+      date: date,
+      startTime: start,
+      endTime: end,
+      sunrise: formatTime(sunriseDt),
+      sunset: formatTime(sunsetDt),
+      weekday: WEEKDAYS_TAMIL[wkIdx],
+      isWednesday: isWed,
+      ratingText: ratingText,
+      isAuspicious: !isWed,
+    );
+  }
+
+  /// குறிப்பிட்ட மாதத்திற்கான அனைத்து நாட்களின் அபிஜித் முகூர்த்தப் பட்டியல் (லோக்கல் கேச் மூலம்)
+  static Future<List<AbhijitMuhurthamSlot>> getMonthAbhijitMuhurthams(
+    int year,
+    int month,
+    double lat,
+    double lon,
+  ) async {
+    final cacheKey = "cache_abhijit_${year}_${month}_${lat.toStringAsFixed(2)}_${lon.toStringAsFixed(2)}";
+
+    if (_memoryAbhijitCache.containsKey(cacheKey)) {
+      return _memoryAbhijitCache[cacheKey]!;
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedJson = prefs.getString(cacheKey);
+      if (savedJson != null && savedJson.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(savedJson);
+        final slots = decoded.map((item) => AbhijitMuhurthamSlot.fromJson(item as Map<String, dynamic>)).toList();
+        _memoryAbhijitCache[cacheKey] = slots;
+        return slots;
+      }
+    } catch (_) {}
+
+    final engine = _engine;
+    final int daysInMonth = DateTime(year, month + 1, 0).day;
+    final List<AbhijitMuhurthamSlot> results = [];
+    const double timezone = 5.5;
+
+    for (int day = 1; day <= daysInMonth; day++) {
+      final curDate = DateTime(year, month, day);
+      DateTime riseDt = DateTime(year, month, day, 6, 0);
+      DateTime setDt = DateTime(year, month, day, 18, 0);
+
+      try {
+        double jd = (curDate.millisecondsSinceEpoch / 86400000.0) + 2440587.5;
+        double jdNoonUt = jd.floor() + 0.5;
+        double jdLocalMidnightUt = jdNoonUt - 0.5 - (timezone / 24.0);
+
+        var phenomena = await engine.calcPhenomena(jdLocalMidnightUt, lat, lon, 0);
+        double riseJD = phenomena['rise'] ?? 0;
+        double setJD = phenomena['set'] ?? 0;
+
+        if (riseJD > 0 && setJD > 0) {
+          int riseMs = ((riseJD - 2440587.5) * 86400 * 1000).round();
+          int setMs = ((setJD - 2440587.5) * 86400 * 1000).round();
+          riseDt = DateTime.fromMillisecondsSinceEpoch(riseMs, isUtc: true).add(const Duration(minutes: 330));
+          setDt = DateTime.fromMillisecondsSinceEpoch(setMs, isUtc: true).add(const Duration(minutes: 330));
+        }
+      } catch (_) {}
+
+      final slot = calculateAbhijitMuhurthamForDate(curDate, riseDt, setDt);
+      results.add(slot);
+    }
+
+    _memoryAbhijitCache[cacheKey] = results;
 
     try {
       final prefs = await SharedPreferences.getInstance();

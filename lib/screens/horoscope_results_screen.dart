@@ -17,6 +17,7 @@ import '../services/astro_translation_service.dart';
 import '../services/palangal_service.dart';
 import '../services/shadbala_service.dart';
 import '../services/astro_special_calculations_service.dart';
+import '../services/temple_worship_service.dart';
 import 'dart:io' show Platform;
 import 'package:astrology_flutter/l10n/app_localizations.dart';
 
@@ -309,14 +310,6 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     final bool isNadi = widget.results['isNadi'] ?? false;
     final bool isPrasannam = widget.results['isPrasannam'] ?? false;
     
-    int tabLength = 0;
-    if (isPrasannam) {
-      tabLength = 2;
-    } else {
-      tabLength = 8;
-      if (isKp) tabLength += 4;
-    }
-
     final tabsList = [
       if (isPrasannam) Tab(text: AppLocalizations.of(context)!.tabPrasannam),
       Tab(text: AppLocalizations.of(context)!.tabDetails),
@@ -331,6 +324,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       if (!isPrasannam) Tab(text: AppLocalizations.of(context)!.tabDasavarga),
       if (!isPrasannam) const Tab(text: "ஷட்பலம்"),
       if (!isPrasannam) Tab(text: AppLocalizations.of(context)!.tabPalangal),
+      if (!isPrasannam) const Tab(text: "வழிபாட்டு தலங்கள்"),
     ];
 
     final tabViewsList = [
@@ -347,7 +341,10 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       if (!isPrasannam) _buildDasavarkkamView(),
       if (!isPrasannam) _buildShadbalaView(),
       if (!isPrasannam) _buildPalangalView(),
+      if (!isPrasannam) _buildWorshipPlanView(),
     ];
+
+    final int tabLength = tabsList.length;
 
     return DefaultTabController(
       length: tabLength,
@@ -1038,6 +1035,26 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     );
   }
 
+  String _formatAgeRange(DateTime? start, DateTime? end) {
+    final dob = (widget.results['birth_dt'] ?? widget.results['dob']) as DateTime?;
+    if (dob == null || start == null || end == null) return "-";
+
+    double startYears = start.difference(dob).inDays / 365.25;
+    double endYears = end.difference(dob).inDays / 365.25;
+    if (startYears < 0) startYears = 0.0;
+    if (endYears < 0) endYears = 0.0;
+
+    int sY = startYears.floor();
+    int eY = endYears.round();
+    if (eY <= sY && endYears > startYears + 0.05) {
+      eY = sY + 1;
+    }
+    if (sY == eY) {
+      return "$sY வ";
+    }
+    return "$sY - $eY";
+  }
+
   Widget _buildDasaSection(String title, List<dynamic> periods, Map<String, dynamic>? selectedItem, Function(Map<String, dynamic>) onSelect) {
     final l10n = AppLocalizations.of(context)!;
     // If an item is selected, we only show that one row (as a header).
@@ -1059,19 +1076,21 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           child: Table(
             border: TableBorder.all(color: const Color(0xFFB58D3D).withOpacity(0.3), width: 0.8),
             columnWidths: const {
-              0: FixedColumnWidth(35),
-              1: FlexColumnWidth(1.2),
-              2: FlexColumnWidth(1.5),
-              3: FlexColumnWidth(1.5),
+              0: FixedColumnWidth(30),
+              1: FlexColumnWidth(1.1),
+              2: FlexColumnWidth(1.35),
+              3: FlexColumnWidth(1.35),
+              4: FlexColumnWidth(1.1),
             },
             children: [
               TableRow(
-                decoration: BoxDecoration(color: Color(0xFF5D1204)),
+                decoration: const BoxDecoration(color: Color(0xFF5D1204)),
                 children: [
-                  TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 4), child: Text("No", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)))),
-                  TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 4), child: Text(l10n.lord, textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)))),
-                  TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 4), child: Text(l10n.start, textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)))),
-                  TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 4), child: Text(l10n.end, textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)))),
+                  const TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text("No", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.lord, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.start, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.end, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(AstroTranslationService.translate(context, "வயது"), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
                 ],
               ),
               ...List.generate(displayList.length, (index) {
@@ -1107,6 +1126,12 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                       isToday: isToday,
                       isSelected: isHeaderStyle,
                     ),
+                    _buildInteractiveCell(
+                      _formatAgeRange(p['start'], p['end']), 
+                      onTap: () => onSelect(p),
+                      isToday: isToday,
+                      isSelected: isHeaderStyle,
+                    ),
                   ],
                 );
               }),
@@ -1121,19 +1146,26 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
         decoration: BoxDecoration(
           color: isToday 
               ? const Color(0xFFFFD54F).withOpacity(0.3) 
               : (isSelected ? const Color(0xFFFAF6EE) : Colors.white),
         ),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: const Color(0xFF5D1204),
-            fontWeight: (isToday || isSelected) ? FontWeight.w900 : FontWeight.w500,
-            fontSize: 12,
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              softWrap: false,
+              style: TextStyle(
+                color: const Color(0xFF5D1204),
+                fontWeight: (isToday || isSelected) ? FontWeight.w900 : FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
           ),
         ),
       ),
@@ -1345,17 +1377,19 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           child: Table(
             border: TableBorder.all(color: const Color(0xFFB58D3D).withOpacity(0.3), width: 0.8),
             columnWidths: const {
-              0: FlexColumnWidth(1.2),
-              1: FlexColumnWidth(1.5),
-              2: FlexColumnWidth(1.5),
+              0: FlexColumnWidth(1.1),
+              1: FlexColumnWidth(1.4),
+              2: FlexColumnWidth(1.4),
+              3: FlexColumnWidth(1.1),
             },
             children: [
               TableRow(
-                decoration: BoxDecoration(color: Color(0xFFFAF6EE)),
+                decoration: const BoxDecoration(color: Color(0xFFFAF6EE)),
                 children: [
-                  TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Text(l10n.lord, textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
-                  TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Text(l10n.start, textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
-                  TableCell(child: Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Text(l10n.end, textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.lord, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.start, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.end, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(AstroTranslationService.translate(context, "வயது"), textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
                 ],
               ),
               ...periods.map((p) {
@@ -1367,6 +1401,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                     _buildInteractiveCellWide(p['lord'] ?? "-", isPlanet: true, onTap: () => onSelect(p), isToday: isToday, isSelected: isSelected),
                     _buildInteractiveCellWide(_formatDateOnly(p['start']), onTap: () => onSelect(p), isToday: isToday, isSelected: isSelected),
                     _buildInteractiveCellWide(_formatDateOnly(p['end']), onTap: () => onSelect(p), isToday: isToday, isSelected: isSelected),
+                    _buildInteractiveCellWide(_formatAgeRange(p['start'], p['end']), onTap: () => onSelect(p), isToday: isToday, isSelected: isSelected),
                   ],
                 );
               }).toList(),
@@ -2608,6 +2643,14 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                   _buildDetailRow(l10n.tamilDateLabel, "${pancha['tamil_month'] ?? "-"} ${pancha['tamil_date'] ?? "-"}"),
                   _buildDetailRow(l10n.varaLabel, pancha['vara'] ?? "-"),
                   _buildDetailRow(l10n.tithiLabel, pancha['tithi'] ?? "-"),
+                  _buildDetailRow(
+                    "திதி சூன்ய ராசிகள்",
+                    KPService.formatSuniyaRasiWithBhava(
+                      pancha['suniya_rasi'],
+                      basics['lagna'],
+                      langCode: Localizations.localeOf(context).languageCode,
+                    ),
+                  ),
                   _buildDetailRow(l10n.kaliYearLabel, era['kali']?.toString() ?? "-"),
                   _buildDetailRow(l10n.kollamYearLabel, era['kollam']?.toString() ?? "-"),
                 ]),
@@ -2659,8 +2702,8 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 10. நட்சத்திரக்காரர்கள்
-                _buildDetailCard("நட்சத்திரக்காரர்கள்", [
+                // 10. நட்சத்திர விவரம்
+                _buildDetailCard("நட்சத்திர விவரம்", [
                   _buildDetailRow(l10n.mirugam, matching['mirugam'] ?? "-"),
                   _buildDetailRow(l10n.pakshi, matching['pakshi'] ?? "-"),
                   _buildDetailRow(l10n.ganam, matching['ganam'] ?? "-"),
@@ -2746,6 +2789,14 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
         _buildDetailRow(l10n.tamilDateLabel, "${pancha['tamil_month'] ?? "-"} ${pancha['tamil_date'] ?? "-"}"),
         _buildDetailRow(l10n.varaLabel, pancha['vara'] ?? "-"),
         _buildDetailRow(l10n.tithiLabel, pancha['tithi'] ?? "-"),
+        _buildDetailRow(
+          "திதி சூன்ய ராசிகள்",
+          KPService.formatSuniyaRasiWithBhava(
+            pancha['suniya_rasi'],
+            basics['lagna'],
+            langCode: Localizations.localeOf(context).languageCode,
+          ),
+        ),
         _buildDetailRow(l10n.kaliYearLabel, era['kali']?.toString() ?? "-"),
         _buildDetailRow(l10n.kollamYearLabel, era['kollam']?.toString() ?? "-"),
       ]),
@@ -2781,8 +2832,8 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       _buildAagamiPlanetsCard(),
       // 9. கிரக அவஸ்தைகள்
       _buildPlanetaryAvasthasCard(),
-      // 10. நட்சத்திரக்காரர்கள் (பொருத்த குணங்கள் replaced)
-      _buildDetailCard("நட்சத்திரக்காரர்கள்", [
+      // 10. நட்சத்திர விவரம்
+      _buildDetailCard("நட்சத்திர விவரம்", [
         _buildDetailRow(l10n.mirugam, matching['mirugam'] ?? "-"),
         _buildDetailRow(l10n.pakshi, matching['pakshi'] ?? "-"),
         _buildDetailRow(l10n.ganam, matching['ganam'] ?? "-"),
@@ -3466,7 +3517,9 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
   }
 
   Widget _buildSpecialStarsAndTharaisCard() {
+    final karma = widget.results['karma_nakshatras'] as Map<String, dynamic>?;
     final pushkara = widget.results['pushkara_navamsa'] as Map<String, dynamic>?;
+    final navatara = widget.results['navatara'] as Map<String, dynamic>?;
     final vainasika = widget.results['vainasika_pada'] as Map<String, dynamic>?;
 
     List<Widget> rows = [];
@@ -3499,6 +3552,46 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     }
     if (!hasPushkara) {
       rows.add(_buildDetailRow("புஷ்கர நவாம்சம்", "இல்லை"));
+    }
+
+    // 3, 5, 7 தாரைகள் (விபத்து, பிரத்யக், வதை தாரைகளில் உள்ள கிரகங்கள்)
+    if (navatara != null) {
+      final pTharais = navatara['planet_tharais'] as Map<String, dynamic>? ?? {};
+      pTharais.forEach((p, info) {
+        if (info['is_warning'] == true) {
+          String pTamil = KPService.TAMIL_PLANETS_SHORT[p] ?? KPService.TAMIL_PLANETS[p] ?? p;
+          int num = info['tharai_number'] ?? 0;
+          String label;
+          if (num == 7) {
+            label = "7. வதை தாரை (அதி எச்சரிக்கை)";
+          } else if (num == 5) {
+            label = "5. பிரத்யக் தாரை";
+          } else if (num == 3) {
+            label = "3. விபத்து தாரை";
+          } else {
+            label = info['tharai_name']?.toString() ?? '';
+          }
+          rows.add(_buildDetailRow(
+            "$pTamil (${info['nakshatra']})",
+            label,
+          ));
+        }
+      });
+    }
+
+    // கர்ம நட்சத்திரம் (10-வது நட்சத்திரம்) & ஜென்ம/கர்ம தாரைகளில் உள்ள கிரகங்கள்
+    if (karma != null) {
+      if (karma['karma_nakshatra'] != null) {
+        rows.add(_buildDetailRow("கர்ம நட்சத்திரம் (10-வது நட்சத்திரம்)", karma['karma_nakshatra'].toString()));
+      }
+      final pKarma = karma['planets_in_karma'] as List? ?? [];
+      for (var pk in pKarma) {
+        String pTamil = KPService.TAMIL_PLANETS_SHORT[pk['planet']] ?? pk['planet_tamil'] ?? pk['planet'];
+        rows.add(_buildDetailRow(
+          "$pTamil (${pk['nakshatra']})",
+          pk['role'] ?? 'கர்ம நட்சத்திரம்',
+        ));
+      }
     }
 
     return _buildDetailCard("வைனாசிகம் புஷ்கர நவம்சம்", rows);
@@ -3793,12 +3886,12 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
             child: Table(
               border: TableBorder.all(color: const Color(0xFFB58D3D).withOpacity(0.3), width: 0.8),
               columnWidths: const {
-                0: FlexColumnWidth(1.6),
+                0: FlexColumnWidth(1.4),
                 1: FlexColumnWidth(1.4),
-                2: FlexColumnWidth(2.2),
+                2: FlexColumnWidth(2.0),
                 3: FlexColumnWidth(1.1),
                 4: FlexColumnWidth(1.2),
-                5: FlexColumnWidth(1.3),
+                5: FlexColumnWidth(1.7),
               },
               children: [
                 // Header
@@ -4046,14 +4139,21 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
   Widget _buildTableCell(String text, {bool isPlanet = false}) {
     String translatedText = AstroTranslationService.translate(context, text, isPlanet: isPlanet);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-      child: Text(
-        translatedText,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: isPlanet ? const Color(0xFFE65100) : const Color(0xFF5D1204),
-          fontWeight: isPlanet ? FontWeight.bold : FontWeight.w600,
-          fontSize: 12.5,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            translatedText,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            softWrap: false,
+            style: TextStyle(
+              color: isPlanet ? const Color(0xFFE65100) : const Color(0xFF5D1204),
+              fontWeight: isPlanet ? FontWeight.bold : FontWeight.w600,
+              fontSize: 12.5,
+            ),
+          ),
         ),
       ),
     );
@@ -4124,6 +4224,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
         break;
       }
     }
+    const bool showDasaPalan = false;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -4177,15 +4278,18 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           color: Colors.deepOrange.shade700,
           isTall: true,
         ),
-        _buildPalangalCard(
-          "தசா புத்தி பலன்", 
-          activeDasa != null 
-            ? "நடப்பு தசை: ${activeDasa['lord']} (${_formatDateOnly(activeDasa['end'])} வரை)\n${PalangalService.getDetailedDasaPalan(activeDasa['lord'])}\n\nநடப்பு புத்தி: ${activeBukthi?['lord'] ?? '-'} (${activeBukthi != null ? _formatDateOnly(activeBukthi['end']) : '-'} வரை)\n${PalangalService.getDetailedBhuktiPalan(activeBukthi?['lord'])}" 
-            : "தசா புத்தி விபரங்கள் இல்லை",
-          Icons.history_rounded,
-          color: Colors.red.shade900,
-          isTall: true,
-        ),
+        // தசா புத்தி பலன் (Hidden per user request; set showDasaPalan = true to restore)
+        if (showDasaPalan) ...[
+          _buildPalangalCard(
+            "தசா புத்தி பலன்", 
+            activeDasa != null 
+              ? "நடப்பு தசை: ${activeDasa['lord']} (${_formatDateOnly(activeDasa['end'])} வரை)\n${PalangalService.getDetailedDasaPalan(activeDasa['lord'])}\n\nநடப்பு புத்தி: ${activeBukthi?['lord'] ?? '-'} (${activeBukthi != null ? _formatDateOnly(activeBukthi['end']) : '-'} வரை)\n${PalangalService.getDetailedBhuktiPalan(activeBukthi?['lord'])}" 
+              : "தசா புத்தி விபரங்கள் இல்லை",
+            Icons.history_rounded,
+            color: Colors.red.shade900,
+            isTall: true,
+          ),
+        ],
         const SizedBox(height: 40),
       ],
     );
@@ -4780,5 +4884,704 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
         ),
       ),
     ]);
+  }
+
+// ==========================================
+  // வழிபாட்டுத் திருத்தலங்கள் (Worship Temples)
+  // ==========================================
+  Widget _buildWorshipPlanView() {
+    final Map<String, dynamic> plan = TempleWorshipService.calculateNativeWorshipPlan(widget.results);
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isWide = screenWidth > 900;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 1. ஜாதகருக்குரிய தனிப்பட்ட வழிபாட்டு அட்டவணை Card
+          Card(
+            elevation: 3,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.5), width: 1.2),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top sacred banner
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF5D1204), Color(0xFF8B1A00), Color(0xFF5D1204)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFFFFD54F), width: 1.5),
+                        ),
+                        child: const Icon(Icons.temple_hindu_rounded, color: Color(0xFFFFD54F), size: 30),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "ஜாதகருக்குரிய வழிபாட்டு அட்டவணை",
+                              style: GoogleFonts.cinzel(
+                                color: const Color(0xFFFFD54F),
+                                fontWeight: FontWeight.w900,
+                                fontSize: 17,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              "நட்சத்திரம், யோகி, அவயோகி, திதி அதிதேவதை, கரண நாதன், வைநாசிகம் மற்றும் முடக்கு பாவகம் அடிப்படையிலான திருத்தலங்கள்",
+                              style: TextStyle(color: Colors.white70, fontSize: 12.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Sacred items grid / column
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: isWide
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  _buildSacredTempleTile(
+                                    title: "1. ஜன்ம நட்சத்திரக் கோவில்",
+                                    badgeText: "${plan['birth_star']} நட்சத்திரம்",
+                                    templeName: plan['birth_star_temple']?.toString() ?? "-",
+                                    benefitText: "ஜன்ம நட்சத்திர அதிதேவதை அருள், ஆயுள் பலம் & மன அமைதிக்கு",
+                                    icon: Icons.star_rounded,
+                                    accentColor: const Color(0xFFD48806),
+                                    bgColor: const Color(0xFFFFFBE6),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildSacredTempleTile(
+                                    title: "2. யோகி கோவில் (சுப யோகம்)",
+                                    badgeText: "${plan['yoga_name']} யோகம் • யோகி: ${plan['yogi_planet']}",
+                                    templeName: plan['yogi_temple']?.toString() ?? "-",
+                                    benefitText: "சுப யோக பலன்கள் முழுமையாகக் கிடைக்க, தன வரவு & தொழில் மேன்மை",
+                                    icon: Icons.wb_sunny_rounded,
+                                    accentColor: const Color(0xFF2E7D32),
+                                    bgColor: const Color(0xFFE8F5E9),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildSacredTempleTile(
+                                    title: "3. அவயோகி பரிகாரக் கோவில் (தோஷ நிவர்த்தி)",
+                                    badgeText: "அவயோகி கிரகம்: ${plan['avayogi_planet']}",
+                                    templeName: plan['avayogi_temple']?.toString() ?? "-",
+                                    benefitText: "அவயோக தோஷம் நீங்க, தடைகள் மற்றும் மன உளைச்சல்கள் விலக",
+                                    icon: Icons.shield_rounded,
+                                    accentColor: const Color(0xFFC62828),
+                                    bgColor: const Color(0xFFFFEBEE),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildSacredTempleTile(
+                                    title: "4. திதி அதிதேவதை & கோவில்",
+                                    badgeText: "${plan['thithi_name']} (${plan['is_shukla'] == true ? 'வளர்பிறை' : 'தேய்பிறை'}) • தெய்வம்: ${plan['thithi_deity']}",
+                                    templeName: plan['thithi_temple']?.toString() ?? "-",
+                                    benefitText: "திதி சூன்ய தோஷம் நீங்க, ஆத்ம பலம் மற்றும் காரிய சித்தி",
+                                    icon: Icons.brightness_6_rounded,
+                                    accentColor: const Color(0xFF1565C0),
+                                    bgColor: const Color(0xFFE3F2FD),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  _buildSacredTempleTile(
+                                    title: "5. கரண நாதன் கோவில்",
+                                    badgeText: "${plan['karana_name']} கரணம் • நாதன்: ${plan['karana_lord']} • மிருகம்: ${plan['karana_animal']} • தெய்வம்: ${plan['karana_deity']}",
+                                    templeName: plan['karana_temple']?.toString() ?? "-",
+                                    benefitText: "தொழில், உத்தியோகம் & அன்றாடச் செயல்களில் தடைகள் நீங்கி வெற்றி",
+                                    icon: Icons.pets_rounded,
+                                    accentColor: const Color(0xFF6A1B9A),
+                                    bgColor: const Color(0xFFF3E5F5),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildSacredTempleTile(
+                                    title: "6. வைநாசிக நட்சத்திரக் கோவில் (88-வது பாதம்)",
+                                    badgeText: "${plan['vainasika_nak']} (${plan['vainasika_pada']}-ஆம் பாதம்)",
+                                    templeName: plan['vainasika_temple']?.toString() ?? "-",
+                                    benefitText: "88-வது பாத வைநாசிக தோஷ நிவர்த்தி, விபத்து & கண்டங்கள் விலக",
+                                    icon: Icons.flare_rounded,
+                                    accentColor: const Color(0xFF00695C),
+                                    bgColor: const Color(0xFFE0F2F1),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildSacredTempleTile(
+                                    title: "7. முடக்கு ராசி / பாவகக் கோவில்",
+                                    badgeText: "${plan['mudakku_rasi']} • லக்னத்திலிருந்து ${plan['mudakku_bhava']}-ஆம் பாவம்",
+                                    templeName: plan['mudakku_temple']?.toString() ?? "-",
+                                    benefitText: "முடக்கு தோஷம் நிவர்த்தியாகி பாவக காரகங்கள் நற்பலன் தர",
+                                    icon: Icons.lock_open_rounded,
+                                    accentColor: const Color(0xFFE65100),
+                                    bgColor: const Color(0xFFFFF3E0),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            _buildSacredTempleTile(
+                              title: "1. ஜன்ம நட்சத்திரக் கோவில்",
+                              badgeText: "${plan['birth_star']} நட்சத்திரம்",
+                              templeName: plan['birth_star_temple']?.toString() ?? "-",
+                              benefitText: "ஜன்ம நட்சத்திர அதிதேவதை அருள், ஆயுள் பலம் & மன அமைதிக்கு",
+                              icon: Icons.star_rounded,
+                              accentColor: const Color(0xFFD48806),
+                              bgColor: const Color(0xFFFFFBE6),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildSacredTempleTile(
+                              title: "2. யோகி கோவில் (சுப யோகம்)",
+                              badgeText: "${plan['yoga_name']} யோகம் • யோகி: ${plan['yogi_planet']}",
+                              templeName: plan['yogi_temple']?.toString() ?? "-",
+                              benefitText: "சுப யோக பலன்கள் முழுமையாகக் கிடைக்க, தன வரவு & தொழில் மேன்மை",
+                              icon: Icons.wb_sunny_rounded,
+                              accentColor: const Color(0xFF2E7D32),
+                              bgColor: const Color(0xFFE8F5E9),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildSacredTempleTile(
+                              title: "3. அவயோகி பரிகாரக் கோவில் (தோஷ நிவர்த்தி)",
+                              badgeText: "அவயோகி கிரகம்: ${plan['avayogi_planet']}",
+                              templeName: plan['avayogi_temple']?.toString() ?? "-",
+                              benefitText: "அவயோக தோஷம் நீங்க, தடைகள் மற்றும் மன உளைச்சல்கள் விலக",
+                              icon: Icons.shield_rounded,
+                              accentColor: const Color(0xFFC62828),
+                              bgColor: const Color(0xFFFFEBEE),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildSacredTempleTile(
+                              title: "4. திதி அதிதேவதை & கோவில்",
+                              badgeText: "${plan['thithi_name']} (${plan['is_shukla'] == true ? 'வளர்பிறை' : 'தேய்பிறை'}) • தெய்வம்: ${plan['thithi_deity']}",
+                              templeName: plan['thithi_temple']?.toString() ?? "-",
+                              benefitText: "திதி சூன்ய தோஷம் நீங்க, ஆத்ம பலம் மற்றும் காரிய சித்தி",
+                              icon: Icons.brightness_6_rounded,
+                              accentColor: const Color(0xFF1565C0),
+                              bgColor: const Color(0xFFE3F2FD),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildSacredTempleTile(
+                              title: "5. கரண நாதன் கோவில்",
+                              badgeText: "${plan['karana_name']} கரணம் • நாதன்: ${plan['karana_lord']} • மிருகம்: ${plan['karana_animal']} • தெய்வம்: ${plan['karana_deity']}",
+                              templeName: plan['karana_temple']?.toString() ?? "-",
+                              benefitText: "தொழில், உத்தியோகம் & அன்றாடச் செயல்களில் தடைகள் நீங்கி வெற்றி",
+                              icon: Icons.pets_rounded,
+                              accentColor: const Color(0xFF6A1B9A),
+                              bgColor: const Color(0xFFF3E5F5),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildSacredTempleTile(
+                              title: "6. வைநாசிக நட்சத்திரக் கோவில் (88-வது பாதம்)",
+                              badgeText: "${plan['vainasika_nak']} (${plan['vainasika_pada']}-ஆம் பாதம்)",
+                              templeName: plan['vainasika_temple']?.toString() ?? "-",
+                              benefitText: "88-வது பாத வைநாசிக தோஷ நிவர்த்தி, விபத்து & கண்டங்கள் விலக",
+                              icon: Icons.flare_rounded,
+                              accentColor: const Color(0xFF00695C),
+                              bgColor: const Color(0xFFE0F2F1),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildSacredTempleTile(
+                              title: "7. முடக்கு ராசி / பாவகக் கோவில்",
+                              badgeText: "${plan['mudakku_rasi']} • லக்னத்திலிருந்து ${plan['mudakku_bhava']}-ஆம் பாவம்",
+                              templeName: plan['mudakku_temple']?.toString() ?? "-",
+                              benefitText: "முடக்கு தோஷம் நிவர்த்தியாகி பாவக காரகங்கள் நற்பலன் தர",
+                              icon: Icons.lock_open_rounded,
+                              accentColor: const Color(0xFFE65100),
+                              bgColor: const Color(0xFFFFF3E0),
+                            ),
+                          ],
+                        ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // 2. முழு வழிபாட்டு அட்டவணைகள் (Reference Tables Header)
+          Row(
+            children: [
+              const Icon(Icons.menu_book_rounded, color: Color(0xFF5D1204), size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "முழு வழிபாட்டுத் தலங்கள் அட்டவணைகள் (Reference Directories)",
+                  style: GoogleFonts.cinzel(
+                    color: const Color(0xFF5D1204),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Directory 1: வைநாசிக நட்சத்திரக் கோவில்கள் (27)
+          _buildExpandableTableCard(
+            title: "வைநாசிக நட்சத்திரக் கோவில்கள் (27 நட்சத்திரங்கள்)",
+            subtitle: "ஒவ்வொரு நட்சத்திரத்திற்கும் உரிய 88-வது பாத வைநாசிக பரிகாரத் தலங்கள்",
+            icon: Icons.flare_rounded,
+            headerColor: const Color(0xFF00695C),
+            headers: const ["எண்", "நட்சத்திரம்", "கோவில் & ஊர் விவரம்"],
+            flexes: const [1, 3, 6],
+            rows: TempleWorshipService.VAINASIKA_TEMPLES.entries
+                .toList()
+                .where((e) => e.key != 'அசுவனி' && e.key != 'மிருகசீர்ஷம்') // unique 27
+                .toList()
+                .asMap()
+                .entries
+                .map((entry) => [
+                      "${entry.key + 1}",
+                      entry.value.key,
+                      entry.value.value,
+                    ])
+                .toList(),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Directory 2: நாம யோகங்கள் - யோகி & அவயோகி கோயில்கள் (27)
+          _buildExpandableTableCard(
+            title: "நாம யோகங்கள் - யோகி & அவயோகி கோயில்கள் (27 யோகங்கள்)",
+            subtitle: "27 நித்திய யோகங்களுக்குரிய சுப யோகி மற்றும் தோஷ நிவர்த்தி அவயோகி தலங்கள்",
+            icon: Icons.wb_sunny_rounded,
+            headerColor: const Color(0xFF5D1204),
+            headers: const ["எண்", "நாம யோகம்", "யோகி கோவில்", "அவயோகி கோவில்"],
+            flexes: const [1, 2, 4, 4],
+            rows: TempleWorshipService.YOGA_TEMPLES.entries.toList().asMap().entries.map((entry) {
+              final idx = entry.key + 1;
+              final yogaName = entry.value.key;
+              final yogi = entry.value.value['yogi'] ?? '-';
+              final avayogi = entry.value.value['avayogi'] ?? '-';
+              return ["$idx", yogaName, yogi, avayogi];
+            }).toList(),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Directory 3: சுக்கில பட்சம் (வளர்பிறை) திதி அதிதேவதை & கோவில்கள் (15)
+          _buildExpandableTableCard(
+            title: "சுக்கில பட்சம் / வளர்பிறை திதிகள் & கோவில்கள்",
+            subtitle: "வளர்பிறை 15 திதிகளுக்குரிய அதிதேவதை மற்றும் வழிபட வேண்டிய திருக்கோவில்கள்",
+            icon: Icons.brightness_7_rounded,
+            headerColor: const Color(0xFF1565C0),
+            headers: const ["எண்", "திதி", "அதிதேவதை", "திருக்கோவில்"],
+            flexes: const [1, 2, 3, 4],
+            rows: TempleWorshipService.SHUKLA_THITHI_TEMPLES.entries.toList().asMap().entries.map((entry) {
+              final idx = entry.key + 1;
+              final thithi = entry.value.key;
+              final deity = entry.value.value['deity'] ?? '-';
+              final temple = entry.value.value['temple'] ?? '-';
+              return ["$idx", thithi, deity, temple];
+            }).toList(),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Directory 4: கிருஷ்ண பட்சம் (தேய்பிறை) திதி அதிதேவதை & கோவில்கள் (15)
+          _buildExpandableTableCard(
+            title: "கிருஷ்ண பட்சம் / தேய்பிறை திதிகள் & கோவில்கள்",
+            subtitle: "தேய்பிறை 15 திதிகளுக்குரிய அதிதேவதை மற்றும் வழிபட வேண்டிய திருக்கோவில்கள்",
+            icon: Icons.brightness_3_rounded,
+            headerColor: const Color(0xFF37474F),
+            headers: const ["எண்", "திதி", "அதிதேவதை", "திருக்கோவில்"],
+            flexes: const [1, 2, 3, 4],
+            rows: TempleWorshipService.KRISHNA_THITHI_TEMPLES.entries.toList().asMap().entries.map((entry) {
+              final idx = entry.key + 1;
+              final thithi = entry.value.key;
+              final deity = entry.value.value['deity'] ?? '-';
+              final temple = entry.value.value['temple'] ?? '-';
+              return ["$idx", thithi, deity, temple];
+            }).toList(),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Directory 5: கரண நாதன் & அதிதேவதைக் கோவில்கள் (11)
+          _buildExpandableTableCard(
+            title: "கரண நாதன் கோவில்கள் (11 கரணங்கள்)",
+            subtitle: "11 கரணங்களுக்குரிய கிரகம், வாகனம், அதிதேவதை மற்றும் சிறப்புத் திருத்தலங்கள்",
+            icon: Icons.pets_rounded,
+            headerColor: const Color(0xFF6A1B9A),
+            headers: const ["எண்", "கரணம்", "கிரகம்", "மிருகம்", "அதிதேவதை", "கோவில்"],
+            flexes: const [1, 2, 2, 2, 2, 4],
+            rows: TempleWorshipService.PRIMARY_KARANAS.asMap().entries.map((entry) {
+              final idx = entry.key + 1;
+              final karana = entry.value;
+              final info = TempleWorshipService.KARANA_TEMPLES[karana] ?? {};
+              final lord = info['lord'] ?? '-';
+              final animal = info['animal'] ?? '-';
+              final deity = info['deity'] ?? '-';
+              final temple = info['temple'] ?? '-';
+              return ["$idx", karana, lord, animal, deity, temple];
+            }).toList(),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Directory 6: முடக்கு ராசி / பாவகம் வாரியான கோவில்கள்
+          _buildExpandableMudakkuCard(),
+
+          const SizedBox(height: 12),
+
+          // Directory 7: ஜன்ம நட்சத்திரக் கோவில்கள் (27)
+          _buildExpandableTableCard(
+            title: "ஜன்ம நட்சத்திரக் கோவில்கள் (27 நட்சத்திரங்கள்)",
+            subtitle: "27 நட்சத்திரங்களுக்கும் அருள் பாலிக்கும் பாரம்பரியத் திருத்தலங்கள்",
+            icon: Icons.star_rounded,
+            headerColor: const Color(0xFFD48806),
+            headers: const ["எண்", "நட்சத்திரம்", "ஜன்ம நட்சத்திரத் திருக்கோவில்"],
+            flexes: const [1, 3, 6],
+            rows: TempleWorshipService.NAKSHATRA_TEMPLES.entries
+                .toList()
+                .where((e) => e.key != 'அசுவனி' && e.key != 'மிருகசீர்ஷம்')
+                .toList()
+                .asMap()
+                .entries
+                .map((entry) => [
+                      "${entry.key + 1}",
+                      entry.value.key,
+                      entry.value.value,
+                    ])
+                .toList(),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  /// Individual Sacred Temple Tile
+  Widget _buildSacredTempleTile({
+    required String title,
+    required String badgeText,
+    required String templeName,
+    required String benefitText,
+    required IconData icon,
+    required Color accentColor,
+    required Color bgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accentColor.withOpacity(0.4), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.06),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: accentColor.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: accentColor, size: 20),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.5,
+                    color: accentColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: accentColor.withOpacity(0.25)),
+            ),
+            child: Text(
+              badgeText,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 12.5,
+                color: accentColor,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.place_rounded, color: Color(0xFF5D1204), size: 18),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  templeName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    color: Color(0xFF5D1204),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "• $benefitText",
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87.withOpacity(0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Expandable Table Card for Master Directories
+  Widget _buildExpandableTableCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color headerColor,
+    required List<String> headers,
+    required List<int> flexes,
+    required List<List<String>> rows,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          collapsedBackgroundColor: const Color(0xFFFAF6EE),
+          backgroundColor: Colors.white,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: headerColor.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: headerColor, size: 22),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: headerColor,
+            ),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: const TextStyle(fontSize: 11.5, color: Colors.black54),
+          ),
+          children: [
+            Container(
+              decoration: const BoxDecoration(color: Color(0xFF5D1204)),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              child: Row(
+                children: List.generate(headers.length, (i) {
+                  return Expanded(
+                    flex: flexes[i],
+                    child: Text(
+                      headers[i],
+                      textAlign: i == 0 ? TextAlign.center : TextAlign.start,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+            ...rows.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final row = entry.value;
+              final isAlt = idx % 2 == 1;
+
+              return Container(
+                color: isAlt ? const Color(0xFFFAF6EE) : Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                child: Row(
+                  children: List.generate(row.length, (i) {
+                    return Expanded(
+                      flex: flexes[i],
+                      child: Text(
+                        row[i],
+                        textAlign: i == 0 ? TextAlign.center : TextAlign.start,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: i == 1 ? FontWeight.bold : FontWeight.normal,
+                          color: i == 0
+                              ? const Color(0xFF5D1204)
+                              : (i == 1 ? headerColor : Colors.black87),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Expandable Card for Mudakku Rasi / Bhava Temples
+  Widget _buildExpandableMudakkuCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          collapsedBackgroundColor: const Color(0xFFFAF6EE),
+          backgroundColor: Colors.white,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE65100).withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.lock_open_rounded, color: Color(0xFFE65100), size: 22),
+          ),
+          title: const Text(
+            "முடக்கு ராசி / பாவகம் வாரியான வழிபாட்டுத் தலங்கள்",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Color(0xFFE65100),
+            ),
+          ),
+          subtitle: const Text(
+            "12 லக்னங்கள் & 1 முதல் 12-ஆம் பாவகங்கள் முடக்காக அமைந்தால் வழிபட வேண்டிய திருத்தலங்கள்",
+            style: TextStyle(fontSize: 11.5, color: Colors.black54),
+          ),
+          children: [
+            ...TempleWorshipService.MUDAKKU_BHAVA_TEMPLES.entries.map((bhavaEntry) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      color: const Color(0xFF5D1204),
+                      child: Text(
+                        "முடக்கு ராசி அமைப்பு: ${bhavaEntry.key}",
+                        style: const TextStyle(
+                          color: Color(0xFFFFD54F),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ),
+                    ...bhavaEntry.value.entries.map((item) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFAF6EE),
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 4,
+                              child: Text(
+                                "• ${item.key}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: Color(0xFF5D1204),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 6,
+                              child: Text(
+                                item.value,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              );
+            }),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 }

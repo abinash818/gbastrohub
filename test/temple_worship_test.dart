@@ -237,13 +237,15 @@ void main() {
       expect(TempleWorshipService.getMudakkuTemple(9, 'மேஷம்'), contains('விராலிமலை முருகன்'));
       expect(TempleWorshipService.getMudakkuTemple(9, 'ரிஷபம்'), contains('திருமயம் கோட்டை உள்ள சிவன்'));
       expect(TempleWorshipService.getMudakkuTemple(9, 'மிதுனம்'), contains('அச்சரப்பாக்கம் ஆட்சீஸ்வரர்'));
-      expect(TempleWorshipService.getMudakkuTemple(9, 'கடகம்'), contains('தரங்கம்பாடி மாசிலாமணீஸ்வரர்'));
+      expect(TempleWorshipService.getMudakkuTemple(9, 'கடகம்'), contains('தரங்கம்பாடி மாசிலாமணீஸ்வரர், திருக்கடையூர்'));
       expect(TempleWorshipService.getMudakkuTemple(9, 'சிம்மம்'), contains('பெருநகர் பிரம்மபுரீஸ்வரர்'));
       expect(TempleWorshipService.getMudakkuTemple(9, 'தனுசு'), contains('தாயுமானவர் சுவாமி, திருச்சி'));
-      expect(TempleWorshipService.getMudakkuTemple(9, 'மகரம்'), contains('பூண்டி / தாண்டிக்குடி பாலமுருகன்'));
+      expect(TempleWorshipService.getMudakkuTemple(9, 'மகரம்'), contains('தாண்டிக்குடி பாலமுருகன்'));
+      expect(TempleWorshipService.getMudakkuTemple(9, 'மகரம்'), isNot(contains('பூண்டி')));
 
       // Bhava 10
-      expect(TempleWorshipService.getMudakkuTemple(10, 'மேஷம்'), contains('பழனி முருகன் ராஜதரிசனம்'));
+      expect(TempleWorshipService.getMudakkuTemple(10, 'மேஷம்'), contains('பழனி முருகன் ராஜ அலங்காரம் வழிபாடு'));
+      expect(TempleWorshipService.getMudakkuTemple(10, 'விருச்சிகம்'), contains('பழனி முருகன் ராஜ அலங்காரம் வழிபாடு'));
       expect(TempleWorshipService.getMudakkuTemple(10, 'ரிஷபம்'), contains('மதுரை மீனாட்சி'));
       expect(TempleWorshipService.getMudakkuTemple(10, 'மிதுனம்'), contains('ஸ்ரீரங்கம் கருடாழ்வார்'));
       expect(TempleWorshipService.getMudakkuTemple(10, 'கடகம்'), contains('திருச்சுழி சிவன் திருமேனிநாதர்'));

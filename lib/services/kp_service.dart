@@ -522,7 +522,7 @@ class KPService {
       };
       finalResults['pavagam'][SIGNS[(hLon / 30).floor() % 12]]!.add("${ROMAN_BHAVAS[i - 1]} ${formatDegrees(hLon)}");
     }
-    finalResults['pavagam'][SIGNS[(lagnaLon / 30).floor() % 12]]!.add(TAMIL_PLANETS_SHORT['Lagna']!);
+    finalResults['pavagam'][SIGNS[(lagnaLon / 30).floor() % 12]]!.add("${TAMIL_PLANETS_SHORT['Lagna']!} $lagnaDeg");
     planetLons.forEach((pName, pLon) {
       int houseNum = 0;
       for (int i = 1; i <= 11; i++) {
@@ -538,7 +538,7 @@ class KPService {
       String flags = "";
       if (isRetro) flags += " (வ)";
       if (isCombust) flags += " (அ)";
-      finalResults['pavagam'][SIGNS[(siderealCusps[houseNum] / 30).floor() % 12]]!.add("${TAMIL_PLANETS_SHORT[pName]!}$flags");
+      finalResults['pavagam'][SIGNS[(siderealCusps[houseNum] / 30).floor() % 12]]!.add("${TAMIL_PLANETS_SHORT[pName]!}$flags ${formatDegrees(pLon)}");
     });
     finalResults['year_length'] = actualYearLength;
     finalResults['dasa'] = _calculateDasaList(planetLons['Moon']!, dt, actualYearLength);

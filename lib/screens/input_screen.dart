@@ -12,6 +12,7 @@ import 'dart:convert';
 import '../services/pdf_service.dart';
 import '../services/one_page_pdf_service.dart';
 import '../services/kp_one_page_pdf_service.dart';
+import '../services/gp_one_page_pdf_service.dart';
 import '../services/kp_service.dart';
 import 'horoscope_results_screen.dart';
 import 'pdf_viewer_screen.dart';
@@ -878,7 +879,7 @@ class _InputScreenState extends State<InputScreen> {
               l10n: AppLocalizations.of(context)!,
             );
           } else {
-            OnePagePdfService.showHtmlReport(
+            GbOnePagePdfService.showHtmlReport(
               name: _nameController.text,
               gender: _selectedGender,
               results: results,
@@ -899,7 +900,7 @@ class _InputScreenState extends State<InputScreen> {
                   results: results,
                   l10n: AppLocalizations.of(context)!,
                 )
-              : await OnePagePdfService.generate(
+              : await GbOnePagePdfService.generate(
                   name: _nameController.text,
                   gender: _selectedGender,
                   results: results,
@@ -909,12 +910,14 @@ class _InputScreenState extends State<InputScreen> {
           if (!mounted) return;
           Navigator.pop(context); // Close loading
           
+          final fileNamePrefix = isKp ? "KP_OnePageHoroscope" : "GB_OnePageHoroscope";
+          final cleanName = _nameController.text.trim().isEmpty ? "Horoscope" : _nameController.text.trim().replaceAll(' ', '_');
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => PdfViewerScreen(
                 pdfBytes: bytes,
-                fileName: "${_nameController.text.replaceAll(' ', '_')}.pdf",
+                fileName: "${fileNamePrefix}_$cleanName.pdf",
               ),
             ),
           );

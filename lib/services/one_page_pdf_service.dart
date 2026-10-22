@@ -262,50 +262,50 @@ class OnePagePdfService {
       <meta name="viewport" content="width=794, initial-scale=1.0, maximum-scale=1.0"/>
       <title>Horoscope - $name</title>
       <style>
-        :root { --border-orange: #E0D4BE; --header-blue: #5D1204; --text-red: #5D1204; --text-green: #B58D3D; }
+        :root { --border-orange: #93C5FD; --header-blue: #1E3A8A; --text-red: #1E3A8A; --text-green: #059669; }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; width: 794px; }
-        body { font-family: sans-serif; color: #333; font-size: 11px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background: white; }
+        body { font-family: sans-serif; color: #1E293B; font-size: 11px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background: white; }
         .page { background: white; width: 794px; min-height: 1123px; padding: 18px; position: relative; overflow: hidden; }
-        .inner-page { border: 1.5px solid var(--text-red); padding: 14px; min-height: 1080px; overflow: hidden; }
+        .inner-page { border: 2px solid #1E3A8A; outline: 1px solid #D97706; outline-offset: -3px; padding: 14px; min-height: 1080px; overflow: hidden; }
         @media screen {
           body { background: #f3f4f6; display: flex; flex-direction: column; align-items: center; }
-          .print-btn { position: fixed; top: 20px; right: 20px; background: var(--text-red); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-          .print-btn:hover { background: #3E0A02; }
+          .print-btn { position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #1E3A8A, #2563EB); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .print-btn:hover { background: #1E3A8A; }
         }
         @media print {
           @page { size: A4; margin: 0; }
           html, body { width: 100%; }
           body { background: white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .page { width: 100%; padding: 18px; box-shadow: none; margin: 0; height: 297mm; }
-          .inner-page { border: 1.5px solid var(--text-red); padding: 14px; height: 100%; }
+          .inner-page { border: 2px solid #1E3A8A; outline: 1px solid #D97706; outline-offset: -3px; padding: 14px; height: 100%; }
           .no-print { display: none !important; }
         }
-        .header { border-bottom: 2px solid var(--text-red); margin-bottom: 8px; padding-bottom: 5px; }
+        .header { border-bottom: 2px solid #2563EB; margin-bottom: 8px; padding-bottom: 5px; }
         .header-top { display: flex; justify-content: space-between; }
-        .header-title { color: var(--text-red); font-weight: bold; font-size: 18px; line-height: 1.2; word-break: break-word; }
+        .header-title { color: #1E3A8A; font-weight: bold; font-size: 18px; line-height: 1.2; word-break: break-word; }
         .header-sub { font-size: 10px; color: #555; line-height: 1.3; word-break: break-word; }
-        .banner { background: var(--text-red); color: white; text-align: center; padding: 5px; font-weight: bold; font-size: 16px; margin: 5px 0; border-radius: 3px; overflow: hidden; }
+        .banner { background: linear-gradient(90deg, #1E3A8A 0%, #2563EB 50%, #059669 100%); color: white; text-align: center; padding: 5px; font-weight: bold; font-size: 15px; margin: 5px 0; border-radius: 4px; overflow: hidden; }
         .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
         .detail-row { display: flex; margin-bottom: 2px; overflow: hidden; }
         .detail-row span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-        .detail-label { width: 105px; min-width: 105px; color: var(--text-red); font-weight: bold; }
+        .detail-label { width: 105px; min-width: 105px; color: #1E3A8A; font-weight: bold; }
         .charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .grid-chart { width: 100%; border-collapse: collapse; border: 1.8px solid var(--text-red); table-layout: fixed; }
-        .grid-chart td { border: 1.2px solid var(--text-red); height: 50px; text-align: center; font-size: 10px; font-weight: bold; padding: 1px; vertical-align: middle; background: #FAF6EE; overflow: hidden; word-break: break-all; }
-        .chart-title { color: var(--text-red); font-size: 12px; font-weight: bold; line-height: 1.1; }
+        .grid-chart { width: 100%; border-collapse: collapse; border: 1.8px solid #2563EB; table-layout: fixed; }
+        .grid-chart td { border: 1.2px solid #BFDBFE; height: 50px; text-align: center; font-size: 10px; font-weight: bold; padding: 1px; vertical-align: middle; background: #FFFFFF; overflow: hidden; word-break: break-all; }
+        .chart-title { color: #1E3A8A; font-size: 12px; font-weight: bold; line-height: 1.1; }
         .chart-sub { font-size: 8px; font-weight: normal; line-height: 1; }
         .middle-row { display: grid; grid-template-columns: 200px 1fr; gap: 12px; margin-bottom: 10px; }
-        .planetary-table { width: 100%; border-collapse: collapse; border: 1px solid var(--border-orange); font-size: 10px; table-layout: fixed; }
-        .planetary-table th { background: var(--text-red); color: white; padding: 3px; border: 1px solid var(--border-orange); overflow: hidden; }
-        .planetary-table td { border: 1px solid var(--border-orange); padding: 3px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .ashta-table { width: 100%; border-collapse: collapse; border: 1.2px solid var(--border-orange); font-size: 10px; text-align: center; table-layout: fixed; }
-        .ashta-table td { border: 1.2px solid var(--border-orange); padding: 4px; overflow: hidden; }
+        .planetary-table { width: 100%; border-collapse: collapse; border: 1px solid #93C5FD; font-size: 10px; table-layout: fixed; }
+        .planetary-table th { background: linear-gradient(135deg, #1E3A8A, #2563EB); color: white; padding: 3px; border: 1px solid #93C5FD; overflow: hidden; }
+        .planetary-table td { border: 1px solid #E2E8F0; padding: 3px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ashta-table { width: 100%; border-collapse: collapse; border: 1.2px solid #93C5FD; font-size: 10px; text-align: center; table-layout: fixed; }
+        .ashta-table td { border: 1.2px solid #E2E8F0; padding: 4px; overflow: hidden; }
         .timeline-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .timeline-table { width: 100%; border-collapse: collapse; border: 1.2px solid var(--border-orange); font-size: 9px; text-align: center; table-layout: fixed; }
-        .timeline-table th { background: #F4EFE3; color: var(--text-red); padding: 3px; border: 1.2px solid var(--border-orange); overflow: hidden; }
-        .timeline-table td { border: 1.2px solid var(--border-orange); padding: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .highlight-row { background: #FAF6EE; font-weight: bold; border: 1.5px solid var(--text-green); }
+        .timeline-table { width: 100%; border-collapse: collapse; border: 1.2px solid #93C5FD; font-size: 9px; text-align: center; table-layout: fixed; }
+        .timeline-table th { background: #EFF6FF; color: #1E3A8A; padding: 3px; border: 1.2px solid #93C5FD; overflow: hidden; }
+        .timeline-table td { border: 1.2px solid #E2E8F0; padding: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .highlight-row { background: #ECFDF5; font-weight: bold; border: 1.5px solid #059669; }
       </style>
     </head>
     <body>
@@ -378,8 +378,8 @@ class OnePagePdfService {
 </div>
 <style>
   .zoom-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-  .zoom-controls button { width: 45px; height: 45px; border-radius: 50%; border: none; background: #5D1204; color: white; font-size: 24px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; }
-  .zoom-controls button:hover { background: #B58D3D; }
+  .zoom-controls button { width: 45px; height: 45px; border-radius: 50%; border: none; background: #1E3A8A; color: white; font-size: 24px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; }
+  .zoom-controls button:hover { background: #2563EB; }
   @media print { .zoom-controls { display: none !important; } }
 </style>
 <script>

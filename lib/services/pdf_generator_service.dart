@@ -7,10 +7,10 @@ import 'kp_service.dart';
 import 'package:intl/intl.dart';
 
 class PdfGeneratorService {
-  static final PdfColor primaryColor = PdfColor.fromInt(0xFF5D1204); // Maroon
-  static final PdfColor secondaryColor = PdfColor.fromInt(0xFFB58D3D); // Gold/Terracotta
-  static final PdfColor backgroundColor = PdfColor.fromInt(0xFFFAF6EE); // Cream background
-  static final PdfColor borderColor = PdfColor.fromInt(0xFFE0D4BE); // Border
+  static final PdfColor primaryColor = PdfColor.fromInt(0xFF1E3A8A); // Royal Blue
+  static final PdfColor secondaryColor = PdfColor.fromInt(0xFF059669); // Emerald Green
+  static final PdfColor backgroundColor = PdfColor.fromInt(0xFFF8FAFC); // Clean Light
+  static final PdfColor borderColor = PdfColor.fromInt(0xFF93C5FD); // Soft Blue Border
 
   static Future<Uint8List> generateHoroscopePdf({
     required String name,

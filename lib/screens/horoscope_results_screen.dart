@@ -10,6 +10,7 @@ import '../data/nakshatra_data.dart';
 import '../theme/app_colors.dart';
 import 'pdf_viewer_screen.dart';
 import '../services/one_page_pdf_service.dart';
+import '../services/gp_one_page_pdf_service.dart';
 import '../services/kp_one_page_pdf_service.dart';
 import '../services/full_report_pdf_service.dart';
 import '../services/settings_service.dart';
@@ -152,7 +153,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           l10n: AppLocalizations.of(context)!,
         );
       } else {
-        OnePagePdfService.showHtmlReport(
+        GbOnePagePdfService.showHtmlReport(
           name: widget.results['name'] ?? widget.name,
           gender: widget.results['gender'] ?? "-",
           results: widget.results,
@@ -177,7 +178,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                 results: widget.results,
                 l10n: AppLocalizations.of(context)!,
               )
-            : await OnePagePdfService.generate(
+            : await GbOnePagePdfService.generate(
                 name: widget.results['name'] ?? widget.name,
                 gender: widget.results['gender'] ?? "-",
                 results: widget.results,
@@ -186,7 +187,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
         if (!mounted) return;
         Navigator.pop(context); // Close loading
         
-        final fileNamePrefix = widget.results['isKp'] == true ? "KP_OnePageHoroscope" : "OnePageHoroscope";
+        final fileNamePrefix = widget.results['isKp'] == true ? "KP_OnePageHoroscope" : "GB_OnePageHoroscope";
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -241,6 +242,54 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
             builder: (context) => PdfViewerScreen(
               pdfBytes: bytes,
               fileName: "KP_OnePageHoroscope_${widget.name.replaceAll(' ', '_')}.pdf",
+            ),
+          ),
+        );
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+        }
+      } finally {
+        if (mounted) setState(() => _isGenerating = false);
+      }
+    }
+  }
+
+  Future<void> _handleGbOnePageReport() async {
+    if (kIsWeb) {
+      GbOnePagePdfService.showHtmlReport(
+        name: widget.results['name'] ?? widget.name,
+        gender: widget.results['gender'] ?? "-",
+        results: widget.results,
+        l10n: AppLocalizations.of(context)!,
+      );
+    } else {
+      if (_isGenerating) return;
+      setState(() => _isGenerating = true);
+      
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+      
+      try {
+        final bytes = await GbOnePagePdfService.generate(
+          name: widget.results['name'] ?? widget.name,
+          gender: widget.results['gender'] ?? "-",
+          results: widget.results,
+          l10n: AppLocalizations.of(context)!,
+        );
+        if (!mounted) return;
+        Navigator.pop(context);
+        
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PdfViewerScreen(
+              pdfBytes: bytes,
+              fileName: "GB_OnePageHoroscope_${widget.name.replaceAll(' ', '_')}.pdf",
             ),
           ),
         );
@@ -412,41 +461,11 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
             ),
           ),
           actions: [
-            if (!kIsWeb && (Platform.isAndroid || Platform.isIOS))
-              IconButton(
-                icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.primary),
-                tooltip: AppLocalizations.of(context)!.pdfDownload,
-                onPressed: _handleOnePageReport,
-              )
-            else
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.primary),
-                tooltip: AppLocalizations.of(context)!.pdfDownload,
-                onSelected: (value) {
-                  if (value == 'one_page') {
-                    _handleOnePageReport();
-                  } else if (value == 'kp_one_page') {
-                    _handleKpOnePageReport();
-                  } else if (value == 'full_report') {
-                    _handleFullReport();
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'one_page',
-                    child: Text(AppLocalizations.of(context)!.onePageA5),
-                  ),
-                  PopupMenuItem(
-                    value: 'kp_one_page',
-                    child: Text(AppLocalizations.of(context)!.kpOnePageA5),
-                  ),
-                  if (!kIsWeb && Platform.isWindows)
-                    PopupMenuItem(
-                      value: 'full_report',
-                      child: Text(AppLocalizations.of(context)!.fullReport),
-                    ),
-                ],
-              ),
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.primary),
+              tooltip: "GB ஒன் பேஜ் PDF (திருக்கணிதம்)",
+              onPressed: _handleGbOnePageReport,
+            ),
             const SizedBox(width: 8),
           ],
           bottom: TabBar(
@@ -487,41 +506,11 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                                 tabs: tabsList,
                               ),
                             ),
-                            if (!kIsWeb && (Platform.isAndroid || Platform.isIOS))
-                              IconButton(
-                                icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.primary),
-                                tooltip: AppLocalizations.of(context)!.pdfDownload,
-                                onPressed: _handleOnePageReport,
-                              )
-                            else
-                              PopupMenuButton<String>(
-                                icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.primary),
-                                tooltip: AppLocalizations.of(context)!.pdfDownload,
-                                onSelected: (value) {
-                                  if (value == 'one_page') {
-                                    _handleOnePageReport();
-                                  } else if (value == 'kp_one_page') {
-                                    _handleKpOnePageReport();
-                                  } else if (value == 'full_report') {
-                                    _handleFullReport();
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  PopupMenuItem(
-                                    value: 'one_page',
-                                    child: Text(AppLocalizations.of(context)!.onePageA5),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'kp_one_page',
-                                    child: Text(AppLocalizations.of(context)!.kpOnePageA5),
-                                  ),
-                                  if (!kIsWeb && Platform.isWindows)
-                                    PopupMenuItem(
-                                      value: 'full_report',
-                                      child: Text(AppLocalizations.of(context)!.fullReport),
-                                    ),
-                                ],
-                              ),
+                            IconButton(
+                              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.primary),
+                              tooltip: "GB ஒன் பேஜ் PDF (திருக்கணிதம்)",
+                              onPressed: _handleGbOnePageReport,
+                            ),
                             const SizedBox(width: 16),
                           ],
                         ),

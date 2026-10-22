@@ -68,12 +68,25 @@ class SouthIndianChart extends StatelessWidget {
     return null;
   }
 
+  static bool isReverseSign(String? rasi) {
+    if (rasi == null) return false;
+    const reverseSigns = {
+      "sagittarius", "capricorn", "aquarius", "pisces",
+      "தனுசு", "மகரம்", "கும்பம்", "மீனம்",
+      "sag", "cap", "aqu", "pis",
+      "dhanu", "makara", "kumbha", "meena",
+      "धनु", "मकर", "कुंभ", "मीन"
+    };
+    return reverseSigns.contains(rasi.trim().toLowerCase());
+  }
+
   static List<String> sortItemsByDegree(List<String> items, {String? rasi, bool isJamakkol = false}) {
     if (items.length <= 1) return items;
     if (items.any((e) => _extractDegree(e) != null)) {
       final sorted = List<String>.from(items);
-      const reverseSigns = {"Sagittarius", "Capricorn", "Aquarius", "Pisces", "தனுசு", "மகரம்", "கும்பம்", "மீனம்"};
-      final isReverse = isJamakkol && rasi != null && reverseSigns.contains(rasi);
+      // Aries to Scorpio: 0° top to 30° bottom (column / ascending)
+      // Sagittarius to Pisces: 0° bottom to 30° top (column-reverse / descending)
+      final isReverse = isReverseSign(rasi);
       sorted.sort((a, b) {
         final degA = _extractDegree(a) ?? 999.0;
         final degB = _extractDegree(b) ?? 999.0;
@@ -149,8 +162,8 @@ class SouthIndianChart extends StatelessWidget {
                       itemCount: 16,
                       itemBuilder: (context, index) {
                         final rasi = RASI_ORDER[index];
-                        final rawItems = rasiMap[rasi] ?? [];
-                        final items = isJamakkolChart ? rawItems : sortItemsByDegree(rawItems);
+                        final rawItems = rasiMap[rasi] ?? (rasi != null ? rasiMap[AstroTranslationService.translate(context, rasi)] : null) ?? [];
+                        final items = sortItemsByDegree(rawItems, rasi: rasi);
                         final bool isLagnaCell = items.any((e) => e.startsWith("லக்") || e.startsWith("உத") || e.startsWith("Asc") || e.startsWith("Lagna") || e.startsWith("Uda") || e.startsWith("लग्न") || e.startsWith("उदय"));
                         final bool isArudamCell = items.any((e) => e.startsWith("ஆரூ") || e.startsWith("Aru") || e.startsWith("आरू"));
                         final bool isKaviCell = items.any((e) => e.startsWith("கவி") || e.startsWith("Kav") || e.startsWith("कवि"));

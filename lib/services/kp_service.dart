@@ -505,10 +505,17 @@ class KPService {
       finalResults['navamsa'][SIGNS[navIdx]]!.add("${TAMIL_PLANETS_SHORT[pName]!}$flags");
     });
 
-    // Degree-wise sorting (ascending order) for each Rasi box
+    // Degree-wise sorting for each Rasi box:
+    // Mesham to Vrischikam (Aries to Scorpio): 0° top to 30° bottom (ascending)
+    // Dhanusu to Meenam (Sagittarius to Pisces): 0° bottom to 30° top (descending)
+    const reverseSigns = {"Sagittarius", "Capricorn", "Aquarius", "Pisces"};
     for (var sign in SIGNS) {
       final list = rasiEntries[sign]!;
-      list.sort((a, b) => (a['deg'] as double).compareTo(b['deg'] as double));
+      if (reverseSigns.contains(sign)) {
+        list.sort((a, b) => (b['deg'] as double).compareTo(a['deg'] as double));
+      } else {
+        list.sort((a, b) => (a['deg'] as double).compareTo(b['deg'] as double));
+      }
       finalResults['rasi'][sign] = list.map((e) => e['label'] as String).toList();
     }
     const List<String> ROMAN_BHAVAS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];

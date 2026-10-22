@@ -6,7 +6,6 @@ import '../services/device_service.dart';
 import '../services/access_service.dart';
 import '../services/subscription_service.dart';
 import '../theme/app_colors.dart';
-import 'approval_pending_screen.dart';
 import 'package:astrology_flutter/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -41,72 +40,24 @@ class _LoginScreenState extends State<LoginScreen> {
         final statusData = await _deviceService.checkUserStatus(user.email!);
         final String status = statusData['status'] ?? "NOT_REGISTERED";
 
+        if (status == 'LIMIT_REACHED') {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(statusData['message'] ?? 'Device limit reached. Contact Admin.'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ));
+          return;
+        }
+
         if (status == 'NOT_REGISTERED' || status == 'NEW_DEVICE') {
           _showPhoneRegistrationDialog(
-            user.email!, 
+            user, 
             status == 'NEW_DEVICE' ? AppLocalizations.of(context)!.newDeviceReg : null
           );
           return;
         }
 
-        // Always initialize AccessService
-        await AccessService().init();
-
-        // Global App Paywall: Check Subscription
-        final subStatus = await SubscriptionService().checkUserSubscription(user.uid, user.email);
-        
-        Map<String, dynamic> finalAccessMap = {};
-
-        // 1. Add Admin Panel Features
-        if (statusData.containsKey('access') && statusData['access'] != null) {
-          try {
-            var accessData = statusData['access'];
-            if (accessData is Map) {
-              finalAccessMap.addAll(accessData.cast<String, dynamic>());
-            }
-          } catch(e){
-            debugPrint("Error parsing admin access data: $e");
-          }
-        }
-        
-        // 2. Add Subscription Features
-        if (subStatus['success'] == true && subStatus['is_premium'] == true && subStatus['subscription'] != null) {
-          final subscription = subStatus['subscription'];
-          finalAccessMap['is_premium'] = true;
-          finalAccessMap['start_date'] = subscription['start_date'];
-          finalAccessMap['end_date'] = subscription['end_date'];
-          finalAccessMap['last_online_check'] = DateTime.now().toIso8601String();
-        }
-
-        // 3. Decide navigation based on final access map
-        bool hasAnyFeature = finalAccessMap.keys.any((key) => 
-          (finalAccessMap[key] == true || finalAccessMap[key] == 1 || finalAccessMap[key] == "1") &&
-          key != 'is_premium' && key != 'start_date' && key != 'end_date' && key != 'last_online_check'
-        );
-
-        if (hasAnyFeature || finalAccessMap['is_premium'] == true) {
-          await AccessService().updateAccess(finalAccessMap);
-          if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
-        } else if (subStatus['error'] == true) {
-          if (AccessService().hasAccess('is_premium') || AccessService().getActiveFeatures().isNotEmpty) {
-            if (AccessService().isOfflineExpired(15)) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(AppLocalizations.of(context)!.noInternetSub),
-                  duration: const Duration(seconds: 5),
-                ));
-                Navigator.pushReplacementNamed(context, '/subscriptions');
-              }
-            } else {
-              if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
-            }
-          } else {
-            if (mounted) Navigator.pushReplacementNamed(context, '/subscriptions');
-          }
-        } else {
-          await AccessService().updateAccess({'is_premium': false});
-          if (mounted) Navigator.pushReplacementNamed(context, '/subscriptions');
-        }
+        await _proceedAfterAuth(user, statusData);
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -181,71 +132,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (status == 'NOT_REGISTERED' || status == 'NEW_DEVICE') {
           _showPhoneRegistrationDialog(
-            user.email!, 
+            user, 
             status == 'NEW_DEVICE' ? AppLocalizations.of(context)!.newDeviceReg : null
           );
           return;
         }
 
-        // Always initialize AccessService
-        await AccessService().init();
-
-        // Global App Paywall: Check Subscription
-        final SubscriptionService subService = SubscriptionService();
-        final subStatus = await subService.checkUserSubscription(user.uid, user.email);
-        
-        Map<String, dynamic> finalAccessMap = {};
-
-        // 1. Add Admin Panel Features
-        if (statusData.containsKey('access') && statusData['access'] != null) {
-          try {
-            var accessData = statusData['access'];
-            if (accessData is Map) {
-              finalAccessMap.addAll(accessData.cast<String, dynamic>());
-            }
-          } catch(e){
-            debugPrint("Error parsing admin access data: $e");
-          }
-        }
-        
-        // 2. Add Subscription Features
-        if (subStatus['success'] == true && subStatus['is_premium'] == true && subStatus['subscription'] != null) {
-          final subscription = subStatus['subscription'];
-          finalAccessMap['is_premium'] = true;
-          finalAccessMap['start_date'] = subscription['start_date'];
-          finalAccessMap['end_date'] = subscription['end_date'];
-          finalAccessMap['last_online_check'] = DateTime.now().toIso8601String();
-        }
-
-        // 3. Decide navigation based on final access map
-        bool hasAnyFeature = finalAccessMap.keys.any((key) => 
-          (finalAccessMap[key] == true || finalAccessMap[key] == 1 || finalAccessMap[key] == "1") &&
-          key != 'is_premium' && key != 'start_date' && key != 'end_date' && key != 'last_online_check'
-        );
-
-        if (hasAnyFeature || finalAccessMap['is_premium'] == true) {
-          await AccessService().updateAccess(finalAccessMap);
-          if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
-        } else if (subStatus['error'] == true) {
-          if (AccessService().hasAccess('is_premium') || AccessService().getActiveFeatures().isNotEmpty) {
-            if (AccessService().isOfflineExpired(15)) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(AppLocalizations.of(context)!.noInternetSub),
-                  duration: const Duration(seconds: 5),
-                ));
-                Navigator.pushReplacementNamed(context, '/subscriptions');
-              }
-            } else {
-              if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
-            }
-          } else {
-            if (mounted) Navigator.pushReplacementNamed(context, '/subscriptions');
-          }
-        } else {
-          await AccessService().updateAccess({'is_premium': false}); // Clear access if no subscription
-          if (mounted) Navigator.pushReplacementNamed(context, '/subscriptions');
-        }
+        await _proceedAfterAuth(user, statusData);
       }
     } catch (e) {
       if (mounted) {
@@ -270,7 +163,69 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _showPhoneRegistrationDialog(String email, String? customMessage) {
+  Future<void> _proceedAfterAuth(User user, Map<String, dynamic> statusData) async {
+    // Always initialize AccessService
+    await AccessService().init();
+
+    // Global App Paywall: Check Subscription
+    final SubscriptionService subService = SubscriptionService();
+    final subStatus = await subService.checkUserSubscription(user.uid, user.email);
+    
+    Map<String, dynamic> finalAccessMap = {};
+
+    // 1. Add Admin Panel Features
+    if (statusData.containsKey('access') && statusData['access'] != null) {
+      try {
+        var accessData = statusData['access'];
+        if (accessData is Map) {
+          finalAccessMap.addAll(accessData.cast<String, dynamic>());
+        }
+      } catch (e) {
+        debugPrint("Error parsing admin access data: $e");
+      }
+    }
+    
+    // 2. Add Subscription Features
+    if (subStatus['success'] == true && subStatus['is_premium'] == true && subStatus['subscription'] != null) {
+      final subscription = subStatus['subscription'];
+      finalAccessMap['is_premium'] = true;
+      finalAccessMap['start_date'] = subscription['start_date'];
+      finalAccessMap['end_date'] = subscription['end_date'];
+      finalAccessMap['last_online_check'] = DateTime.now().toIso8601String();
+    }
+
+    // 3. Decide navigation based on final access map
+    bool hasAnyFeature = finalAccessMap.keys.any((key) => 
+      (finalAccessMap[key] == true || finalAccessMap[key] == 1 || finalAccessMap[key] == "1") &&
+      key != 'is_premium' && key != 'start_date' && key != 'end_date' && key != 'last_online_check'
+    );
+
+    if (hasAnyFeature || finalAccessMap['is_premium'] == true) {
+      await AccessService().updateAccess(finalAccessMap);
+      if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
+    } else if (subStatus['error'] == true) {
+      if (AccessService().hasAccess('is_premium') || AccessService().getActiveFeatures().isNotEmpty) {
+        if (AccessService().isOfflineExpired(15)) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(AppLocalizations.of(context)!.noInternetSub),
+              duration: const Duration(seconds: 5),
+            ));
+            Navigator.pushReplacementNamed(context, '/subscriptions');
+          }
+        } else {
+          if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
+        }
+      } else {
+        if (mounted) Navigator.pushReplacementNamed(context, '/subscriptions');
+      }
+    } else {
+      await AccessService().updateAccess({'is_premium': false}); // Clear access if no subscription
+      if (mounted) Navigator.pushReplacementNamed(context, '/subscriptions');
+    }
+  }
+
+  void _showPhoneRegistrationDialog(User user, String? customMessage) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -303,37 +258,66 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              _authService.signOut();
+            },
             child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () async {
-              if (_phoneController.text.length < 10) {
+              final phone = _phoneController.text.trim();
+              if (phone.length < 10) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(AppLocalizations.of(context)!.enterValidMobile)),
                 );
                 return;
               }
               
-              // Removed hardcoded backdoor to enforce secure server-side check.
-              
               Navigator.pop(context); // Close dialog
               setState(() => _isLoading = true);
               
-              final success = await _deviceService.requestApproval(
-                email: email,
-                phone: _phoneController.text,
-              );
-              
-              setState(() => _isLoading = false);
-              
-              if (success && mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => ApprovalPendingScreen(
-                    message: AppLocalizations.of(context)!.requestSent
-                  )),
+              try {
+                final success = await _deviceService.requestApproval(
+                  email: user.email!,
+                  phone: phone,
                 );
+                
+                if (!mounted) return;
+
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context)!.requestSent),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
+
+                // Check updated status and proceed directly to Subscriptions or Dashboard
+                final statusData = await _deviceService.checkUserStatus(user.email!);
+                final String status = statusData['status'] ?? '';
+
+                if (status == 'LIMIT_REACHED') {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(statusData['message'] ?? 'Device limit reached. Contact Admin.'),
+                    backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 5),
+                  ));
+                  return;
+                }
+
+                await _proceedAfterAuth(user, statusData);
+              } catch (e) {
+                debugPrint("Error in registration flow: $e");
+                if (mounted) {
+                  await _proceedAfterAuth(user, {});
+                }
+              } finally {
+                if (mounted) {
+                  setState(() => _isLoading = false);
+                }
               }
             },
             style: ElevatedButton.styleFrom(

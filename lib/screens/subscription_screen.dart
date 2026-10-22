@@ -13,7 +13,7 @@ class SubscriptionScreen extends StatefulWidget {
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final SubscriptionService _subscriptionService = SubscriptionService();
-  final String _adminWhatsAppNumber = '919600666225'; // Included India country code +91
+  final String _adminWhatsAppNumber = '919787067910'; // +91 97870 67910
 
   String _formatDuration(int days, double price) {
     String durationText = '$days Days';
@@ -29,11 +29,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   Future<void> _requestPlan(SubscriptionPlan plan) async {
     final user = FirebaseAuth.instance.currentUser;
-    final userId = user?.uid ?? 'Unknown User';
     final userEmail = user?.email ?? 'Unknown Email';
-    final userPhone = user?.phoneNumber ?? 'Unknown Phone';
+    final userPhone = user?.phoneNumber ?? '';
 
-    final text = 'Hi Admin,\n\nI would like to subscribe to the *${plan.name}* plan (Rs. ${plan.price}).\n\nMy Details:\nUser ID: $userId\nEmail: $userEmail\nPhone: $userPhone';
+    final phonePart = userPhone.isNotEmpty ? '• Phone: $userPhone\n' : '';
+    final text = 'வணக்கம் குருஜி,\n\nநான் *${plan.name}* (₹${plan.price.toStringAsFixed(0)}) சந்தா பெற விரும்புகிறேன்.\n\nவிவரங்கள்:\n• Email: $userEmail\n$phonePart• திட்டம் (Plan): ${plan.name}\n\nGoogle Pay / PhonePe (+91 97870 67910) வழியாக பணம் செலுத்திவிட்டேன் / ரசீது இணைத்துள்ளேன். தயவுசெய்து எனது சந்தாவை செயல்படுத்தி தரவும். நன்றி!';
     
     final encodedText = Uri.encodeComponent(text);
     final url = Uri.parse('https://wa.me/$_adminWhatsAppNumber?text=$encodedText');

@@ -455,7 +455,7 @@ class DashboardScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
                 onPressed: () async {
-                  final String adminWhatsAppNumber = '919600666225';
+                  final String adminWhatsAppNumber = '919787067910';
                   final encodedText = Uri.encodeComponent(AppLocalizations.of(context)!.whatsappMsg(serviceName));
                   final url = Uri.parse('https://wa.me/$adminWhatsAppNumber?text=$encodedText');
                   

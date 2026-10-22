@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/subscription_plan.dart';
 import '../services/subscription_service.dart';
 import '../services/auth_service.dart';
@@ -43,168 +45,408 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     });
   }
 
-  bool _isBrowserOpen = false;
+  static const String _adminWhatsAppNumber = '919787067910';
+  static const String _gpayNumberDisplay = '+91 97870 67910';
+  static const String _gpayNumberRaw = '9787067910';
+  static const String _upiId = 'ganeshmuthukumarts@okicici';
 
-  Future<void> _initiatePayment(SubscriptionPlan plan) async {
-    final amountInPaisa = (plan.price * 100).toInt();
-    
-    final int timestamp = DateTime.now().millisecondsSinceEpoch;
-    final String orderId = "APP${timestamp}";
-
-    // Construct the Guruji Checkout Wrapper URL
-    final String checkoutUrl = "https://abinaasananthaguruji.com/api/aadhiguru_checkout.php?amount=$amountInPaisa&user_id=$_userId&plan_id=${plan.id}&order_id=$orderId";
-    
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening secure payment gateway...')));
-
+  Future<void> _downloadOrShareQrCode() async {
     try {
-      final Uri url = Uri.parse(checkoutUrl);
+      final byteData = await rootBundle.load('assets/images/gpay_qr.png');
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/gb_astro_gpay_qr.png');
+      await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
       
-      _isBrowserOpen = true;
-      
-      // Open in Custom Tab.
-      launchUrl(url, mode: LaunchMode.inAppBrowserView).then((_) {
-        _isBrowserOpen = false;
-      });
-      
-      // Start polling in the background to detect success
-      _pollPaymentStatus(orderId, plan.id.toString());
-      
-      // Show the manual verification dialog so user can verify if polling fails
-      _showPaymentStatusDialog(orderId, plan.id.toString());
-      
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'image/png')],
+        text: 'GB ASTRO - Google Pay / PhonePe QR Code\nGPay / PhonePe No: +91 97870 67910\nUPI ID: ganeshmuthukumarts@okicici',
+      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open payment page: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('QR Code-ஐ பதிவிறக்க/பகிர முடியவில்லை: $e')),
+        );
+      }
     }
   }
 
-  void _showPaymentStatusDialog(String orderId, String planId) {
+  void _showQrCodeDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
+      builder: (dialogCtx) {
         return AlertDialog(
-          title: const Text("Payment in Progress", style: TextStyle(color: Color(0xFFB58D3D))),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: const Color(0xFFFFF9EE),
+          title: Row(
             children: const [
-              Text("Please complete the payment in the browser overlay.\n\nNote: After payment, PhonePe will redirect to a blank error page (due to a whitelist issue). Please DO NOT WORRY. Just close the browser by clicking 'X' at the top, and click 'Verify Payment' below!"),
+              Icon(Icons.qr_code_2_rounded, color: Color(0xFF5D1204), size: 28),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "GPay / PhonePe QR Code",
+                  style: TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                _isBrowserOpen = false;
-                Navigator.pop(dialogContext);
-              },
-              child: const Text("Close"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFB58D3D), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4)),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/images/gpay_qr.png',
+                      height: 240,
+                      width: 240,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 240,
+                        width: 240,
+                        color: Colors.grey.shade100,
+                        alignment: Alignment.center,
+                        child: const Text("QR Code Image\n(assets/images/gpay_qr.png)", textAlign: TextAlign.center),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  "GPay / PhonePe எண்:",
+                  style: TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                const SelectableText(
+                  _gpayNumberDisplay,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF5D1204), letterSpacing: 1),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "UPI ID: $_upiId",
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5D1204)),
+                      ),
+                      const SizedBox(width: 6),
+                      InkWell(
+                        onTap: () {
+                          Clipboard.setData(const ClipboardData(text: _upiId));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('UPI ID நகலெடுக்கப்பட்டது!'), duration: Duration(seconds: 2)),
+                          );
+                        },
+                        child: const Icon(Icons.copy_rounded, size: 14, color: Color(0xFF5D1204)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "இந்த QR Code-ஐ சேமித்து (Save / Download) அல்லது ஸ்கேன் செய்து Google Pay / PhonePe-ல் பணம் செலுத்தலாம்.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: Colors.black87.withOpacity(0.8), height: 1.3),
+                ),
+              ],
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB58D3D)),
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                _verifyPaymentStatus(context, orderId, planId);
-              },
-              child: const Text("Verify Payment"),
+          ),
+          actionsPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF5D1204),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    icon: const Icon(Icons.download_rounded, size: 18),
+                    label: const Text("Download / Share", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    onPressed: _downloadOrShareQrCode,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogCtx),
+                  child: const Text("Close", style: TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold)),
+                ),
+              ],
             ),
           ],
         );
-      }
+      },
     );
   }
 
-  Future<void> _pollPaymentStatus(String orderId, String planId) async {
-    final String verifyUrl = "https://abinaasananthaguruji.com/api/aadhiguru_payment.php?action=check_status&orderId=$orderId&user_id=$_userId&plan_id=$planId";
-    
-    while (_isBrowserOpen) {
-      await Future.delayed(const Duration(seconds: 3));
-      if (!_isBrowserOpen) break;
-      
-      try {
-        final response = await http.get(Uri.parse(verifyUrl));
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          
-          if (data['success'] == true && data['is_premium'] == true) {
-            // Payment was successful! Automatically close the browser!
-            closeInAppWebView();
-            _isBrowserOpen = false;
-            
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Subscription Activated Successfully!'),
-              backgroundColor: Colors.green,
-            ));
-            
-            if (mounted) {
-              Navigator.pushReplacementNamed(context, '/dashboard');
-            }
-            break;
-          }
-        }
-      } catch (e) {
-        // Ignore network errors during polling
+  Future<void> _requestPlanViaWhatsApp(SubscriptionPlan plan) async {
+    final userEmail = _authService.currentUser?.email ?? _authService.currentUser?.phoneNumber ?? 'Unknown';
+    final userPhone = _authService.currentUser?.phoneNumber ?? '';
+
+    final StringBuffer msg = StringBuffer();
+    msg.writeln("வணக்கம் குருஜி,");
+    msg.writeln("நான் GB ASTRO செயலியில் *${plan.name}* (₹${plan.price.toStringAsFixed(0)} / ${plan.durationDays} நாட்கள்) சந்தா பெற விரும்புகிறேன்.");
+    msg.writeln();
+    msg.writeln("📌 எனது விவரங்கள் (My Details):");
+    msg.writeln("• மின்னஞ்சல் (Email): $userEmail");
+    if (userPhone.isNotEmpty) {
+      msg.writeln("• தொலைபேசி (Phone): $userPhone");
+    }
+    msg.writeln("• திட்டம் (Plan): ${plan.name} (₹${plan.price.toStringAsFixed(0)})");
+    msg.writeln();
+    msg.writeln("Google Pay / PhonePe எண் ($_gpayNumberDisplay) மூலமாக பணம் செலுத்திவிட்டேன் / ரசீது இணைத்துள்ளேன். தயவுசெய்து எனது சந்தாவை செயல்படுத்தி தருமாறு கேட்டுக்கொள்கிறேன். நன்றி!");
+
+    final Uri url = Uri.parse('https://wa.me/$_adminWhatsAppNumber?text=${Uri.encodeComponent(msg.toString())}');
+
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(url, mode: LaunchMode.platformDefault);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('WhatsApp திறக்க முடியவில்லை: $e')),
+        );
       }
     }
   }
-  Future<void> _verifyPaymentStatus(BuildContext context, String orderId, String planId) async {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Verifying payment with PhonePe...')));
 
-    try {
-      final String verifyUrl = "https://abinaasananthaguruji.com/api/aadhiguru_payment.php?action=check_status&orderId=$orderId&user_id=$_userId&plan_id=$planId";
-      
-      final response = await http.get(Uri.parse(verifyUrl));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        
-        if (data['success'] == true && data['is_premium'] == true) {
-          
-           // Fetch new subscription features to update AccessService
-           try {
-             final userEmail = _authService.currentUser?.email ?? _authService.currentUser?.phoneNumber;
-             
-             // Fetch both Admin features and Subscription features
-             final statusData = await DeviceService().checkUserStatus(userEmail ?? '');
-             final subStatus = await SubscriptionService().checkUserSubscription(_userId ?? '', userEmail);
-             
-             Map<String, dynamic> finalAccessMap = {};
-             
-             // Add Admin features
-             if (statusData.containsKey('access') && statusData['access'] != null) {
-                var accessData = statusData['access'];
-                if (accessData is Map) {
-                  finalAccessMap.addAll(accessData.cast<String, dynamic>());
-                }
-             }
+  void _showPlanPaymentBottomSheet(SubscriptionPlan plan) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFF9EE),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      plan.name,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF5D1204),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF5D1204),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      "₹${plan.price.toStringAsFixed(0)}",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                "கால அளவு: ${plan.durationDays} நாட்கள்",
+                style: const TextStyle(fontSize: 14, color: Colors.black54, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: Color(0xFFB58D3D)),
+              const SizedBox(height: 12),
+              
+              // GPay / PhonePe Box
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF5D1204), Color(0xFF8B2B15)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: const Color(0xFF5D1204).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.payment_rounded, color: Color(0xFFF3D99F), size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "Google Pay / PhonePe கட்டணம் செலுத்துக:",
+                            style: TextStyle(color: Color(0xFFF3D99F), fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFF3D99F).withOpacity(0.6)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: SelectableText(
+                              _gpayNumberDisplay,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  Clipboard.setData(const ClipboardData(text: _gpayNumberRaw));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('GPay / PhonePe எண் நகலெடுக்கப்பட்டது! (Number copied)'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF3D99F),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: const [
+                                      Icon(Icons.copy_rounded, size: 14, color: Color(0xFF5D1204)),
+                                      SizedBox(width: 4),
+                                      Text("Copy", style: TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              InkWell(
+                                onTap: () {
+                                  Navigator.pop(ctx);
+                                  _showQrCodeDialog();
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF3D99F),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: const [
+                                      Icon(Icons.qr_code_rounded, size: 14, color: Color(0xFF5D1204)),
+                                      SizedBox(width: 4),
+                                      Text("QR", style: TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "இந்த எண்ணிற்கு ₹${plan.price.toStringAsFixed(0)} செலுத்திவிட்டு, ஸ்கிரீன்ஷாட் (Screenshot) எடுத்து WhatsApp-ல் அனுப்பவும்.",
+                      style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12, height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
 
-             // Add Subscription features
-             if (subStatus['success'] == true && subStatus['is_premium'] == true) {
-               final subscription = subStatus['subscription'];
-               finalAccessMap['is_premium'] = true;
-               finalAccessMap['start_date'] = subscription['start_date'];
-               finalAccessMap['end_date'] = subscription['end_date'];
-               finalAccessMap['last_online_check'] = DateTime.now().toIso8601String();
-             }
-             
-             if (finalAccessMap.isNotEmpty) {
-                await AccessService().updateAccess(finalAccessMap);
-             }
-          } catch (e) {
-             print("Could not update access map immediately: $e");
-          }
-
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Subscription Activated Successfully!'),
-            backgroundColor: Colors.green,
-          ));
-          Navigator.pushReplacementNamed(context, '/dashboard');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'] ?? 'Payment not successful yet')));
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Server error while verifying payment')));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not connect to payment server: $e')));
-    }
+              // WhatsApp Button
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF25D366), // WhatsApp Green
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
+                ),
+                icon: const Icon(Icons.chat_rounded, color: Colors.white, size: 22),
+                label: const Text(
+                  "WhatsApp-ல் கோரிக்கை அனுப்ப (Request via WhatsApp)",
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _requestPlanViaWhatsApp(plan);
+                },
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("ரத்து செய் (Cancel)", style: TextStyle(color: Colors.grey)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
 
@@ -305,193 +547,244 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               builder: (context, constraints) {
                 final bool isWide = constraints.maxWidth > 900;
                 
-                final userCard = // User Details & Refresh Card
+                final userCard = // User Details & Refresh Card (Compact)
                 Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(20),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFF5D1204), Color(0xFF8B2B15)], // Premium dark red gradient
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(18),
                     boxShadow: [
-                      BoxShadow(color: const Color(0xFF5D1204).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+                      BoxShadow(color: const Color(0xFF5D1204).withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 6)),
                     ],
                     border: Border.all(color: const Color(0xFFB58D3D), width: 1.5), // Gold border
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // User Info Row
+                      // User Info & Active Status Row (Compact)
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFB58D3D).withOpacity(0.2),
+                              color: const Color(0xFFB58D3D).withOpacity(0.25),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.person, color: Color(0xFFF3D99F), size: 26),
+                            child: const Icon(Icons.person, color: Color(0xFFF3D99F), size: 22),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text("Logged in as", style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500)),
+                                const Text("Logged in as", style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500)),
                                 Text(
                                   _authService.currentUser?.email ?? _authService.currentUser?.phoneNumber ?? 'Unknown',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFF3D99F).withOpacity(0.4)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.stars_rounded, color: Color(0xFFF3D99F), size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  activeFeatures.isEmpty ? 'Free Plan' : 'Premium (${activeFeatures.length})',
+                                  style: const TextStyle(color: Color(0xFFF3D99F), fontSize: 11, fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
                       
-                      // Active Features Box
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.06),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      if (activeFeatures.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          "Active: ${activeFeatures.join(', ')}",
+                          style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 12),
                         ),
-                        child: Row(
+                      ],
+
+                      if (AccessService().startDate != null && AccessService().endDate != null) ...[
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Purchased: ${_formatDate(AccessService().startDate!)}",
+                              style: const TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                            Text(
+                              "Expires: ${_formatDate(AccessService().endDate!)}",
+                              style: const TextStyle(color: Color(0xFFF3D99F), fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 14),
+
+                      // GPay / PhonePe Payment Box
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFB58D3D).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFF3D99F), width: 1.2),
+                        ),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Padding(
-                              padding: EdgeInsets.only(top: 2),
-                              child: Icon(Icons.stars_rounded, color: Color(0xFFF3D99F), size: 22),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text("Active Features", style: TextStyle(color: Color(0xFFF3D99F), fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5)),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    activeFeatures.isEmpty ? 'None' : activeFeatures.join(',  '),
-                                    style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5, fontWeight: FontWeight.w500),
+                            Row(
+                              children: const [
+                                Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFF3D99F), size: 18),
+                                SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    "Google Pay / PhonePe கட்டணம்:",
+                                    style: TextStyle(color: Color(0xFFF3D99F), fontWeight: FontWeight.bold, fontSize: 13),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Expanded(
+                                  child: SelectableText(
+                                    _gpayNumberDisplay,
+                                    style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold, letterSpacing: 1),
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    InkWell(
+                                      onTap: () {
+                                        Clipboard.setData(const ClipboardData(text: _gpayNumberRaw));
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('GPay எண் நகலெடுக்கப்பட்டது! (Number copied)'),
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF3D99F),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: const [
+                                            Icon(Icons.copy_rounded, size: 12, color: Color(0xFF5D1204)),
+                                            SizedBox(width: 3),
+                                            Text("Copy", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    InkWell(
+                                      onTap: _showQrCodeDialog,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF3D99F),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: const [
+                                            Icon(Icons.qr_code_rounded, size: 13, color: Color(0xFF5D1204)),
+                                            SizedBox(width: 3),
+                                            Text("QR Code", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF5D1204))),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "இந்த எண்ணிற்கு பணம் செலுத்திவிட்டு, கீழே உள்ள திட்டத்தில் WhatsApp வழியாக ரசீது அனுப்பவும்.",
+                              style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 11, height: 1.3),
                             ),
                           ],
                         ),
                       ),
-                      
-                      if (AccessService().startDate != null && AccessService().endDate != null) ...[
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text("Purchased Date", style: TextStyle(color: Colors.white60, fontSize: 11)),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _formatDate(AccessService().startDate!),
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                              Container(height: 30, width: 1, color: Colors.white24),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  const Text("Expiry Date", style: TextStyle(color: Colors.white60, fontSize: 11)),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _formatDate(AccessService().endDate!),
-                                    style: const TextStyle(color: Color(0xFFF3D99F), fontWeight: FontWeight.bold, fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 14),
                       
                       // Refresh Button
                       SizedBox(
                         width: double.infinity,
-                        height: 52,
+                        height: 46,
                         child: ElevatedButton.icon(
                           onPressed: _isChecking ? null : _verifyCurrentSubscription,
                           icon: _isChecking 
-                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF5D1204))) 
-                              : const Icon(Icons.sync_rounded, color: Color(0xFF5D1204), size: 24),
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF5D1204))) 
+                              : const Icon(Icons.sync_rounded, color: Color(0xFF5D1204), size: 20),
                           label: Text(
                             _isChecking ? "Checking..." : "சந்தாவை சரிபார்க்க (Check Subscription)",
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, letterSpacing: 0.3),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF3D99F), // Gold background
-                            foregroundColor: const Color(0xFF5D1204), // Dark red text
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            backgroundColor: const Color(0xFFF3D99F),
+                            foregroundColor: const Color(0xFF5D1204),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 8),
                       
-                      // Helper Text
                       Center(
                         child: Text(
-                          "நீங்கள் அட்மினிடம் பேசி சந்தா வாங்கியிருந்தால்,\nஇந்த பட்டனை கிளிக் செய்து அப்டேட் செய்யவும்.",
-                          style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7), height: 1.4),
+                          "பணம் செலுத்திய பின், சந்தாவை அப்டேட் செய்ய இந்த பட்டனை அழுத்தவும்.",
+                          style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.7)),
                           textAlign: TextAlign.center,
                         ),
                       ),
 
                       if (AccessService().hasAccess('is_premium') || AccessService().getActiveFeatures().isNotEmpty) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
-                          height: 48,
+                          height: 44,
                           child: OutlinedButton.icon(
                             onPressed: () => Navigator.pushReplacementNamed(context, '/dashboard'),
-                            icon: const Icon(Icons.dashboard_rounded, color: Color(0xFFF3D99F), size: 20),
+                            icon: const Icon(Icons.dashboard_rounded, color: Color(0xFFF3D99F), size: 18),
                             label: const Text(
-                              "முதன்மைப் பக்கத்திற்குச் செல்க (Open Dashboard)",
-                              style: TextStyle(color: Color(0xFFF3D99F), fontWeight: FontWeight.bold, fontSize: 14),
+                              "முதன்மைப் பக்கம் (Open Dashboard)",
+                              style: TextStyle(color: Color(0xFFF3D99F), fontWeight: FontWeight.bold, fontSize: 13),
                             ),
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(color: Color(0xFFF3D99F), width: 1.5),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
                         ),
                       ],
                     ],
                   ),
-                );
-                
-                final plansList = // Plans List
-                Expanded(
-                  child: _plans.isEmpty
-                      ? const Center(child: Text("No active plans available."))
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: _plans.length,
-                          itemBuilder: (context, index) {
-                            final plan = _plans[index];
-                            return _buildPlanCard(plan);
-                          },
-                        ),
                 );
                 
                 if (isWide) {
@@ -505,7 +798,15 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                           children: [
                             Expanded(flex: 2, child: SingleChildScrollView(child: userCard)),
                             const SizedBox(width: 24),
-                            plansList,
+                            Expanded(
+                              flex: 3,
+                              child: _plans.isEmpty
+                                  ? const Center(child: Text("No active plans available."))
+                                  : ListView.builder(
+                                      itemCount: _plans.length,
+                                      itemBuilder: (context, index) => _buildPlanCard(_plans[index]),
+                                    ),
+                            ),
                           ],
                         ),
                       ),
@@ -515,10 +816,39 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                   return Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 800),
-                      child: Column(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         children: [
                           userCard,
-                          plansList,
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                            child: Row(
+                              children: const [
+                                Icon(Icons.workspace_premium_rounded, color: Color(0xFF5D1204), size: 22),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    "சந்தா திட்டங்கள் (Subscription Plans)",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF5D1204),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (_plans.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.all(32.0),
+                              child: Center(child: Text("No active plans available.")),
+                            )
+                          else
+                            ..._plans.map((plan) => _buildPlanCard(plan)),
+                          const SizedBox(height: 32),
                         ],
                       ),
                     ),
@@ -609,18 +939,22 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFB58D3D),
+                  backgroundColor: const Color(0xFF25D366), // WhatsApp Green
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   elevation: 2,
                 ),
-                onPressed: () => _initiatePayment(plan),
-                child: const Text("Subscribe Now", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                icon: const Icon(Icons.chat_rounded, color: Colors.white, size: 20),
+                onPressed: () => _showPlanPaymentBottomSheet(plan),
+                label: const Text(
+                  "WhatsApp மூலம் பெற (Request via WhatsApp)",
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],

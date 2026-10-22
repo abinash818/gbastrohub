@@ -73,6 +73,10 @@ class _VehicleMobileNumerologyViewState extends State<VehicleMobileNumerologyVie
         "en": "Pyramid Peak Number: ",
         "hi": "पिरामिड शीर्ष संख्या: "
       },
+      "பிரமிடு எண் = ": {
+        "en": "Pyramid No = ",
+        "hi": "पिरामिड संख्या = "
+      },
       "ஆளும் கிரகம்: ": {
         "en": "Ruling Planet: ",
         "hi": "सत्तारूढ़ ग्रह: "
@@ -414,7 +418,7 @@ class _VehicleMobileNumerologyViewState extends State<VehicleMobileNumerologyVie
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: row.map((num) {
+                    children: row.map((val) {
                       bool isTail = row.length == 1;
                       return Container(
                         margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -427,7 +431,7 @@ class _VehicleMobileNumerologyViewState extends State<VehicleMobileNumerologyVie
                         ),
                         child: Center(
                           child: Text(
-                            "$num",
+                            "$val",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: isTail ? FontWeight.w900 : FontWeight.w700,
@@ -454,7 +458,7 @@ class _VehicleMobileNumerologyViewState extends State<VehicleMobileNumerologyVie
               child: Column(
                 children: [
                   Text(
-                    "${_getTranslatedText("பிரமிடு உச்ச எண்: ")}$peak",
+                    "${_getTranslatedText("பிரமிடு எண் = ")}${NumerologyService.formatPyramidResult(pyramidData)}",
                     style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, color: const Color(0xFF5D1204)),
                   ),
                   const SizedBox(height: 2),

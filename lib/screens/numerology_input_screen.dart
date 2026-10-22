@@ -128,7 +128,41 @@ class _NumerologyInputScreenState extends State<NumerologyInputScreen> {
                                     valueListenable: _nameController,
                                     builder: (context, value, child) {
                                       final text = value.text.trim();
-                                      if (text.isEmpty) return const SizedBox.shrink();
+                                      if (text.isEmpty) {
+                                        return Container(
+                                          margin: const EdgeInsets.only(top: 10),
+                                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.3), width: 1),
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Icon(Icons.badge_outlined, size: 44, color: const Color(0xFFB58D3D).withOpacity(0.7)),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                "பெயரை உள்ளிடவும்",
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: const Color(0xFF5D1204),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                "பெயரை உள்ளிட்டவுடன் சால்டியன் கூட்டு எண், பெயர் எண் மற்றும் பிரமிடு (பெயர் & பிறந்த தேதி) உடனடியாக கணக்கிடப்படும்.",
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 12,
+                                                  color: Colors.grey.shade600,
+                                                  height: 1.4,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
                                       return NumerologyResultsScreen(
                                         name: text,
                                         dob: _selectedDate,
@@ -177,92 +211,56 @@ class _NumerologyInputScreenState extends State<NumerologyInputScreen> {
       padding: const EdgeInsets.all(4),
       child: Row(
         children: [
-          Expanded(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                setState(() {
-                  _selectedTab = 0;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                decoration: BoxDecoration(
-                  color: _selectedTab == 0 ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.person_outline,
-                        size: 16,
-                        color: _selectedTab == 0 ? Colors.white : AppColors.primary,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        _getTranslatedText("பெயர் & பிறந்த தேதி"),
-                        style: GoogleFonts.outfit(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: _selectedTab == 0 ? Colors.white : AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+          _buildTabButton(0, Icons.person_outline, _getTranslatedText("பெயர் & பிறந்த தேதி")),
           const SizedBox(width: 4),
-          Expanded(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                setState(() {
-                  _selectedTab = 1;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                decoration: BoxDecoration(
-                  color: _selectedTab == 1 ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+          _buildTabButton(1, Icons.directions_car_filled_outlined, _getTranslatedText("வாகனம் & மொபைல்")),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabButton(int index, IconData icon, String title) {
+    final bool isSelected = _selectedTab == index;
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          setState(() {
+            _selectedTab = index;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          alignment: Alignment.center,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: isSelected ? Colors.white : AppColors.primary,
                 ),
-                alignment: Alignment.center,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.directions_car_filled_outlined,
-                        size: 16,
-                        color: _selectedTab == 1 ? Colors.white : AppColors.primary,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        _getTranslatedText("வாகனம் & மொபைல்"),
-                        style: GoogleFonts.outfit(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: _selectedTab == 1 ? Colors.white : AppColors.primary,
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 5),
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : AppColors.primary,
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

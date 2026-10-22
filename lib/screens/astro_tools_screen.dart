@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import '../services/kp_service.dart';
 import '../services/astro_special_calculations_service.dart';
+import '../services/temple_worship_service.dart';
+import '../services/astro_translation_service.dart';
 import '../components/custom_drawer.dart';
 
 class AstroToolsScreen extends StatefulWidget {
@@ -34,10 +36,17 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
   int _horaWeekday = DateTime.now().weekday;
   TimeOfDay _sunriseTime = const TimeOfDay(hour: 6, minute: 0);
 
+  // 5. Karma / Marabu Nakshatras State
+  String _selectedKarmaLookupNakshatra = "அசுவனி";
+
+  // 6. Temple Worship Directories State
+  final TextEditingController _templeSearchController = TextEditingController();
+  String _templeSearchQuery = "";
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
     _recalcHoursToNazhigai();
     _recalcNazhigaiToHours();
   }
@@ -77,6 +86,7 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
     _secondsController.dispose();
     _nazhigaiInputController.dispose();
     _vinazhigaiInputController.dispose();
+    _templeSearchController.dispose();
     super.dispose();
   }
 
@@ -117,6 +127,8 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
             Tab(text: "பஞ்ச பட்சி", icon: Icon(Icons.flutter_dash_rounded)),
             Tab(text: "ஹோரை / உப-ஹோரை", icon: Icon(Icons.grid_view_rounded)),
             Tab(text: "தசா நாதனின் நால்வர்", icon: Icon(Icons.people_alt_rounded)),
+            Tab(text: "மரபு நட்சத்திரங்கள்", icon: Icon(Icons.hub_rounded)),
+            Tab(text: "வழிபாட்டுத் தலங்கள்", icon: Icon(Icons.temple_hindu_rounded)),
           ],
         ),
       ),
@@ -136,6 +148,8 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
                 _buildPanchaPakshiTab(),
                 _buildSubHoraTab(),
                 _buildDasaNalvarToolTab(),
+                _buildKarmaNakshatrasTab(),
+                _buildTempleWorshipDirectoriesTab(),
               ],
             ),
           ),
@@ -805,6 +819,948 @@ class _AstroToolsScreenState extends State<AstroToolsScreen> with SingleTickerPr
           ),
           const SizedBox(height: 30),
         ],
+      ),
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Tab 5: மரபு நட்சத்திரங்கள் (Karma / DNA Nakshatras Master Guide)
+  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildKarmaNakshatrasTab() {
+    const List<String> nakshatras27 = [
+      'அசுவனி', 'பரணி', 'கார்த்திகை', 'ரோகிணி', 'மிருகசீரிஷம்', 'திருவாதிரை',
+      'புனர்பூசம்', 'பூசம்', 'ஆயில்யம்', 'மகம்', 'பூரம்', 'உத்திரம்',
+      'அஸ்தம்', 'சித்திரை', 'சுவாதி', 'விசாகம்', 'அனுஷம்', 'கேட்டை',
+      'மூலம்', 'பூராடம்', 'உத்திராடம்', 'திருவோணம்', 'அவிட்டம்', 'சதயம்',
+      'பூரட்டாதி', 'உத்திரட்டாதி', 'ரேவதி'
+    ];
+
+    const List<String> nakLords = [
+      'கேது', 'சுக்கிரன்', 'சூரியன்', 'சந்திரன்', 'செவ்வாய்', 'ராகு', 'குரு', 'சனி', 'புதன்',
+      'கேது', 'சுக்கிரன்', 'சூரியன்', 'சந்திரன்', 'செவ்வாய்', 'ராகு', 'குரு', 'சனி', 'புதன்',
+      'கேது', 'சுக்கிரன்', 'சூரியன்', 'சந்திரன்', 'செவ்வாய்', 'ராகு', 'குரு', 'சனி', 'புதன்'
+    ];
+
+    final Map<String, Color> planetColors = {
+      'Sun': const Color(0xFFE65100),
+      'Moon': const Color(0xFF1565C0),
+      'Mars': const Color(0xFFC62828),
+      'Mercury': const Color(0xFF2E7D32),
+      'Jupiter': const Color(0xFFD48806),
+      'Venus': const Color(0xFF8E24AA),
+      'Saturn': const Color(0xFF37474F),
+      'Rahu': const Color(0xFF00695C),
+    };
+
+    final Map<String, IconData> planetIcons = {
+      'Sun': Icons.wb_sunny_rounded,
+      'Moon': Icons.nightlight_round,
+      'Mars': Icons.local_fire_department_rounded,
+      'Mercury': Icons.eco_rounded,
+      'Jupiter': Icons.school_rounded,
+      'Venus': Icons.favorite_rounded,
+      'Saturn': Icons.shield_rounded,
+      'Rahu': Icons.all_inclusive_rounded,
+    };
+
+    final String selectedKarmaKey = AstroSpecialCalculationsService.getDnaPlanetFromNakshatra(_selectedKarmaLookupNakshatra);
+    final String selectedKarmaTamil = AstroSpecialCalculationsService.DNA_PLANET_TAMIL[selectedKarmaKey] ?? selectedKarmaKey;
+    final Color selectedColor = planetColors[selectedKarmaKey] ?? AppColors.primary;
+    final int selectedNakIdx = nakshatras27.indexOf(_selectedKarmaLookupNakshatra);
+    final String selectedLord = selectedNakIdx != -1 ? nakLords[selectedNakIdx] : "-";
+    final List<String> siblingStars = AstroSpecialCalculationsService.KARMA_MASTER_TABLE[selectedKarmaKey] ?? [];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 850),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF5D1204), Color(0xFF8A1C08)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF5D1204).withOpacity(0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.hub_rounded, color: Color(0xFFFFD54F), size: 30),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "மரபு நட்சத்திர வழிகாட்டி (Karma / DNA Nakshatras)",
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "8 கிரகங்களின் மரபு ஆதிக்கச் சுழற்சி மற்றும் 27 நட்சத்திரங்களின் மரபுப் பதிவுகள் வழிகாட்டி.",
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Quick Nakshatra Lookup Card
+              Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.4)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
+                          const SizedBox(width: 8),
+                          Text(
+                            "நட்சத்திர மரபு விரைவுத் தேர்வு (Quick Lookup)",
+                            style: GoogleFonts.outfit(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFAF6EE),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.5)),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedKarmaLookupNakshatra,
+                            isExpanded: true,
+                            icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.primary),
+                            items: nakshatras27.map((nak) {
+                              return DropdownMenuItem<String>(
+                                value: nak,
+                                child: Text(
+                                  nak,
+                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() {
+                                  _selectedKarmaLookupNakshatra = val;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Highlight Result Box
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: selectedColor.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: selectedColor.withOpacity(0.3), width: 1.2),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(planetIcons[selectedKarmaKey] ?? Icons.circle, color: selectedColor, size: 24),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "$_selectedKarmaLookupNakshatra ➔ $selectedKarmaTamil மரபு",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: selectedColor,
+                                        ),
+                                      ),
+                                      Text(
+                                        "விம்சோத்தரி நட்சத்திர அதிபதி: $selectedLord",
+                                        style: const TextStyle(fontSize: 12, color: Colors.black87),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 20),
+                            Text(
+                              "$selectedKarmaTamil மரபில் வரும் மற்ற நட்சத்திரங்கள்:",
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 6,
+                              children: siblingStars.map((s) {
+                                final bool isCurrent = s == _selectedKarmaLookupNakshatra;
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: isCurrent ? selectedColor : Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: isCurrent ? selectedColor : const Color(0xFFB58D3D).withOpacity(0.5),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    s,
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
+                                      color: isCurrent ? Colors.white : Colors.black87,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // 8 Planet Master Reference Cards
+              Text(
+                "8 கிரகங்களின் மரபு நட்சத்திர அட்டவணை (Master Registry)",
+                style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              ...AstroSpecialCalculationsService.KARMA_MASTER_TABLE.entries.map((entry) {
+                final pKey = entry.key;
+                final pTamil = AstroSpecialCalculationsService.DNA_PLANET_TAMIL[pKey] ?? pKey;
+                final color = planetColors[pKey] ?? AppColors.primary;
+                final icon = planetIcons[pKey] ?? Icons.circle;
+                final stars = entry.value;
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  elevation: 1.5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(icon, color: color, size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    "$pTamil ($pKey)",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: color,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: color.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      "${stars.length} நட்சத்திரங்கள்",
+                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: stars.map((star) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFAF6EE),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.4)),
+                                    ),
+                                    child: Text(
+                                      "• $star",
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF5D1204),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+
+              const SizedBox(height: 12),
+
+              // 27 Stars Complete Table Expansion
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Theme(
+                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    collapsedBackgroundColor: const Color(0xFFFAF6EE),
+                    backgroundColor: Colors.white,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF5D1204).withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.table_chart_rounded, color: Color(0xFF5D1204), size: 22),
+                    ),
+                    title: const Text(
+                      "27 நட்சத்திரங்களின் முழு மரபு அட்டவணை (Complete Table)",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Color(0xFF5D1204),
+                      ),
+                    ),
+                    subtitle: const Text(
+                      "எண், நட்சத்திரம், நட்சத்திர அதிபதி மற்றும் மரபு கிரகம்",
+                      style: TextStyle(fontSize: 11.5, color: Colors.black54),
+                    ),
+                    children: [
+                      Container(
+                        color: const Color(0xFF5D1204),
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                        child: const Row(
+                          children: [
+                            Expanded(flex: 1, child: Text("எண்", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12))),
+                            Expanded(flex: 3, child: Text("நட்சத்திரம்", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12))),
+                            Expanded(flex: 3, child: Text("நட்சத்திர அதிபதி", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12))),
+                            Expanded(flex: 3, child: Text("மரபு கிரகம்", style: TextStyle(color: Color(0xFFFFD54F), fontWeight: FontWeight.bold, fontSize: 12))),
+                          ],
+                        ),
+                      ),
+                      ...nakshatras27.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final star = entry.value;
+                        final lord = nakLords[idx];
+                        final kKey = AstroSpecialCalculationsService.getDnaPlanetFromNakshatra(star);
+                        final kTamil = AstroSpecialCalculationsService.DNA_PLANET_TAMIL[kKey] ?? kKey;
+                        final kColor = planetColors[kKey] ?? AppColors.primary;
+                        final isAlt = idx % 2 == 1;
+
+                        return Container(
+                          color: isAlt ? const Color(0xFFFAF6EE) : Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                          child: Row(
+                            children: [
+                              Expanded(flex: 1, child: Text("${idx + 1}", textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Color(0xFF5D1204)))),
+                              Expanded(flex: 3, child: Text(star, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87))),
+                              Expanded(flex: 3, child: Text(lord, style: const TextStyle(fontSize: 12, color: Colors.black54))),
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  "$kTamil மரபு",
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: kColor),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 30),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Tab 6: வழிபாட்டுத் தலங்கள் (Temple Worship Directories Tab)
+  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildTempleWorshipDirectoriesTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 850),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF5D1204), Color(0xFF8A1C08)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF5D1204).withOpacity(0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.temple_hindu_rounded, color: Color(0xFFFFD54F), size: 30),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "முழு வழிபாட்டுத் தலங்கள் அட்டவணைகள் (REFERENCE DIRECTORIES)",
+                            style: GoogleFonts.outfit(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "நட்சத்திரங்கள், யோகங்கள், திதிகள், கரணங்கள் மற்றும் முடக்கு ராசிகளுக்கான 7 முழுமையான திருத்தல அட்டவணைகள்.",
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Search Bar
+              TextField(
+                controller: _templeSearchController,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary),
+                  suffixIcon: _templeSearchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, color: Colors.grey),
+                          onPressed: () {
+                            setState(() {
+                              _templeSearchController.clear();
+                              _templeSearchQuery = "";
+                            });
+                          },
+                        )
+                      : null,
+                  hintText: "கோவில், ஊர், நட்சத்திரம், திதி அல்லது யோகம் தேடுக...",
+                  hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.4)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                  ),
+                ),
+                onChanged: (val) {
+                  setState(() {
+                    _templeSearchQuery = val.trim();
+                  });
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Directory 1: 88-வது பாத வைநாசிக பரிகாரத் தலங்கள் (27)
+              _buildExpandableTableCard(
+                title: "88-வது பாத வைநாசிக பரிகாரத் தலங்கள் (27 நட்சத்திரங்கள்)",
+                subtitle: "ஜன்ம நட்சத்திரத்திற்குரிய 88-வது பாத வைநாசிக பரிகாரத் தலங்கள்",
+                icon: Icons.flare_rounded,
+                headerColor: const Color(0xFF00695C),
+                headers: const ["எண்", "நட்சத்திரம்", "கோவில் & ஊர் விவரம்"],
+                flexes: const [1, 3, 6],
+                rows: TempleWorshipService.VAINASIKA_TEMPLES.entries
+                    .toList()
+                    .where((e) => e.key != 'அசுவனி' && e.key != 'மிருகசீர்ஷம்')
+                    .toList()
+                    .asMap()
+                    .entries
+                    .map((entry) => [
+                          "${entry.key + 1}",
+                          entry.value.key,
+                          entry.value.value,
+                        ])
+                    .toList(),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Directory 2: நாம யோகங்கள் - யோகி & அவயோகி கோயில்கள் (27)
+              _buildExpandableTableCard(
+                title: "நாம யோகங்கள் - யோகி & அவயோகி கோயில்கள் (27 யோகங்கள்)",
+                subtitle: "27 நித்திய யோகங்களுக்குரிய சுப யோகி மற்றும் தோஷ நிவர்த்தி அவயோகி தலங்கள்",
+                icon: Icons.wb_sunny_rounded,
+                headerColor: const Color(0xFF5D1204),
+                headers: const ["எண்", "நாம யோகம்", "யோகி கோவில்", "அவயோகி கோவில்"],
+                flexes: const [1, 2, 4, 4],
+                rows: TempleWorshipService.YOGA_TEMPLES.entries.toList().asMap().entries.map((entry) {
+                  final idx = entry.key + 1;
+                  final yogaName = entry.value.key;
+                  final yogi = entry.value.value['yogi'] ?? '-';
+                  final avayogi = entry.value.value['avayogi'] ?? '-';
+                  return ["$idx", yogaName, yogi, avayogi];
+                }).toList(),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Directory 3: சுக்கில பட்சம் (வளர்பிறை) திதி அதிதேவதை & கோவில்கள் (15)
+              _buildExpandableTableCard(
+                title: "சுக்கில பட்சம் / வளர்பிறை திதிகள் & கோவில்கள்",
+                subtitle: "வளர்பிறை 15 திதிகளுக்குரிய அதிதேவதை மற்றும் வழிபட வேண்டிய திருக்கோவில்கள்",
+                icon: Icons.brightness_7_rounded,
+                headerColor: const Color(0xFF1565C0),
+                headers: const ["எண்", "திதி", "அதிதேவதை", "திருக்கோவில்"],
+                flexes: const [1, 2, 3, 4],
+                rows: TempleWorshipService.SHUKLA_THITHI_TEMPLES.entries.toList().asMap().entries.map((entry) {
+                  final idx = entry.key + 1;
+                  final thithi = entry.value.key;
+                  final deity = entry.value.value['deity'] ?? '-';
+                  final temple = entry.value.value['temple'] ?? '-';
+                  return ["$idx", thithi, deity, temple];
+                }).toList(),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Directory 4: கிருஷ்ண பட்சம் (தேய்பிறை) திதி அதிதேவதை & கோவில்கள் (15)
+              _buildExpandableTableCard(
+                title: "கிருஷ்ண பட்சம் / தேய்பிறை திதிகள் & கோவில்கள்",
+                subtitle: "தேய்பிறை 15 திதிகளுக்குரிய அதிதேவதை மற்றும் வழிபட வேண்டிய திருக்கோவில்கள்",
+                icon: Icons.brightness_3_rounded,
+                headerColor: const Color(0xFF37474F),
+                headers: const ["எண்", "திதி", "அதிதேவதை", "திருக்கோவில்"],
+                flexes: const [1, 2, 3, 4],
+                rows: TempleWorshipService.KRISHNA_THITHI_TEMPLES.entries.toList().asMap().entries.map((entry) {
+                  final idx = entry.key + 1;
+                  final thithi = entry.value.key;
+                  final deity = entry.value.value['deity'] ?? '-';
+                  final temple = entry.value.value['temple'] ?? '-';
+                  return ["$idx", thithi, deity, temple];
+                }).toList(),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Directory 5: கரண நாதன் & அதிதேவதைக் கோவில்கள் (11)
+              _buildExpandableTableCard(
+                title: "கரண நாதன் கோவில்கள் (11 கரணங்கள்)",
+                subtitle: "11 கரணங்களுக்குரிய கிரகம், வாகனம், அதிதேவதை மற்றும் சிறப்புத் திருத்தலங்கள்",
+                icon: Icons.pets_rounded,
+                headerColor: const Color(0xFF6A1B9A),
+                headers: const ["எண்", "கரணம்", "கிரகம்", "மிருகம்", "அதிதேவதை", "கோவில்"],
+                flexes: const [1, 2, 2, 2, 2, 4],
+                rows: TempleWorshipService.PRIMARY_KARANAS.asMap().entries.map((entry) {
+                  final idx = entry.key + 1;
+                  final karana = entry.value;
+                  final info = TempleWorshipService.KARANA_TEMPLES[karana] ?? {};
+                  final lord = info['lord'] ?? '-';
+                  final animal = info['animal'] ?? '-';
+                  final deity = info['deity'] ?? '-';
+                  final temple = info['temple'] ?? '-';
+                  return ["$idx", karana, lord, animal, deity, temple];
+                }).toList(),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Directory 6: முடக்கு ராசி / பாவகம் வாரியான கோவில்கள்
+              _buildExpandableMudakkuCard(),
+
+              const SizedBox(height: 12),
+
+              // Directory 7: ஜன்ம நட்சத்திரக் கோவில்கள் (27)
+              _buildExpandableTableCard(
+                title: "ஜன்ம நட்சத்திரக் கோவில்கள் (27 நட்சத்திரங்கள்)",
+                subtitle: "27 நட்சத்திரங்களுக்கும் அருள் பாலிக்கும் பாரம்பரியத் திருத்தலங்கள்",
+                icon: Icons.star_rounded,
+                headerColor: const Color(0xFFD48806),
+                headers: const ["எண்", "நட்சத்திரம்", "ஜன்ம நட்சத்திரத் திருக்கோவில்"],
+                flexes: const [1, 3, 6],
+                rows: TempleWorshipService.NAKSHATRA_TEMPLES.entries
+                    .toList()
+                    .where((e) => e.key != 'அசுவனி' && e.key != 'மிருகசீர்ஷம்')
+                    .toList()
+                    .asMap()
+                    .entries
+                    .map((entry) => [
+                          "${entry.key + 1}",
+                          entry.value.key,
+                          entry.value.value,
+                        ])
+                    .toList(),
+              ),
+
+              const SizedBox(height: 30),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Helper to build expandable reference tables with live search filtering
+  Widget _buildExpandableTableCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color headerColor,
+    required List<String> headers,
+    required List<int> flexes,
+    required List<List<String>> rows,
+  }) {
+    List<List<String>> displayRows = rows;
+    if (_templeSearchQuery.isNotEmpty) {
+      displayRows = rows.where((row) {
+        return row.any((cell) => cell.toLowerCase().contains(_templeSearchQuery.toLowerCase()));
+      }).toList();
+    }
+
+    if (_templeSearchQuery.isNotEmpty && displayRows.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      key: ValueKey("$title-$_templeSearchQuery"),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: _templeSearchQuery.isNotEmpty,
+          collapsedBackgroundColor: const Color(0xFFFAF6EE),
+          backgroundColor: Colors.white,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: headerColor.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: headerColor, size: 22),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: headerColor,
+            ),
+          ),
+          subtitle: Text(
+            _templeSearchQuery.isNotEmpty
+                ? "${displayRows.length} முடிவுகள் கண்டறியப்பட்டன"
+                : subtitle,
+            style: TextStyle(
+              fontSize: 11.5,
+              color: _templeSearchQuery.isNotEmpty ? const Color(0xFF2E7D32) : Colors.black54,
+              fontWeight: _templeSearchQuery.isNotEmpty ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          children: [
+            Container(
+              decoration: const BoxDecoration(color: Color(0xFF5D1204)),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              child: Row(
+                children: List.generate(headers.length, (i) {
+                  return Expanded(
+                    flex: flexes[i],
+                    child: Text(
+                      headers[i],
+                      textAlign: i == 0 ? TextAlign.center : TextAlign.start,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+            ...displayRows.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final row = entry.value;
+              final isAlt = idx % 2 == 1;
+
+              return Container(
+                color: isAlt ? const Color(0xFFFAF6EE) : Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                child: Row(
+                  children: List.generate(row.length, (i) {
+                    return Expanded(
+                      flex: flexes[i],
+                      child: Text(
+                        row[i],
+                        textAlign: i == 0 ? TextAlign.center : TextAlign.start,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: i == 1 ? FontWeight.bold : FontWeight.normal,
+                          color: i == 0
+                              ? const Color(0xFF5D1204)
+                              : (i == 1 ? headerColor : Colors.black87),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Expandable Card for Mudakku Rasi / Bhava Temples with live search filtering
+  Widget _buildExpandableMudakkuCard() {
+    final filteredBhavas = <String, Map<String, String>>{};
+    for (var entry in TempleWorshipService.MUDAKKU_BHAVA_TEMPLES.entries) {
+      final matchingSub = <String, String>{};
+      for (var sub in entry.value.entries) {
+        if (_templeSearchQuery.isEmpty ||
+            entry.key.toLowerCase().contains(_templeSearchQuery.toLowerCase()) ||
+            sub.key.toLowerCase().contains(_templeSearchQuery.toLowerCase()) ||
+            sub.value.toLowerCase().contains(_templeSearchQuery.toLowerCase())) {
+          matchingSub[sub.key] = sub.value;
+        }
+      }
+      if (matchingSub.isNotEmpty) {
+        filteredBhavas[entry.key] = matchingSub;
+      }
+    }
+
+    if (_templeSearchQuery.isNotEmpty && filteredBhavas.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      key: ValueKey("mudakku-$_templeSearchQuery"),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: _templeSearchQuery.isNotEmpty,
+          collapsedBackgroundColor: const Color(0xFFFAF6EE),
+          backgroundColor: Colors.white,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE65100).withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.lock_open_rounded, color: Color(0xFFE65100), size: 22),
+          ),
+          title: const Text(
+            "முடக்கு ராசி / பாவகம் வாரியான வழிபாட்டுத் தலங்கள்",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Color(0xFFE65100),
+            ),
+          ),
+          subtitle: Text(
+            _templeSearchQuery.isNotEmpty
+                ? "${filteredBhavas.length} பாவக முடிவுகள் கண்டறியப்பட்டன"
+                : "12 லக்னங்கள் & 1 முதல் 12-ஆம் பாவகங்கள் முடக்காக அமைந்தால் வழிபட வேண்டிய திருத்தலங்கள்",
+            style: TextStyle(
+              fontSize: 11.5,
+              color: _templeSearchQuery.isNotEmpty ? const Color(0xFF2E7D32) : Colors.black54,
+              fontWeight: _templeSearchQuery.isNotEmpty ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          children: [
+            ...filteredBhavas.entries.map((bhavaEntry) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.3)),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      color: const Color(0xFF5D1204),
+                      child: Text(
+                        "முடக்கு ராசி அமைப்பு: ${bhavaEntry.key}",
+                        style: const TextStyle(
+                          color: Color(0xFFFFD54F),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ),
+                    ...bhavaEntry.value.entries.map((item) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFAF6EE),
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 4,
+                              child: Text(
+                                "• ${item.key}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: Color(0xFF5D1204),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 6,
+                              child: Text(
+                                item.value,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              );
+            }),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

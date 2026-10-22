@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../data/numerology_data.dart';
+import '../services/numerology_service.dart';
 
 class NumerologyResultsScreen extends StatefulWidget {
   final String name;
@@ -49,6 +50,8 @@ class _NumerologyResultsScreenState extends State<NumerologyResultsScreen> {
       "பெயர் பிரமிடு": {"en": "Name Pyramid", "hi": "नाम पिरामिड", "ta": "பெயர் பிரமிடு"},
       "தகவல்கள் இல்லை": {"en": "No Data", "hi": "कोई जानकारी नहीं", "ta": "தகவல்கள் இல்லை"},
       "பிரமிடு எண்: ": {"en": "Pyramid Number: ", "hi": "पिरामिड संख्या: ", "ta": "பிரமிடு எண்: "},
+      "பிரமிடு எண் = ": {"en": "Pyramid No = ", "hi": "पिरामिड संख्या = ", "ta": "பிரமிடு எண் = "},
+      "ஆளும் கிரகம்: ": {"en": "Ruling Planet: ", "hi": "सत्तारूढ़ ग्रह: ", "ta": "ஆளும் கிரகம்: "},
       "பெயர்": {"en": "Name", "hi": "नाम", "ta": "பெயர்"},
       "பிறந்த தேதி": {"en": "DOB", "hi": "जन्म तिथि", "ta": "பிறந்த தேதி"},
 
@@ -111,7 +114,6 @@ class _NumerologyResultsScreenState extends State<NumerologyResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd MMMM yyyy');
     final bool isWide = MediaQuery.of(context).size.width > 900;
 
     Widget content;
@@ -394,49 +396,34 @@ class _NumerologyResultsScreenState extends State<NumerologyResultsScreen> {
           ),
           if (activeData.isNotEmpty) ...[
             const SizedBox(height: 20),
-            Text(
-              "${_getTranslatedText("பிரமிடு எண்: ")}${activeData.last.first}",
-              style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, color: const Color(0xFFB58D3D)),
+            Builder(
+              builder: (context) {
+                final int peak = activeData.last.isNotEmpty ? activeData.last.first : 0;
+                final peakAttrs = NumerologyService.getNumberAttributes(peak);
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFAF6EE),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.5)),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        "${_getTranslatedText("பிரமிடு எண் = ")}${NumerologyService.formatPyramidResult(activeData)}",
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, color: const Color(0xFF5D1204)),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "${_getTranslatedText("ஆளும் கிரகம்: ")}${peakAttrs['planet']}",
+                        style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFFB58D3D)),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ]
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(DateFormat dateFormat) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
-        border: Border(bottom: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.3), width: 1.0)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF5D1204).withOpacity(0.04), 
-            blurRadius: 15, 
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: Column(
-        children: [
-          CircleAvatar(
-            radius: 36,
-            backgroundColor: const Color(0xFFFAF6EE),
-            child: const Icon(Icons.person_outline_rounded, size: 36, color: Color(0xFFB58D3D)),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            widget.name,
-            style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.primary),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            dateFormat.format(widget.dob),
-            style: GoogleFonts.outfit(color: Colors.grey.shade600, fontWeight: FontWeight.w600, fontSize: 14),
-          ),
         ],
       ),
     );

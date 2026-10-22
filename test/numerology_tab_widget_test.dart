@@ -19,7 +19,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify Tab headers exist
+    // Verify Tab headers exist (2 tabs: பெயர் & பிறந்த தேதி, வாகனம் & மொபைல்)
     expect(find.text('பெயர் & பிறந்த தேதி'), findsOneWidget);
     expect(find.text('வாகனம் & மொபைல்'), findsOneWidget);
 
@@ -42,7 +42,26 @@ void main() {
 
     // Verify Pyramid header is present
     expect(find.text('வாகனம் / மொபைல் பிரமிடு'), findsOneWidget);
-    // Verify peak is 7
-    expect(find.textContaining('பிரமிடு உச்ச எண்: 7'), findsOneWidget);
+    // Verify peak is formatted as last two digits = single digit: 52 = 7
+    expect(find.textContaining('பிரமிடு எண் = 52 = 7'), findsOneWidget);
+
+    // Switch back to Name & DOB tab
+    await tester.tap(find.text('பெயர் & பிறந்த தேதி'));
+    await tester.pumpAndSettle();
+
+    // Enter name "GBASTRO"
+    final nameField = find.byType(TextFormField).first;
+    await tester.enterText(nameField, 'GBASTRO');
+    await tester.pumpAndSettle();
+
+    // Verify Pyramid section is present
+    expect(find.text('பெயர் பிரமிடு'), findsOneWidget);
+    expect(find.textContaining('பிரமிடு எண் = 34 = 7'), findsOneWidget);
+
+    // Toggle to DOB pyramid
+    await tester.tap(find.text('பிறந்த தேதி'));
+    await tester.pumpAndSettle();
+    expect(find.text('பிறந்த தேதி பிரமிடு'), findsOneWidget);
+    expect(find.textContaining('பிரமிடு எண் = '), findsOneWidget);
   });
 }

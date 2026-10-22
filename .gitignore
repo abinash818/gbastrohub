@@ -53,3 +53,4 @@ app.*.map.json
 *.dll
 
 server/firebase_credentials.json.json
+.kotlin/

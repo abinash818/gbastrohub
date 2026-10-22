@@ -86,6 +86,25 @@ class NumerologyService {
     return pyramid;
   }
 
+  /// Formats the pyramid result as "[lastTwoDigits] = [peak]" (e.g. "34 = 7")
+  /// or single digit if pyramid has fewer than 2 rows.
+  static String formatPyramidResult(List<List<int>> pyramid) {
+    if (pyramid.isEmpty || pyramid.last.isEmpty) return "";
+    final int peak = pyramid.last.first;
+    if (pyramid.length >= 2 && pyramid[pyramid.length - 2].length >= 2) {
+      final rowBeforeLast = pyramid[pyramid.length - 2];
+      final String lastTwo = "${rowBeforeLast[0]}${rowBeforeLast[1]}";
+      return "$lastTwo = $peak";
+    }
+    return "$peak";
+  }
+
+  /// Returns digit breakdown for Date of Birth (DDMMYYYY)
+  static List<int> getDobDigits(DateTime dob) {
+    String dateStr = "${dob.day.toString().padLeft(2, '0')}${dob.month.toString().padLeft(2, '0')}${dob.year.toString().padLeft(4, '0')}";
+    return dateStr.split('').map((e) => int.parse(e)).toList();
+  }
+
   /// Returns Chaldean value for a letter (A-Z) or digit value for (0-9)
   static int getChaldeanValue(String char) {
     if (char.isEmpty) return 0;

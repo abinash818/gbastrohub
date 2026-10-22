@@ -27,6 +27,7 @@ void main() {
         print(row);
       }
       print('Peak number: ${pyramid.last.first}');
+      expect(NumerologyService.formatPyramidResult(pyramid), '52 = 7');
     });
 
     test('Mobile 9876543210 calculations', () {
@@ -43,6 +44,22 @@ void main() {
       expect(pyramid.length, 10);
       expect(pyramid.last.length, 1);
       print('9876543210 Pyramid peak: ${pyramid.last.first}');
+    });
+
+    test('GBASTRO Screenshot Pyramid and format test', () {
+      final pyramid = NumerologyService.calculateAlphanumericPyramidData('GBASTRO');
+      expect(pyramid.first, [3, 2, 1, 3, 4, 2, 7]);
+      expect(pyramid[pyramid.length - 2], [3, 4]);
+      expect(pyramid.last, [7]);
+      expect(NumerologyService.formatPyramidResult(pyramid), '34 = 7');
+    });
+
+    test('DOB Pyramid test', () {
+      final dob = DateTime(2026, 10, 21);
+      final pyramid = NumerologyService.calculateDobPyramidData(dob);
+      expect(pyramid.first, [2, 1, 1, 0, 2, 0, 2, 6]);
+      expect(pyramid.last.first, 3);
+      expect(NumerologyService.formatPyramidResult(pyramid), '12 = 3');
     });
   });
 }

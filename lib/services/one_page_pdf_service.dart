@@ -504,9 +504,10 @@ class OnePagePdfService {
   }
 
   static int _getSignIdx(String s) {
-    int idx = KPService.SIGNS.indexOf(s);
-    if (idx == -1) idx = KPService.TAMIL_SIGNS.values.toList().indexOf(s);
-    if (idx == -1) idx = (int.tryParse(s) ?? 1) - 1;
+    final clean = s.trim();
+    int idx = KPService.SIGNS.indexWhere((e) => e.toLowerCase() == clean.toLowerCase());
+    if (idx == -1) idx = KPService.TAMIL_SIGNS.values.toList().indexOf(clean);
+    if (idx == -1) idx = (int.tryParse(clean) ?? 1) - 1;
     return idx;
   }
 }

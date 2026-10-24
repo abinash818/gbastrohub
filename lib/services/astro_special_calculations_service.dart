@@ -1315,11 +1315,11 @@ class AstroSpecialCalculationsService {
     // 3. பரிவேடன் (Parivesha) = Vyatipata + 180°
     double parivesha = (vyatipata + 180.0) % 360.0;
 
-    // 4. இந்திரசாபம் / கோதண்டம் (Indrachapa) = 360° - Parivesha
-    double indrachapa = (360.0 - parivesha + 360.0) % 360.0;
+    // 4. இந்திரதனுசு / கோதண்டம் (Indradhanusu) = 360° - Parivesha
+    double indradhanusu = (360.0 - parivesha + 360.0) % 360.0;
 
-    // 5. உபகேது / தூமகோது (Upaketu) = Indrachapa + 16° 40' (16.666667°)
-    double upaketu = (indrachapa + 16.6666666667) % 360.0;
+    // 5. உபகேது / தூமகோது (Upaketu) = Indradhanusu + 16° 40' (16.666667°)
+    double upaketu = (indradhanusu + 16.6666666667) % 360.0;
 
     // 6 & 7. எமகண்டன் (Yamagandan) & மிருத்யு (Mrityu)
     DateTime srDt = DateTime(birthDt.year, birthDt.month, birthDt.day, 6, 0);
@@ -1368,7 +1368,7 @@ class AstroSpecialCalculationsService {
       'தூமன் (Dhuma)': _formatPoint(dhuma),
       'வ்யதீபாதன் (Vyatipata)': _formatPoint(vyatipata),
       'பரிவேடன் (Parivesha)': _formatPoint(parivesha),
-      'இந்திரசாபம் (Indrachapa)': _formatPoint(indrachapa),
+      'இந்திரதனுசு (Indradhanusu)': _formatPoint(indradhanusu),
       'உபகேது (Upaketu)': _formatPoint(upaketu),
       'எமகண்டன் (Yamagandan)': _formatPoint(yamagandan),
       'மிருத்யு (Mrityu)': _formatPoint(mrityu),

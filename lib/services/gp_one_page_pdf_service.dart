@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'kp_service.dart';
 import 'settings_service.dart';
+import 'astro_special_calculations_service.dart';
 import 'pdf_helper_stub.dart' if (dart.library.html) 'pdf_helper_web.dart';
 import 'package:astrology_flutter/l10n/app_localizations.dart';
 
@@ -75,14 +76,17 @@ class GbOnePagePdfService {
   }) async {
     if (!kIsWeb) return;
     final astro = await SettingsService.getAstrologerDetails();
+    final customLogo = await SettingsService.getCustomLogo();
     
-    String gbLogoBase64 = "";
+    String gbLogoBase64 = customLogo ?? "";
     String ganapathyBase64 = "";
-    try {
-      final byteDataL = await rootBundle.load('assets/images/logo.png');
-      gbLogoBase64 = base64Encode(byteDataL.buffer.asUint8List());
-    } catch (e) {
-      debugPrint("Error loading GB logo: $e");
+    if (gbLogoBase64.isEmpty) {
+      try {
+        final byteDataL = await rootBundle.load('assets/images/logo.png');
+        gbLogoBase64 = base64Encode(byteDataL.buffer.asUint8List());
+      } catch (e) {
+        debugPrint("Error loading GB logo: $e");
+      }
     }
     try {
       final byteDataG = await rootBundle.load('assets/images/ganapathy.png');
@@ -102,14 +106,17 @@ class GbOnePagePdfService {
     required AppLocalizations l10n,
   }) async {
     final astro = await SettingsService.getAstrologerDetails();
+    final customLogo = await SettingsService.getCustomLogo();
     
-    String gbLogoBase64 = "";
+    String gbLogoBase64 = customLogo ?? "";
     String ganapathyBase64 = "";
-    try {
-      final byteDataL = await rootBundle.load('assets/images/logo.png');
-      gbLogoBase64 = base64Encode(byteDataL.buffer.asUint8List());
-    } catch (e) {
-      debugPrint("Error loading GB logo: $e");
+    if (gbLogoBase64.isEmpty) {
+      try {
+        final byteDataL = await rootBundle.load('assets/images/logo.png');
+        gbLogoBase64 = base64Encode(byteDataL.buffer.asUint8List());
+      } catch (e) {
+        debugPrint("Error loading GB logo: $e");
+      }
     }
     try {
       final byteDataG = await rootBundle.load('assets/images/ganapathy.png');
@@ -246,20 +253,37 @@ class GbOnePagePdfService {
     String yogiPlanet = yogiData['planet_tamil']?.toString() ?? yogiData['planet']?.toString() ?? "-";
     String avayogiPlanet = avayogiData['planet_tamil']?.toString() ?? avayogiData['planet']?.toString() ?? "-";
     String yogiNak = yogiData['nakshatra_tamil']?.toString() ?? yogiData['nakshatra']?.toString() ?? "";
-    String avayogiNak = avayogiData['nakshatra_tamil']?.toString() ?? avayogiData['nakshatra']?.toString() ?? "";
-
     final suniyaRasi = pan['suniya_rasi']?.toString() ?? "-";
-    final suniyaNak = pan['suniya_nakshatra']?.toString() ?? "-";
 
-    // Suniya Lord (திதி சூன்ய கிரகம்)
-    String suniyaLord = "-";
-    if (suniyaRasi != "-") {
-      final firstRasi = suniyaRasi.split(',').first.trim();
-      final rIdx = KPService.TAMIL_SIGNS.values.toList().indexOf(firstRasi);
-      if (rIdx != -1) {
-        final lordName = KPService.SIGN_LORDS[rIdx % 12];
-        suniyaLord = KPService.TAMIL_PLANETS[lordName] ?? lordName;
+    // Mudaku (முடக்கு நட்சத்திரம் / ராசி)
+    final mudakkuData = specialCalc['mudakku'] as Map? ?? {};
+    String mudakkuNak = mudakkuData['nakshatra_tamil']?.toString() ?? "";
+    String mudakkuRasi = mudakkuData['rasi_tamil']?.toString() ?? "";
+    if (mudakkuNak.isEmpty || mudakkuRasi.isEmpty) {
+      final sunDetails = details['sun'] ?? details['Sun'] ?? {};
+      double? sunLon = double.tryParse(sunDetails['longitude']?.toString() ?? "");
+      if (sunLon != null) {
+        final m = AstroSpecialCalculationsService.calculateMudakku(sunLon);
+        mudakkuNak = m['nakshatra_tamil']?.toString() ?? "-";
+        mudakkuRasi = m['rasi_tamil']?.toString() ?? "-";
       }
+    }
+    String mudakkuStr = (mudakkuNak.isNotEmpty && mudakkuRasi.isNotEmpty) 
+        ? "$mudakkuNak / $mudakkuRasi" 
+        : "-";
+
+    // Aagami Planets (ஆகாமி கிரகங்கள்)
+    final aagamiData = results['aagami_planets'] as Map? ?? {};
+    String aagamiStr = aagamiData['display_text']?.toString() ?? "";
+    if (aagamiStr.isEmpty) {
+      Map<String, double> pLons = {};
+      for (var pKey in ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu']) {
+        final p = details[pKey.toLowerCase()] ?? details[pKey] ?? {};
+        double? lon = double.tryParse(p['longitude']?.toString() ?? "");
+        if (lon != null) pLons[pKey] = lon;
+      }
+      final calcA = AstroSpecialCalculationsService.calculateAagamiPlanets(pLons);
+      aagamiStr = calcA['display_text']?.toString() ?? "இல்லை";
     }
 
     // Planetary roles: Badhaka / Marana / Kudumba / Ashtama
@@ -507,6 +531,7 @@ class GbOnePagePdfService {
           color: #1E3A8A;
           font-weight: bold;
           white-space: nowrap;
+          padding-right: 5px;
         }
         .detail-val {
           color: #0F172A;
@@ -652,9 +677,9 @@ class GbOnePagePdfService {
           <!-- HEADER -->
           <div class="header">
             <div class="header-top">
-              <!-- Left Side: GB Astro Logo -->
+              <!-- Left Side: Center / GB Astro Logo -->
               <div style="flex: 0 0 auto; text-align: left; margin-right: 12px;">
-                ${gbLogoBase64.isNotEmpty ? '<img src="data:image/png;base64,$gbLogoBase64" style="height: 64px; width: 64px; object-fit: contain; border-radius: 50%; border: 1.5px solid #2563EB;" alt="GB Astro Logo" />' : ''}
+                ${gbLogoBase64.isNotEmpty ? '<img src="data:image/png;base64,$gbLogoBase64" style="height: 64px; width: 64px; object-fit: cover; border-radius: 50%; border: 1.5px solid #2563EB;" alt="Logo" />' : ''}
               </div>
 
               <!-- Center: Center Name, Address & Phone from Settings -->
@@ -672,7 +697,7 @@ class GbOnePagePdfService {
           </div>
 
           <!-- BANNER & SUBHEADER -->
-          <div class="banner">✦ SOFTWARE DEVELOPED BY GBASTRO SUITE / MO. NO - 9787067950 / 9600666225 ✦</div>
+          <div class="banner">✦ SOFTWARE DEVELOPED BY GBASTRO SUITE / MO. NO - 9787067910 / 7373411173 ✦</div>
           <div class="sub-header-title">✦ திருக்கணிதம் ✦</div>
 
           <!-- 2-COLUMN DETAILS -->
@@ -699,9 +724,9 @@ class GbOnePagePdfService {
               <div class="detail-row"><span class="detail-label">யோகம் :</span> <span class="detail-val">$yogaStr</span></div>
               <div class="detail-row"><span class="detail-label">கரணம் :</span> <span class="detail-val">$karanaStr</span></div>
               <div class="detail-row"><span class="detail-label">யோகி / அவயோகி :</span> <span class="detail-val highlight-green">$yogiPlanet / <span class="highlight-red">$avayogiPlanet</span></span></div>
-              <div class="detail-row"><span class="detail-label">தி. ராசி / நட் :</span> <span class="detail-val highlight-gold">$suniyaRasi / $suniyaNak</span></div>
-              <div class="detail-row"><span class="detail-label">திதி சூன்ய கிரகம் :</span> <span class="detail-val highlight-red">$suniyaLord</span></div>
-              <div class="detail-row"><span class="detail-label">அவயோகி கிரகம் :</span> <span class="detail-val highlight-red">$avayogiPlanet ${avayogiNak.isNotEmpty ? '($avayogiNak)' : ''}</span></div>
+              <div class="detail-row"><span class="detail-label">மு.நட் / இராசி :</span> <span class="detail-val highlight-gold">$mudakkuStr</span></div>
+              <div class="detail-row"><span class="detail-label">தி.சூனிய இராசிகள் :</span> <span class="detail-val highlight-gold">$suniyaRasi</span></div>
+              <div class="detail-row"><span class="detail-label">ஆகாமி கிரகங்கள் :</span> <span class="detail-val highlight-red">$aagamiStr</span></div>
               <div class="detail-row"><span class="detail-label">கு. பா. கிரகம் :</span> <span class="detail-val highlight-blue">$minDegPlanet</span></div>
               <div class="detail-row"><span class="detail-label">அ. பா. கிரகம் :</span> <span class="detail-val highlight-red">$maxDegPlanet</span></div>
               <div class="detail-row"><span class="detail-label">வயது :</span> <span class="detail-val highlight-green">$age</span></div>
@@ -862,19 +887,68 @@ class GbOnePagePdfService {
   }
 
   static int _getSignIdx(String sign) {
-    final s = sign.toLowerCase().trim();
-    if (s.contains('ari') || s.contains('மேஷ') || s.contains('मेष')) return 1;
-    if (s.contains('tau') || s.contains('ரிஷ') || s.contains('वृष')) return 2;
-    if (s.contains('gem') || s.contains('மிது') || s.contains('मिथ')) return 3;
-    if (s.contains('can') || s.contains('கட') || s.contains('कर्क')) return 4;
-    if (s.contains('leo') || s.contains('சிம்') || s.contains('सिंह')) return 5;
-    if (s.contains('vir') || s.contains('கன்') || s.contains('कन')) return 6;
-    if (s.contains('lib') || s.contains('துலா') || s.contains('तुला')) return 7;
-    if (s.contains('sco') || s.contains('விரு') || s.contains('वृश्चि')) return 8;
-    if (s.contains('sag') || s.contains('தனு') || s.contains('धनु')) return 9;
-    if (s.contains('cap') || s.contains('மக') || s.contains('मकर')) return 10;
-    if (s.contains('aqu') || s.contains('கும்') || s.contains('कुंभ')) return 11;
-    if (s.contains('pis') || s.contains('மீன') || s.contains('मीन')) return 12;
+    final s = sign.trim();
+    if (s.isEmpty) return -1;
+
+    final numVal = int.tryParse(s);
+    if (numVal != null && numVal >= 1 && numVal <= 12) return numVal;
+
+    final sLower = s.toLowerCase();
+
+    // 1. Exact match with standard English sign names
+    int engIdx = KPService.SIGNS.indexWhere((e) => e.toLowerCase() == sLower);
+    if (engIdx != -1) return engIdx + 1;
+
+    // 2. Exact match with Tamil sign names
+    int tamIdx = KPService.TAMIL_SIGNS.values.toList().indexWhere((e) => e == s);
+    if (tamIdx != -1) return tamIdx + 1;
+
+    // 3. Exact match with Hindi sign names
+    int hiIdx = KPService.HINDI_SIGNS.values.toList().indexWhere((e) => e == s);
+    if (hiIdx != -1) return hiIdx + 1;
+
+    // 4. StartsWith for English (strictly startsWith to prevent 'aquarius' or 'sagittarius' matching 'ari')
+    if (sLower.startsWith('ari')) return 1;
+    if (sLower.startsWith('tau')) return 2;
+    if (sLower.startsWith('gem')) return 3;
+    if (sLower.startsWith('can')) return 4;
+    if (sLower.startsWith('leo')) return 5;
+    if (sLower.startsWith('vir')) return 6;
+    if (sLower.startsWith('lib')) return 7;
+    if (sLower.startsWith('sco')) return 8;
+    if (sLower.startsWith('sag')) return 9;
+    if (sLower.startsWith('cap')) return 10;
+    if (sLower.startsWith('aqu')) return 11;
+    if (sLower.startsWith('pis')) return 12;
+
+    // 5. Tamil sign name substrings
+    if (s.contains('மேஷ')) return 1;
+    if (s.contains('ரிஷ')) return 2;
+    if (s.contains('மிது')) return 3;
+    if (s.contains('கட')) return 4;
+    if (s.contains('சிம்')) return 5;
+    if (s.contains('கன்')) return 6;
+    if (s.contains('துலா')) return 7;
+    if (s.contains('விரு')) return 8;
+    if (s.contains('தனு')) return 9;
+    if (s.contains('மக')) return 10;
+    if (s.contains('கும்')) return 11;
+    if (s.contains('மீன')) return 12;
+
+    // 6. Hindi sign name substrings
+    if (s.contains('मेष')) return 1;
+    if (s.contains('वृष')) return 2;
+    if (s.contains('मिथ')) return 3;
+    if (s.contains('कर्क')) return 4;
+    if (s.contains('सिंह')) return 5;
+    if (s.contains('कन')) return 6;
+    if (s.contains('तुला')) return 7;
+    if (s.contains('वृश्च')) return 8;
+    if (s.contains('धनु')) return 9;
+    if (s.contains('मकर')) return 10;
+    if (s.contains('कुंभ')) return 11;
+    if (s.contains('मीन')) return 12;
+
     return -1;
   }
 }

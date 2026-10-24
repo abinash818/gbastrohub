@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/settings_service.dart';
 import '../services/astro_translation_service.dart';
 import '../widgets/location_search_dialog.dart';
@@ -39,6 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _udayamMethod = 0;
   int _maandiMethod = 4;
   bool _includeLagnaAshtakavarga = false;
+  Uint8List? _customLogoBytes;
 
   bool _isLoading = true;
 
@@ -59,6 +63,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettings() async {
     final location = await SettingsService.getDefaultLocation();
     final info = await SettingsService.getAstrologerDetails();
+    final customLogo = await SettingsService.getCustomLogo();
+
+    Uint8List? logoBytes;
+    if (customLogo != null && customLogo.isNotEmpty) {
+      try {
+        logoBytes = base64Decode(customLogo);
+      } catch (e) {
+        debugPrint("Error decoding custom logo: $e");
+      }
+    }
 
     setState(() {
       if (location['name'] != null) {
@@ -72,6 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _astroNameController.text = info['name'] ?? '';
       _astroPhoneController.text = info['phone'] ?? '';
       _astroAddressController.text = info['address'] ?? '';
+      _customLogoBytes = logoBytes;
     });
     
     final dyl = await SettingsService.getDasaYearLength();
@@ -102,6 +117,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _includeLagnaAshtakavarga = ila;
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _pickAndSaveLogo() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? file = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 300,
+        maxHeight: 300,
+        imageQuality: 75,
+      );
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      if (bytes.lengthInBytes > 100 * 1024) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              backgroundColor: Colors.red,
+              content: Text("படம் 100 KB-க்கு குறைவாக இருக்க வேண்டும். (Image must be under 100 KB)"),
+            ),
+          );
+        }
+        return;
+      }
+      final b64 = base64Encode(bytes);
+      await SettingsService.saveCustomLogo(b64);
+      if (mounted) {
+        setState(() {
+          _customLogoBytes = bytes;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Color(0xFF059669),
+            content: Text("லோகோ வெற்றிகரமாக சேமிக்கப்பட்டது!"),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error picking image: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("பிழை: $e")),
+        );
+      }
+    }
+  }
+
+  Future<void> _removeLogo() async {
+    await SettingsService.removeCustomLogo();
+    if (mounted) {
+      setState(() {
+        _customLogoBytes = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("லோகோ நீக்கப்பட்டு இயல்பான லோகோவுக்கு மாற்றப்பட்டது.")),
+      );
     }
   }
 
@@ -295,6 +367,105 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildLogoSection() {
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            Container(
+              width: 86,
+              height: 86,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF2563EB), width: 2.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withOpacity(0.18),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: _customLogoBytes != null
+                    ? Image.memory(
+                        _customLogoBytes!,
+                        width: 86,
+                        height: 86,
+                        fit: BoxFit.cover,
+                      )
+                    : Image.asset(
+                        'assets/images/logo.png',
+                        width: 86,
+                        height: 86,
+                        fit: BoxFit.cover,
+                      ),
+              ),
+            ),
+            GestureDetector(
+              onTap: _pickAndSaveLogo,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF2563EB),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          AstroTranslationService.translate(context, "ஜோதிட மைய லோகோ / படம்"),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFF1E3A8A)),
+        ),
+        Text(
+          AstroTranslationService.translate(context, "(PDF-ன் இடதுபுறத்தில் தோன்றும் - Max 100 KB)"),
+          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              onPressed: _pickAndSaveLogo,
+              icon: const Icon(Icons.upload_file, size: 15),
+              label: Text(AstroTranslationService.translate(context, _customLogoBytes != null ? "மாற்றுக" : "லோகோ பதிவேற்று")),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E3A8A),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+            if (_customLogoBytes != null) ...[
+              const SizedBox(width: 10),
+              OutlinedButton.icon(
+                onPressed: _removeLogo,
+                icon: const Icon(Icons.delete_outline, size: 15, color: Colors.red),
+                label: Text(
+                  AstroTranslationService.translate(context, "நீக்குக"),
+                  style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.red),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 14),
+        const Divider(),
+        const SizedBox(height: 14),
+      ],
+    );
+  }
+
   Widget _buildInfoCard() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -311,6 +482,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       child: Column(
         children: [
+          _buildLogoSection(),
           _buildTextField(_astroNameController, AstroTranslationService.translate(context, "உங்கள் பெயர் (Name)"), Icons.person_outline),
           const SizedBox(height: 16),
           _buildTextField(_astroPhoneController, AstroTranslationService.translate(context, "மொபைல் எண் (Phone)"), Icons.phone_android_outlined, keyboardType: TextInputType.phone),

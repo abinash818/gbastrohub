@@ -194,4 +194,24 @@ class SettingsService {
       'address': prefs.getString(_keyAstroAddress) ?? '',
     };
   }
+
+  static const String _keyCustomLogo = 'custom_astrologer_logo';
+
+  static Future<void> saveCustomLogo(String base64Logo) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyCustomLogo, base64Logo);
+  }
+
+  static Future<String?> getCustomLogo() async {
+    final prefs = await SharedPreferences.getInstance();
+    final logo = prefs.getString(_keyCustomLogo);
+    if (logo == null || logo.trim().isEmpty) return null;
+    return logo;
+  }
+
+  static Future<void> removeCustomLogo() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyCustomLogo);
+  }
 }
+

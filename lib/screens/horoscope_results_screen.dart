@@ -1079,7 +1079,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.lord, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.start, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.end, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
-                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(AstroTranslationService.translate(context, "வயது"), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.age, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
                 ],
               ),
               ...List.generate(displayList.length, (index) {
@@ -1378,7 +1378,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.lord, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.start, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.end, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
-                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(AstroTranslationService.translate(context, "வயது"), textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.age, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
                 ],
               ),
               ...periods.map((p) {
@@ -2919,7 +2919,10 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
 
     return _buildDetailCard("ஜெமினி ஏழு காரகங்கள்", karakasData.entries.map((e) {
       final info = e.value as Map<String, dynamic>;
-      return _buildDetailRow("${e.key} - ${info['description']}", "${info['planet_tamil']} (${info['degree']})", isPlanet: true);
+      final kName = AstroTranslationService.translate(context, e.key);
+      final kDesc = AstroTranslationService.translate(context, info['description']?.toString() ?? '');
+      final pName = AstroTranslationService.translate(context, info['planet_tamil'] ?? info['planet'] ?? '', isPlanet: true);
+      return _buildDetailRow("$kName - $kDesc", "$pName (${info['degree']})", isPlanet: true);
     }).toList());
   }
 
@@ -3113,7 +3116,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            "தற்போது காலநட்பு பருவம்: ${currentStatus['dasa_tamil']} தசை (${currentStatus['age_range']}) நடைபெறுகிறது.",
+                            "${AstroTranslationService.translate(context, 'தற்போது காலநட்பு பருவம்')}: ${AstroTranslationService.translate(context, currentStatus['dasa_tamil'] ?? '', isPlanet: true)} ${AstroTranslationService.translate(context, 'தசை')} (${currentStatus['age_range']}) ${AstroTranslationService.translate(context, 'நடைபெறுகிறது')}.",
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20)),
                           ),
                         ),
@@ -3144,11 +3147,11 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 2.5),
                           child: Text.rich(
                             TextSpan(
-                              text: "• ${r['label']}: ",
+                              text: "• ${AstroTranslationService.translate(context, r['label']?.toString() ?? '')}: ",
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Color(0xFF2E7D32)),
                               children: [
                                 TextSpan(
-                                  text: "${r['lord_tamil']} திசை",
+                                  text: "${AstroTranslationService.translate(context, r['lord_tamil']?.toString() ?? '', isPlanet: true)} ${AstroTranslationService.translate(context, 'திசை')}",
                                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5, color: Colors.black87),
                                 ),
                               ],
@@ -3220,7 +3223,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            "தற்போது காலப்பகை பருவம்: ${currentStatus['dasa_tamil']} தசை (${currentStatus['age_range']}) நடைபெறுகிறது.",
+                            "${AstroTranslationService.translate(context, 'தற்போது காலப்பகை பருவம்')}: ${AstroTranslationService.translate(context, currentStatus['dasa_tamil'] ?? '', isPlanet: true)} ${AstroTranslationService.translate(context, 'தசை')} (${currentStatus['age_range']}) ${AstroTranslationService.translate(context, 'நடைபெறுகிறது')}.",
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFFB71C1C)),
                           ),
                         ),
@@ -3251,11 +3254,11 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 2.5),
                           child: Text.rich(
                             TextSpan(
-                              text: "• ${r['label']}: ",
+                              text: "• ${AstroTranslationService.translate(context, r['label']?.toString() ?? '')}: ",
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Color(0xFFD84315)),
                               children: [
                                 TextSpan(
-                                  text: "${r['lord_tamil']} திசை",
+                                  text: "${AstroTranslationService.translate(context, r['lord_tamil']?.toString() ?? '', isPlanet: true)} ${AstroTranslationService.translate(context, 'திசை')}",
                                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5, color: Colors.black87),
                                 ),
                               ],
@@ -3286,6 +3289,17 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                           String dTamil = w['dasa_tamil'] ?? (KPService.TAMIL_PLANETS[w['dasa']] ?? w['dasa'] ?? '');
                           String bTamil = w['bhukthi_tamil'] ?? (KPService.TAMIL_PLANETS[w['bhukthi']] ?? w['bhukthi'] ?? '');
                           bool isCur = w['is_current'] == true;
+                          final pDasa = AstroTranslationService.translate(context, dTamil, isPlanet: true);
+                          final pBhukthi = AstroTranslationService.translate(context, bTamil, isPlanet: true);
+                          final langCode = Localizations.localeOf(context).languageCode;
+                          String warnMsg;
+                          if (langCode == 'en') {
+                            warnMsg = "$pDasa Dasa - $pBhukthi Bhukthi (${w['age_range']}): $pBhukthi in $pDasa Dasa is a Kala Pagai (inauspicious) period.${isCur ? ' (Currently Running)' : ''}";
+                          } else if (langCode == 'hi') {
+                            warnMsg = "$pDasa दशा - $pBhukthi भुक्ति (${w['age_range']}): $pDasa दशा में $pBhukthi भुक्ति काल शत्रु योग है।${isCur ? ' (वर्तमान में जारी)' : ''}";
+                          } else {
+                            warnMsg = "$dTamil தசை - $bTamil புத்தி (${w['age_range']}): $dTamil தசையில் $bTamil புத்தி காலப்பகை அமைப்பாகும்.${isCur ? ' (தற்போது நடக்கிறது)' : ''}";
+                          }
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Row(
@@ -3294,7 +3308,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                                 Icon(Icons.arrow_right_rounded, color: isCur ? Colors.red.shade900 : Colors.deepOrange, size: 20),
                                 Expanded(
                                   child: Text(
-                                    "$dTamil தசை - $bTamil புத்தி (${w['age_range']}): $dTamil தசையில் $bTamil புத்தி காலப்பகை அமைப்பாகும்.${isCur ? ' (தற்போது நடக்கிறது)' : ''}",
+                                    warnMsg,
                                     style: TextStyle(
                                       fontSize: 12.5,
                                       fontWeight: isCur ? FontWeight.w900 : FontWeight.w600,
@@ -4555,7 +4569,10 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     final vedhaka = nalvar['vedhaka'] as Map<String, dynamic>;
     final pachaka = nalvar['pachaka'] as Map<String, dynamic>;
     final karaka = nalvar['karaka'] as Map<String, dynamic>;
-    final String dasaTamil = nalvar['dasa_tamil'] ?? "$dasaLord தசை";
+    final String pName = AstroTranslationService.translate(context, dasaLord, isPlanet: true);
+    final String dasaWord = AstroTranslationService.translate(context, "தசை");
+    final String nalvarTitle = AstroTranslationService.translate(context, "நால்வர் (துணைவர்கள்)");
+    final String cardHeader = "$pName $dasaWord - $nalvarTitle";
 
     return Container(
       margin: const EdgeInsets.only(top: 4, bottom: 10),
@@ -4581,7 +4598,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  "$dasaTamil - நால்வர் (துணைவர்கள்)",
+                  cardHeader,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -4662,7 +4679,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
+            AstroTranslationService.translate(context, title),
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.w900,
@@ -4671,7 +4688,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            planet,
+            AstroTranslationService.translate(context, planet, isPlanet: true),
             style: const TextStyle(
               color: Colors.black87,
               fontWeight: FontWeight.w900,
@@ -4680,7 +4697,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           ),
           const SizedBox(height: 2),
           Text(
-            desc,
+            AstroTranslationService.translate(context, desc),
             style: TextStyle(
               color: Colors.grey.shade700,
               fontSize: 10,

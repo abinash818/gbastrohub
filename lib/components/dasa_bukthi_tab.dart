@@ -1067,7 +1067,10 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
     final vedhaka = nalvar['vedhaka'] as Map<String, dynamic>;
     final pachaka = nalvar['pachaka'] as Map<String, dynamic>;
     final karaka = nalvar['karaka'] as Map<String, dynamic>;
-    final String dasaTamil = nalvar['dasa_tamil'] ?? "$dasaLord தசை";
+    final String pName = AstroTranslationService.translate(context, dasaLord, isPlanet: true);
+    final String dasaWord = AstroTranslationService.translate(context, "தசை");
+    final String nalvarTitle = AstroTranslationService.translate(context, "நால்வர் (துணைவர்கள்)");
+    final String cardHeader = "$pName $dasaWord - $nalvarTitle";
 
     return Container(
       margin: const EdgeInsets.only(top: 4, bottom: 10),
@@ -1093,7 +1096,7 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  "$dasaTamil - நால்வர் (துணைவர்கள்)",
+                  cardHeader,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -1174,7 +1177,7 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
+            AstroTranslationService.translate(context, title),
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.w900,
@@ -1183,7 +1186,7 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
           ),
           const SizedBox(height: 4),
           Text(
-            planet,
+            AstroTranslationService.translate(context, planet, isPlanet: true),
             style: const TextStyle(
               color: Colors.black87,
               fontWeight: FontWeight.w900,
@@ -1192,7 +1195,7 @@ class _DasaBukthiTabState extends State<DasaBukthiTab> {
           ),
           const SizedBox(height: 2),
           Text(
-            desc,
+            AstroTranslationService.translate(context, desc),
             style: TextStyle(
               color: Colors.grey.shade700,
               fontSize: 10,

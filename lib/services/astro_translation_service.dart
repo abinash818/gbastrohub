@@ -771,6 +771,109 @@ class AstroTranslationService {
       tMap["தற்போது நடக்கிறது"] = "Currently Running";
       tMap["காலப்பகை அமைப்பாகும்"] = "is a Kala Pagai period";
 
+      // Upagrahas
+      tMap["உபகிரகங்கள் (மிருத்யு, எமகண்டன் உள்ளிட்டவை)"] = "Upagrahas (including Mrityu, Yamakantaka)";
+      tMap["உபகிரகங்கள்"] = "Upagrahas";
+      tMap["தூமன் (Dhuma)"] = "Dhuma";
+      tMap["வ்யதீபாதன் (Vyatipata)"] = "Vyatipata";
+      tMap["பரிவேடன் (Parivesha)"] = "Parivesha";
+      tMap["இந்திரதனுசு (Indradhanusu)"] = "Indradhanusu";
+      tMap["உபகேது (Upaketu)"] = "Upaketu";
+      tMap["எமகண்டன் (Yamagandan)"] = "Yamakantaka (Yamagandan)";
+      tMap["மிருத்யு (Mrityu)"] = "Mrityu";
+      tMap["தூமன்"] = "Dhuma";
+      tMap["வ்யதீபாதன்"] = "Vyatipata";
+      tMap["பரிவேடன்"] = "Parivesha";
+      tMap["இந்திரதனுசு"] = "Indradhanusu";
+      tMap["உபகேது"] = "Upaketu";
+      tMap["எமகண்டன்"] = "Yamakantaka";
+      tMap["மிருத்யு"] = "Mrityu";
+
+      // Jaimini Seven Karakas
+      tMap["ஜெமினி ஏழு காரகங்கள்"] = "Jaimini Seven Karakas";
+      tMap["ஆத்மகாரகன் (AK)"] = "Atmakaraka (AK)";
+      tMap["அமாத்யகாரகன் (AmK)"] = "Amatyakaraka (AmK)";
+      tMap["பிராத்ருகாரகன் (BK)"] = "Bhratrukaraka (BK)";
+      tMap["மாத்ருகாரகன் (MK)"] = "Matrukaraka (MK)";
+      tMap["புத்ரகாரகன் (PK)"] = "Putrakaraka (PK)";
+      tMap["ஞானதிகாரகன் (GK)"] = "Gnatikaraka (GK)";
+      tMap["தாரகாரகன் (DK)"] = "Darakaraka (DK)";
+      tMap["ஆத்மகாரகன்"] = "Atmakaraka";
+      tMap["அமாத்யகாரகன்"] = "Amatyakaraka";
+      tMap["பிராத்ருகாரகன்"] = "Bhratrukaraka";
+      tMap["மாத்ருகாரகன்"] = "Matrukaraka";
+      tMap["புத்ரகாரகன்"] = "Putrakaraka";
+      tMap["ஞானதிகாரகன்"] = "Gnatikaraka";
+      tMap["தாரகாரகன்"] = "Darakaraka";
+      tMap["ஆன்மா, தலைமை, சுய வளர்ச்சி (Highest Degree)"] = "Soul, Leadership, Self-Growth (Highest Degree)";
+      tMap["தொழில், அந்தஸ்து, அமைச்சர் நிலை"] = "Profession, Status, Position";
+      tMap["சகோதரம், தைரியம், வழிகாட்டுதல்"] = "Siblings, Courage, Guidance";
+      tMap["தாய், கல்வி, சுகபோகங்கள்"] = "Mother, Education, Luxuries";
+      tMap["புத்திர பாக்கியம், புத்தி கூர்மை"] = "Children, Intellect, Wisdom";
+      tMap["எதிரிகள், கடன், நோய், உறவுகள்"] = "Enemies, Debts, Illness, Relatives";
+      tMap["வாழ்க்கைத் துணை, கூட்டுத் தொழில் (Lowest Degree)"] = "Spouse, Partnerships (Lowest Degree)";
+
+      // Age and Age Ranges
+      tMap["வயது"] = "Age";
+      tMap["வயது வரை"] = "Years";
+      tMap["வயதுக்குள்"] = "Years";
+      tMap["முதல்"] = "to";
+      tMap["வரை"] = "to";
+      tMap["1 வயதுக்குள்"] = "Within 1 Year";
+      tMap["2 முதல் 3 வயது வரை"] = "Age 2 to 3";
+      tMap["4 முதல் 12 வயது வரை"] = "Age 4 to 12";
+      tMap["12 முதல் 32 வயது வரை"] = "Age 12 to 32";
+      tMap["33 முதல் 50 வயது வரை"] = "Age 33 to 50";
+      tMap["51 முதல் 70 வயது வரை"] = "Age 51 to 70";
+      tMap["71 முதல் 120 வயது வரை"] = "Age 71 to 120";
+      tMap["2 வயது வரை"] = "Up to Age 2";
+      tMap["3 முதல் 18 வயதுக்குள்"] = "Age 3 to 18";
+      tMap["11 முதல் 12 வயதுக்குள்"] = "Age 11 to 12";
+      tMap["18 முதல் 34 வயதுக்குள்"] = "Age 18 to 34";
+      tMap["34 முதல் 52 வயதுக்குள்"] = "Age 34 to 52";
+      tMap["52 முதல் 68 வயதுக்குள்"] = "Age 52 to 68";
+      tMap["68 முதல் 100 வயதுக்குள்"] = "Age 68 to 100";
+
+      // Dasa / Disai terms
+      tMap["சூரிய தசை"] = "Sun Dasa";
+      tMap["சூரியன் தசை"] = "Sun Dasa";
+      tMap["சூரிய திசை"] = "Sun Dasa";
+      tMap["சூரியன் திசை"] = "Sun Dasa";
+      tMap["சந்திர தசை"] = "Moon Dasa";
+      tMap["சந்திரன் தசை"] = "Moon Dasa";
+      tMap["சந்திர திசை"] = "Moon Dasa";
+      tMap["சந்திரன் திசை"] = "Moon Dasa";
+      tMap["செவ்வாய் தசை"] = "Mars Dasa";
+      tMap["செவ்வாய் திசை"] = "Mars Dasa";
+      tMap["புதன் தசை"] = "Mercury Dasa";
+      tMap["புதன் திசை"] = "Mercury Dasa";
+      tMap["குரு தசை"] = "Jupiter Dasa";
+      tMap["குரு திசை"] = "Jupiter Dasa";
+      tMap["சுக்கிர தசை"] = "Venus Dasa";
+      tMap["சுக்கிரன் தசை"] = "Venus Dasa";
+      tMap["சுக்கிர திசை"] = "Venus Dasa";
+      tMap["சுக்கிரன் திசை"] = "Venus Dasa";
+      tMap["சனி தசை"] = "Saturn Dasa";
+      tMap["சனி திசை"] = "Saturn Dasa";
+      tMap["ராகு தசை"] = "Rahu Dasa";
+      tMap["ராகு திசை"] = "Rahu Dasa";
+      tMap["கேது தசை"] = "Ketu Dasa";
+      tMap["கேது திசை"] = "Ketu Dasa";
+
+      // Dasa Nalvar
+      tMap["தசா நாதனின் நால்வர் (போதகன், வேதகன், பாசகன், காரகன்)"] = "Dasa Lord's Associates (Bodhaka, Vedhaka, Pachaka, Karaka)";
+      tMap["தசா நாதனின் நால்வர்"] = "Dasa Lord's Associates";
+      tMap["நால்வர் (துணைவர்கள்)"] = "Four Associates (Nalvar)";
+      tMap["நால்வர்"] = "Four Associates";
+      tMap["போதகன்"] = "Bodhaka (Instructor)";
+      tMap["வேதகன்"] = "Vedhaka (Blocker)";
+      tMap["பாசகன்"] = "Pachaka (Activator)";
+      tMap["காரகன்"] = "Karaka (Significator)";
+      tMap["நற்பலன் தருபவர்"] = "Giver of good results";
+      tMap["தடை தருபவர்"] = "Creator of obstacles";
+      tMap["அனுபவிக்க வைப்பவர்"] = "Bringer of experiences";
+      tMap["நிலைநிறுத்துபவர்"] = "Establisher & Sustainer";
+
     } else if (languageCode == 'hi') {
       tMap["சூரி"] = "सूर्य";
       tMap["சூ"] = "सू";
@@ -1382,6 +1485,109 @@ class AstroTranslationService {
       tMap["தற்போது நடக்கிறது"] = "वर्तमान में जारी";
       tMap["காலப்பகை அமைப்பாகும்"] = "एक काल शत्रु अवधि है";
 
+      // Upagrahas
+      tMap["உபகிரகங்கள் (மிருத்யு, எமகண்டன் உள்ளிட்டவை)"] = "उपग्रह (मृत्यु, यमगंड आदि)";
+      tMap["உபகிரகங்கள்"] = "उपग्रह";
+      tMap["தூமன் (Dhuma)"] = "धूम (Dhuma)";
+      tMap["வ்யதீபாதன் (Vyatipata)"] = "व्यतीपात (Vyatipata)";
+      tMap["பரிவேடன் (Parivesha)"] = "परिवेश (Parivesha)";
+      tMap["இந்திரதனுசு (Indradhanusu)"] = "इंद्रधनुष (Indradhanusu)";
+      tMap["உபகேது (Upaketu)"] = "उपकेतु (Upaketu)";
+      tMap["எமகண்டன் (Yamagandan)"] = "यमगंड (Yamagandan)";
+      tMap["மிருத்யு (Mrityu)"] = "मृत्यु (Mrityu)";
+      tMap["தூமன்"] = "धूम";
+      tMap["வ்யதீபாதன்"] = "व्यतीपात";
+      tMap["பரிவேடன்"] = "परिवेश";
+      tMap["இந்திரதனுசு"] = "इंद्रधनुष";
+      tMap["உபகேது"] = "उपकेतु";
+      tMap["எமகண்டன்"] = "यमगंड";
+      tMap["மிருத்யு"] = "मृत्यु";
+
+      // Jaimini Seven Karakas
+      tMap["ஜெமினி ஏழு காரகங்கள்"] = "जैमिनी सात कारक";
+      tMap["ஆத்மகாரகன் (AK)"] = "आत्मकारक (AK)";
+      tMap["அமாத்யகாரகன் (AmK)"] = "अमात्यकारक (AmK)";
+      tMap["பிராத்ருகாரகன் (BK)"] = "भ्रातृकारक (BK)";
+      tMap["மாத்ருகாரகன் (MK)"] = "मातृकारक (MK)";
+      tMap["புத்ரகாரகன் (PK)"] = "पुत्रकारक (PK)";
+      tMap["ஞானதிகாரகன் (GK)"] = "ज्ञािकारक (GK)";
+      tMap["தாரகாரகன் (DK)"] = "दाराकारक (DK)";
+      tMap["ஆத்மகாரகன்"] = "आत्मकारक";
+      tMap["அமாத்யகாரகன்"] = "अमात्यकारक";
+      tMap["பிராத்ருகாரகன்"] = "भ्रातृकारक";
+      tMap["மாத்ருகாரகன்"] = "मातृकारक";
+      tMap["புத்ரகாரகன்"] = "पुत्रकारक";
+      tMap["ஞானதிகாரகன்"] = "ज्ञािकारक";
+      tMap["தாரகாரகன்"] = "दाराकारक";
+      tMap["ஆன்மா, தலைமை, சுய வளர்ச்சி (Highest Degree)"] = "आत्मा, नेतृत्व, आत्म-विकास (उच्चतम अंश)";
+      tMap["தொழில், அந்தஸ்து, அமைச்சர் நிலை"] = "कर्म, प्रतिष्ठा, पद-प्रतिष्ठा";
+      tMap["சகோதரம், தைரியம், வழிகாட்டுதல்"] = "भाई-बहन, साहस, मार्गदर्शन";
+      tMap["தாய், கல்வி, சுகபோகங்கள்"] = "माता, शिक्षा, सुख-सुविधाएं";
+      tMap["புத்திர பாக்கியம், புத்தி கூர்மை"] = "संतान, बुद्धि, विवेक";
+      tMap["எதிரிகள், கடன், நோய், உறவுகள்"] = "शत्रु, ऋण, रोग, संबंध";
+      tMap["வாழ்க்கைத் துணை, கூட்டுத் தொழில் (Lowest Degree)"] = "जीवनसाथी, साझेदारी (न्यूनतम अंश)";
+
+      // Age and Age Ranges
+      tMap["வயது"] = "आयु";
+      tMap["வயது வரை"] = "वर्ष तक";
+      tMap["வயதுக்குள்"] = "वर्ष के भीतर";
+      tMap["முதல்"] = "से";
+      tMap["வரை"] = "तक";
+      tMap["1 வயதுக்குள்"] = "1 वर्ष के भीतर";
+      tMap["2 முதல் 3 வயது வரை"] = "आयु 2 से 3 वर्ष";
+      tMap["4 முதல் 12 வயது வரை"] = "आयु 4 से 12 वर्ष";
+      tMap["12 முதல் 32 வயது வரை"] = "आयु 12 से 32 वर्ष";
+      tMap["33 முதல் 50 வயது வரை"] = "आयु 33 से 50 वर्ष";
+      tMap["51 முதல் 70 வயது வரை"] = "आयु 51 से 70 वर्ष";
+      tMap["71 முதல் 120 வயது வரை"] = "आयु 71 से 120 वर्ष";
+      tMap["2 வயது வரை"] = "2 वर्ष तक";
+      tMap["3 முதல் 18 வயதுக்குள்"] = "आयु 3 से 18 वर्ष";
+      tMap["11 முதல் 12 வயதுக்குள்"] = "आयु 11 से 12 वर्ष";
+      tMap["18 முதல் 34 வயதுக்குள்"] = "आयु 18 से 34 वर्ष";
+      tMap["34 முதல் 52 வயதுக்குள்"] = "आयु 34 से 52 वर्ष";
+      tMap["52 முதல் 68 வயதுக்குள்"] = "आयु 52 से 68 वर्ष";
+      tMap["68 முதல் 100 வயதுக்குள்"] = "आयु 68 से 100 वर्ष";
+
+      // Dasa / Disai terms
+      tMap["சூரிய தசை"] = "सूर्य दशा";
+      tMap["சூரியன் தசை"] = "सूर्य दशा";
+      tMap["சூரிய திசை"] = "सूर्य दशा";
+      tMap["சூரியன் திசை"] = "सूर्य दशा";
+      tMap["சந்திர தசை"] = "चंद्र दशा";
+      tMap["சந்திரன் தசை"] = "चंद्र दशा";
+      tMap["சந்திர திசை"] = "चंद्र दशा";
+      tMap["சந்திரன் திசை"] = "चंद्र दशा";
+      tMap["செவ்வாய் தசை"] = "मंगल दशा";
+      tMap["செவ்வாய் திசை"] = "मंगल दशा";
+      tMap["புதன் தசை"] = "बुध दशा";
+      tMap["புதன் திசை"] = "बुध दशा";
+      tMap["குரு தசை"] = "गुरु दशा";
+      tMap["குரு திசை"] = "गुरु दशा";
+      tMap["சுக்கிர தசை"] = "शुक्र दशा";
+      tMap["சுக்கிரன் தசை"] = "शुक्र दशा";
+      tMap["சுக்கிர திசை"] = "शुक्र दशा";
+      tMap["சுக்கிரன் திசை"] = "शुक्र दशा";
+      tMap["சனி தசை"] = "शनि दशा";
+      tMap["சனி திசை"] = "शनि दशा";
+      tMap["ராகு தசை"] = "राहु दशा";
+      tMap["ராகு திசை"] = "राहु दशा";
+      tMap["கேது தசை"] = "केतु दशा";
+      tMap["கேது திசை"] = "केतु दशा";
+
+      // Dasa Nalvar
+      tMap["தசா நாதனின் நால்வர் (போதகன், வேதகன், பாசகன், காரகன்)"] = "दशा स्वामी के चार सहायक (बोधक, वेधक, पाचक, कारक)";
+      tMap["தசா நாதனின் நால்வர்"] = "दशा स्वामी के चार सहायक";
+      tMap["நால்வர் (துணைவர்கள்)"] = "चार सहायक (नाल्वर)";
+      tMap["நால்வர்"] = "चार सहायक";
+      tMap["போதகன்"] = "बोधक (शुभ फलदाता)";
+      tMap["வேதகன்"] = "वेधक (बाधा कारक)";
+      tMap["பாசகன்"] = "पाचक (अनुभव प्रदाता)";
+      tMap["காரகன்"] = "कारक (स्थायित्व कर्ता)";
+      tMap["நற்பலன் தருபவர்"] = "शुभ फल देने वाले";
+      tMap["தடை தருபவர்"] = "बाधा उत्पन्न करने वाले";
+      tMap["அனுபவிக்க வைப்பவர்"] = "अनुभव कराने वाले";
+      tMap["நிலைநிறுத்துபவர்"] = "स्थिर रखने वाले";
+
     }
 
     if (tMap.containsKey(normalizedWord)) return tMap[normalizedWord]!;
@@ -1397,14 +1603,15 @@ class AstroTranslationService {
       for (var ta in sortedKeys) {
         if (!translated.contains(ta)) continue;
 
-        // Multi-word phrases, phrases with delimiters, or long terms (>= 5 chars) can be replaced directly
-        if (ta.contains(' ') || ta.contains('/') || ta.contains('-') || ta.contains('(') || ta.length >= 5) {
+        // Multi-word phrases, phrases with punctuation, or phrases containing delimiters can be replaced directly
+        if (ta.contains(' ') || ta.contains('/') || ta.contains('-') || ta.contains('(') || ta.contains(',')) {
           translated = translated.replaceAll(ta, tMap[ta]!);
         } else {
-          // Short tokens (< 5 chars, like கட, வரு, மா, நா, லக், நிலை) MUST NOT corrupt internal letters of other words.
-          // Only replace when bounded by start/end, whitespace, or punctuation.
+          // Single Tamil words/tokens must be bounded by start/end or non-Tamil characters,
+          // so internal roots/syllables of larger words are NEVER corrupted
+          // (e.g. 'தனுசு' inside 'இந்திரதனுசு', 'புத்தி' inside 'புத்திர', 'லக்' inside other words).
           final escaped = RegExp.escape(ta);
-          final pattern = RegExp(r'(?<=^|[\s,.:;()[\]/\-])' + escaped + r'(?=[\s,.:;()[\]/\-]|$)');
+          final pattern = RegExp(r'(?<=^|[^\u0B80-\u0BFF])' + escaped + r'(?=[^\u0B80-\u0BFF]|$)');
           translated = translated.replaceAll(pattern, tMap[ta]!);
         }
       }

@@ -1079,7 +1079,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.lord, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.start, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.end, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
-                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(l10n.age, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2), child: Text(AstroTranslationService.translate(context, "வயது"), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)))),
                 ],
               ),
               ...List.generate(displayList.length, (index) {
@@ -1378,7 +1378,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.lord, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.start, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
                   TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.end, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
-                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.age, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
+                  TableCell(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(AstroTranslationService.translate(context, "வயது"), textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5D1204), fontWeight: FontWeight.bold, fontSize: 12)))),
                 ],
               ),
               ...periods.map((p) {

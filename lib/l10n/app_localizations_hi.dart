@@ -1277,4 +1277,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get lagnaAshtakavargaDisabled =>
       'निष्क्रिय: केवल 7 ग्रहों के मानक अष्टकवर्ग (337 बिंदु) की गणना की जाएगी।';
+
+  @override
+  String get vaasthu => 'वास्तु';
+
+  @override
+  String get vaasthuSubtitle => 'वास्तु शास्त्र एवं जीपी वास्तु';
 }

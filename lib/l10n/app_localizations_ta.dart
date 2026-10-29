@@ -1282,4 +1282,10 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get lagnaAshtakavargaDisabled =>
       'இயக்கப்படவில்லை: 7 கிரகங்களின் நிலையான அஷ்டவர்க்கம் (337 பரல்கள்) மட்டும் கணக்கிடப்படும்.';
+
+  @override
+  String get vaasthu => 'வாஸ்து';
+
+  @override
+  String get vaasthuSubtitle => 'மனை அடி சாஸ்திரம் & GP வாஸ்து';
 }

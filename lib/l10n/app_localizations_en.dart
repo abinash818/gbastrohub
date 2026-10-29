@@ -1277,4 +1277,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get lagnaAshtakavargaDisabled =>
       'Disabled: Only standard ashtakavarga (337 bindus) for 7 planets is calculated.';
+
+  @override
+  String get vaasthu => 'Vaasthu';
+
+  @override
+  String get vaasthuSubtitle => 'Manaiyadi Sasthiram & GP Vaasthu';
 }

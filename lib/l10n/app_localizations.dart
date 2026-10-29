@@ -2601,6 +2601,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disabled: Only standard ashtakavarga (337 bindus) for 7 planets is calculated.'**
   String get lagnaAshtakavargaDisabled;
+
+  /// No description provided for @vaasthu.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaasthu'**
+  String get vaasthu;
+
+  /// No description provided for @vaasthuSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manaiyadi Sasthiram & GP Vaasthu'**
+  String get vaasthuSubtitle;
 }
 
 class _AppLocalizationsDelegate

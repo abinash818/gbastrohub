@@ -18,6 +18,8 @@ class AstroTranslationService {
       "Sagittarius": "தனுசு", "Capricorn": "மகரம்", "Aquarius": "கும்பம்", "Pisces": "மீனம்",
       "Ashwini": "அசுவனி", "Bharani": "பரணி", "Krittika": "கிருத்திகை", "Rohini": "ரோகிணி",
       "Mrigashirsha": "மிருகசீர்ஷம்", "Arudra": "திருவாதிரை", "Punarvasu": "புனர்பூசம்",
+      "மிருகசீரிஷம்": "மிருகசீர்ஷம்", "மிருகசீரிடம்": "மிருகசீர்ஷம்", "அஸ்வினி": "அசுவனி", "அசுவினி": "அசுவனி",
+      "கார்த்திகை": "கிருத்திகை", "ஹஸ்தம்": "அஸ்தம்",
       "Pushya": "பூசம்", "Aslesha": "ஆயில்யம்", "Magha": "மகம்", "Purvaphalguni": "பூரம்",
       "Uttaraphalguni": "உத்திரம்", "Hastha": "அஸ்தம்", "Chitra": "சித்திரை", "Swati": "சுவாதி",
       "Vishakha": "விசாகம்", "Anuradha": "அனுஷம்", "Jyeshta": "கேட்டை", "Jyeshtha": "கேட்டை", "Mula": "மூலம்",
@@ -76,10 +78,16 @@ class AstroTranslationService {
       "கும்பம்": l10n.aquarius,
       "மீனம்": l10n.pisces,
       "அசுவனி": l10n.ashwini,
+      "அஸ்வினி": l10n.ashwini,
+      "அசுவினி": l10n.ashwini,
       "பரணி": l10n.bharani,
+      "கார்த்திகை": l10n.krittika,
       "கிருத்திகை": l10n.krittika,
       "ரோகிணி": l10n.rohini,
       "மிருகசீர்ஷம்": l10n.mrigashirsha,
+      "மிருகசீரிஷம்": l10n.mrigashirsha,
+      "மிருகசீரிடம்": l10n.mrigashirsha,
+      "ஹஸ்தம்": l10n.hasta,
       "திருவாதிரை": l10n.ardra,
       "புனர்பூசம்": l10n.punarvasu,
       "பூசம்": l10n.pushya,
@@ -536,6 +544,233 @@ class AstroTranslationService {
       tMap["கடிகா லக்னம் (GL)"] = "Ghatika Lagna (GL)";
       tMap["கதிர்கள்"] = "Rays";
 
+      // Sri, Tithi, Paksham
+      tMap["ஸ்ரீ"] = "Sri";
+      tMap["தேய்பிறை"] = "Waning Moon (Krishna Paksha)";
+      tMap["வளர்பிறை"] = "Waxing Moon (Shukla Paksha)";
+      tMap["(கிருஷ்ண பக்ஷம்)"] = "(Krishna Paksha)";
+      tMap["(சுக்ல பக்ஷம்)"] = "(Shukla Paksha)";
+      tMap["கிருஷ்ண பக்ஷம்"] = "Krishna Paksha";
+      tMap["சுக்ல பக்ஷம்"] = "Shukla Paksha";
+      tMap["பௌர்ணமி (சுக்ல பக்ஷம்)"] = "Full Moon (Shukla Paksha)";
+      tMap["அமாவாசை (கிருஷ்ண பக்ஷம்)"] = "New Moon (Krishna Paksha)";
+      tMap["பௌர்ணமி"] = "Pournami (Full Moon)";
+      tMap["அமாவாசை"] = "Amavasya (New Moon)";
+
+      // Chandrashtama & Ordinals
+      tMap["சந்திராஷ்டம ராசி"] = "Chandrashtama Rasi";
+      tMap["சந்திராஷ்டம நட்சத்திரம்"] = "Chandrashtama Nakshatra";
+      tMap["சந்திராஷ்டம"] = "Chandrashtama";
+      tMap["(17-வது நட்சத்திரம்)"] = "(17th Star)";
+      tMap["17-வது நட்சத்திரம்"] = "17th Star";
+      tMap["17-வது"] = "17th";
+      tMap["(10-வது நட்சத்திரம்)"] = "(10th Star)";
+      tMap["10-வது நட்சத்திரம்"] = "10th Star";
+      tMap["10-வது"] = "10th";
+      tMap["(19-வது நட்சத்திரம்)"] = "(19th Star)";
+      tMap["19-வது நட்சத்திரம்"] = "19th Star";
+      tMap["19-வது"] = "19th";
+      tMap["(88-வது பாதம்)"] = "(88th Pada)";
+      tMap["(88-வது Pada)"] = "(88th Pada)";
+      tMap["88-வது பாதம்"] = "88th Pada";
+      tMap["88-வது"] = "88th";
+      tMap["-வது நட்சத்திரம்"] = "th Star";
+      tMap["-வது பாதம்"] = "th Pada";
+      tMap["-வது"] = "th";
+      tMap["-ம் பாதம்"] = " Pada";
+      tMap["-ம்"] = "";
+      tMap["நட்சத்திரம்"] = "Star";
+
+      // Vainashika & Tharais
+      tMap["வைநாசிக தோஷ பாதம் (88-வது பாதம்)"] = "Vainashika Dosha Pada (88th Pada)";
+      tMap["வைநாசிக தோஷ பாதம்"] = "Vainashika Dosha Pada";
+      tMap["வைநாசிக தோஷ"] = "Vainashika Dosha";
+      tMap["வைநாசிக"] = "Vainashika";
+      tMap["1. ஜென்ம தாரை"] = "1. Janma Tharai";
+      tMap["2. சம்பத்து தாரை"] = "2. Sampat Tharai";
+      tMap["3. விபத்து தாரை"] = "3. Vipat Tharai";
+      tMap["4. சேம தாரை"] = "4. Kshema Tharai";
+      tMap["5. பிரத்யக் தாரை"] = "5. Pratyak Tharai";
+      tMap["6. சாதக தாரை"] = "6. Sadhaka Tharai";
+      tMap["7. வதை தாரை (அதி எச்சரிக்கை)"] = "7. Vadhai Tharai (High Warning)";
+      tMap["7. வதை தாரை"] = "7. Vadhai Tharai";
+      tMap["8. மைத்ர தாரை"] = "8. Mitra Tharai";
+      tMap["9. பரம மைத்ர தாரை"] = "9. Parama Mitra Tharai";
+      tMap["ஜென்ம தாரை"] = "Janma Tharai";
+      tMap["சம்பத்து தாரை"] = "Sampat Tharai";
+      tMap["விபத்து தாரை"] = "Vipat Tharai";
+      tMap["சேம தாரை"] = "Kshema Tharai";
+      tMap["பிரத்யக் தாரை"] = "Pratyak Tharai";
+      tMap["சாதக தாரை"] = "Sadhaka Tharai";
+      tMap["வதை தாரை"] = "Vadhai Tharai";
+      tMap["மைத்ர தாரை"] = "Mitra Tharai";
+      tMap["பரம மைத்ர தாரை"] = "Parama Mitra Tharai";
+      tMap["தாரை"] = "Tharai";
+      tMap["தாரைகளில்"] = "in Tharais";
+      tMap["ஆதான நட்சத்திரம்"] = "Aadhana Nakshatra";
+      tMap["கர்ம நட்சத்திரம்"] = "Karma Nakshatra";
+
+      // Extreme Degrees & Notes
+      tMap["வீட்டு அதிபதி"] = "House Lord";
+      tMap["(வீட்டு அதிபதி"] = "(House Lord";
+      tMap["கிரகங்களின் பாகை விவரம் (இறங்கு வரிசை):"] = "Planetary Degrees (Descending Order):";
+      tMap["கிரகங்களின் பாகை விவரம் (இறங்கு வரிசை)"] = "Planetary Degrees (Descending Order)";
+      tMap["கிரகங்களின் பாகை விவரம்"] = "Planetary Degrees";
+      tMap["இறங்கு வரிசை"] = "Descending Order";
+
+      // Special Lagna Points
+      tMap["இந்து லக்னம் (Indu Lagna)"] = "Indu Lagna";
+      tMap["இந்து லக் (Indu லக்)"] = "Indu Lagna";
+      tMap["இந்து லக்னம்"] = "Indu Lagna";
+      tMap["இந்து லக்"] = "Indu Lagna";
+      tMap["இந்து Asc (Indu Asc)"] = "Indu Lagna";
+      tMap["இந்து"] = "Indu";
+
+      // Nakshatra Details: Animals (Mirugam)
+      tMap["ஆண்குதிரை"] = "Male Horse";
+      tMap["பெண்குதிரை"] = "Female Horse";
+      tMap["ஆண்யானை"] = "Male Elephant";
+      tMap["பெண்யானை"] = "Female Elephant";
+      tMap["பெண் ஆடு"] = "Female Sheep / Goat";
+      tMap["ஆண்ஆடு"] = "Male Ram / Goat";
+      tMap["ஆண்நாகம்"] = "Male Cobra";
+      tMap["பெண்சாரை"] = "Female Rat Snake";
+      tMap["ஆண்நாய்"] = "Male Dog";
+      tMap["பெண்நாய்"] = "Female Dog";
+      tMap["ஆண்பூனை"] = "Male Cat";
+      tMap["பெண்பூனை"] = "Female Cat";
+      tMap["ஆண்எலி"] = "Male Rat";
+      tMap["பெண்எலி"] = "Female Rat";
+      tMap["ஆண்பசு"] = "Bull";
+      tMap["பெண்பசு"] = "Cow";
+      tMap["ஆண்கீரி/பசு"] = "Male Mongoose / Cow";
+      tMap["ஆண்கீரி"] = "Male Mongoose";
+      tMap["பெண்கீரி"] = "Female Mongoose";
+      tMap["ஆண்எருமை"] = "Male Buffalo";
+      tMap["பெண்எருமை"] = "Female Buffalo";
+      tMap["ஆண்புலி"] = "Male Tiger";
+      tMap["பெண்புலி"] = "Female Tiger";
+      tMap["ஆண்மான்"] = "Male Deer";
+      tMap["பெண்மான்"] = "Female Deer";
+      tMap["ஆண்குரங்கு"] = "Male Monkey";
+      tMap["பெண்குரங்கு"] = "Female Monkey";
+      tMap["ஆண்சிங்கம்"] = "Male Lion";
+      tMap["பெண்சிங்கம்"] = "Female Lion";
+
+      // Birds (Pakshi)
+      tMap["ராசாளி"] = "Hawk / Eagle";
+      tMap["காகம்"] = "Crow";
+      tMap["மயில்"] = "Peacock";
+      tMap["ஆந்தை"] = "Owl";
+      tMap["கோழி"] = "Cock / Hen";
+      tMap["அன்றில்"] = "Nightjar";
+      tMap["அன்னம்"] = "Swan";
+      tMap["நீர்காகம்"] = "Cormorant";
+      tMap["கிச்சிலி"] = "Kingfisher";
+      tMap["ஆண்கழுகு"] = "Male Vulture";
+      tMap["பெண்கழுகு"] = "Female Vulture";
+      tMap["கழுகு"] = "Vulture";
+      tMap["கௌதாரி"] = "Partridge";
+      tMap["பருந்து"] = "Kite";
+      tMap["மரங்கொத்தி"] = "Woodpecker";
+      tMap["தேனீ"] = "Honeybee";
+      tMap["குருவி"] = "Sparrow";
+      tMap["வானம்பாடி"] = "Skylark";
+      tMap["சக்கரவாளம்"] = "Ruddy Shelduck";
+      tMap["செம்பருந்து"] = "Brahminy Kite";
+      tMap["வலியான்"] = "Drongo";
+      tMap["நாரை"] = "Stork";
+      tMap["பொன்வண்டு"] = "Golden Beetle";
+      tMap["அண்டங்காக்கை"] = "Raven";
+      tMap["உள்ளான்"] = "Sandpiper";
+      tMap["கோட்டான்"] = "Barn Owl";
+      tMap["வல்லூறு"] = "Falcon";
+
+      // Trees (Maram)
+      tMap["எட்டி"] = "Strychnine Tree";
+      tMap["நெல்லி"] = "Amla";
+      tMap["அத்தி(பா)"] = "Cluster Fig";
+      tMap["அத்தி"] = "Cluster Fig";
+      tMap["நாவல்(பா)"] = "Jamun";
+      tMap["நாவல்"] = "Jamun";
+      tMap["கருங்காலி"] = "Ebony (Black Catechu)";
+      tMap["செங்கரு"] = "Red Catechu";
+      tMap["மூங்கில்"] = "Bamboo";
+      tMap["அரசு(பா)"] = "Peepal";
+      tMap["அரசு"] = "Peepal";
+      tMap["புன்னை(பா)"] = "Alexandrian Laurel";
+      tMap["புன்னை"] = "Alexandrian Laurel";
+      tMap["ஆல்(பா)"] = "Banyan";
+      tMap["ஆல்"] = "Banyan";
+      tMap["பலா(பா)"] = "Jackfruit";
+      tMap["பலா"] = "Jackfruit";
+      tMap["அலரி(பா)"] = "Oleander";
+      tMap["அலரி"] = "Oleander";
+      tMap["வில்வம்"] = "Bael Tree";
+      tMap["மருதம்"] = "Arjuna Tree";
+      tMap["விளா"] = "Wood Apple";
+      tMap["மகிழம்"] = "Bakula Tree";
+      tMap["பராய்(பா)"] = "Siamese Rough Bush";
+      tMap["பராய்"] = "Siamese Rough Bush";
+      tMap["மராமரம்"] = "Sal Tree";
+      tMap["வஞ்சி(பா)"] = "Willow Tree";
+      tMap["வஞ்சி"] = "Willow Tree";
+      tMap["எருக்கு(பா)"] = "Calotropis";
+      tMap["எருக்கு"] = "Calotropis";
+      tMap["வன்னி"] = "Khejri Tree";
+      tMap["கடம்பு"] = "Kadamba";
+      tMap["தேமா(பா)"] = "Sweet Mango";
+      tMap["தேமா"] = "Sweet Mango";
+      tMap["வேம்பு"] = "Neem";
+      tMap["இலுப்பை"] = "Mahua";
+
+      // Ganam, Naadi, Rajju, Angam
+      tMap["தேவ"] = "Deva";
+      tMap["மனுஷ"] = "Manusha";
+      tMap["ராக்ஷஸ"] = "Rakshasa";
+      tMap["தஷிண பார்சுவ நாடி"] = "Dakshina Parsva Naadi";
+      tMap["மத்திய பார்சுவ நாடி"] = "Madhya Parsva Naadi";
+      tMap["வாம பார்சுவ நாடி"] = "Vama Parsva Naadi";
+      tMap["சிரசு(தலை)"] = "Head";
+      tMap["சிரசு"] = "Head";
+      tMap["ஏறுபாதம்"] = "Ascending Foot";
+      tMap["ஏறுதொடை"] = "Ascending Thigh";
+      tMap["ஏறுவயிறு"] = "Ascending Abdomen";
+      tMap["ஏறுகழுத்து"] = "Ascending Neck";
+      tMap["இறங்குகழுத்து"] = "Descending Neck";
+      tMap["இறங்குவயிறு"] = "Descending Abdomen";
+      tMap["இறங்குதொடை"] = "Descending Thigh";
+      tMap["இறங்குபாதம்"] = "Descending Foot";
+      tMap["சிரசு ரஜ்ஜு"] = "Sirsu Rajju";
+      tMap["கண்ட ரஜ்ஜு"] = "Kanta Rajju";
+      tMap["உதர ரஜ்ஜு"] = "Udara Rajju";
+      tMap["நாபி ரஜ்ஜு"] = "Nabhi Rajju";
+      tMap["கட்டி ரஜ்ஜு"] = "Kati Rajju";
+      tMap["பாத ரஜ்ஜு"] = "Pada Rajju";
+      tMap["ஆரோகண சிரசு ரஜ்ஜு"] = "Arohana Sirasu Rajju";
+      tMap["அவரோகண சிரசு ரஜ்ஜு"] = "Avarohana Sirasu Rajju";
+      tMap["யோனி"] = "Yoni";
+      tMap["ரஜ்ஜு"] = "Rajju";
+      tMap["நாடி"] = "Naadi";
+      tMap["அங்கம்"] = "Angam";
+      tMap["ஆண்"] = "Male";
+      tMap["பெண்"] = "Female";
+
+      // Kala Natpu & Kala Pagai phrases
+      tMap["கால நட்பு"] = "Kala Natpu (Auspicious Period)";
+      tMap["காலப்பகை"] = "Kala Pagai (Inauspicious Period)";
+      tMap["தற்போது காலநட்பு பருவம்"] = "Current Auspicious Kala Natpu Period";
+      tMap["தற்போது காலப்பகை பருவம்"] = "Current Inauspicious Kala Pagai Period";
+      tMap["காலநட்பு வயது & திசை விவரங்கள்:"] = "Kala Natpu Age & Dasa Details:";
+      tMap["காலப்பகை வயது & திசை விவரங்கள்:"] = "Kala Pagai Age & Dasa Details:";
+      tMap["காலப்பகை தசா - புத்தி எச்சரிக்கைகள்:"] = "Kala Pagai Dasa - Bhukthi Warnings:";
+      tMap["திசை"] = "Dasa";
+      tMap["தசை"] = "Dasa";
+      tMap["புத்தி"] = "Bhukthi";
+      tMap["நடைபெறுகிறது"] = "is currently running";
+      tMap["தற்போது நடக்கிறது"] = "Currently Running";
+      tMap["காலப்பகை அமைப்பாகும்"] = "is a Kala Pagai period";
+
     } else if (languageCode == 'hi') {
       tMap["சூரி"] = "सूर्य";
       tMap["சூ"] = "सू";
@@ -919,6 +1154,233 @@ class AstroTranslationService {
       tMap["ஹோரா லக்னம் (HL)"] = "होरा लग्न (HL)";
       tMap["கடிகா லக்னம் (GL)"] = "घटिका लग्न (GL)";
       tMap["கதிர்கள்"] = "किरणें";
+
+      // Sri, Tithi, Paksham
+      tMap["ஸ்ரீ"] = "श्री";
+      tMap["தேய்பிறை"] = "कृष्ण पक्ष";
+      tMap["வளர்பிறை"] = "शुक्ल पक्ष";
+      tMap["(கிருஷ்ண பக்ஷம்)"] = "(कृष्ण पक्ष)";
+      tMap["(சுக்ல பக்ஷம்)"] = "(शुक्ल पक्ष)";
+      tMap["கிருஷ்ண பக்ஷம்"] = "कृष्ण पक्ष";
+      tMap["சுக்ல பக்ஷம்"] = "शुक्ल पक्ष";
+      tMap["பௌர்ணமி (சுக்ல பக்ஷம்)"] = "पूर्णिमा (शुक्ल पक्ष)";
+      tMap["அமாவாசை (கிருஷ்ண பக்ஷம்)"] = "अमावस्या (कृष्ण पक्ष)";
+      tMap["பௌர்ணமி"] = "पूर्णिमा";
+      tMap["அமாவாசை"] = "अमावस्या";
+
+      // Chandrashtama & Ordinals
+      tMap["சந்திராஷ்டம ராசி"] = "चंद्राष्टम राशि";
+      tMap["சந்திராஷ்டம நட்சத்திரம்"] = "चंद्राष्टम नक्षत्र";
+      tMap["சந்திராஷ்டம"] = "चंद्राष्टम";
+      tMap["(17-வது நட்சத்திரம்)"] = "(17वां नक्षत्र)";
+      tMap["17-வது நட்சத்திரம்"] = "17वां नक्षत्र";
+      tMap["17-வது"] = "17वां";
+      tMap["(10-வது நட்சத்திரம்)"] = "(10वां नक्षत्र)";
+      tMap["10-வது நட்சத்திரம்"] = "10वां नक्षत्र";
+      tMap["10-வது"] = "10वां";
+      tMap["(19-வது நட்சத்திரம்)"] = "(19वां नक्षत्र)";
+      tMap["19-வது நட்சத்திரம்"] = "19वां नक्षत्र";
+      tMap["19-வது"] = "19वां";
+      tMap["(88-வது பாதம்)"] = "(88वां पद)";
+      tMap["(88-வது Pada)"] = "(88वां पद)";
+      tMap["88-வது பாதம்"] = "88वां पद";
+      tMap["88-வது"] = "88वां";
+      tMap["-வது நட்சத்திரம்"] = "वां नक्षत्र";
+      tMap["-வது பாதம்"] = "वां पद";
+      tMap["-வது"] = "वां";
+      tMap["-ம் பாதம்"] = " पद";
+      tMap["-ம்"] = "";
+      tMap["நட்சத்திரம்"] = "नक्षत्र";
+
+      // Vainashika & Tharais
+      tMap["வைநாசிக தோஷ பாதம் (88-வது பாதம்)"] = "वैनाशिक दोष पद (88वां पद)";
+      tMap["வைநாசிக தோஷ பாதம்"] = "वैनाशिक दोष पद";
+      tMap["வைநாசிக தோஷ"] = "वैनाशिक दोष";
+      tMap["வைநாசிக"] = "वैनाशिक";
+      tMap["1. ஜென்ம தாரை"] = "1. जन्म तारा";
+      tMap["2. சம்பத்து தாரை"] = "2. संपत तारा";
+      tMap["3. விபத்து தாரை"] = "3. विपत तारा";
+      tMap["4. சேம தாரை"] = "4. क्षेम तारा";
+      tMap["5. பிரத்யக் தாரை"] = "5. प्रत्यक तारा";
+      tMap["6. சாதக தாரை"] = "6. साधक तारा";
+      tMap["7. வதை தாரை (அதி எச்சரிக்கை)"] = "7. वध तारा (अति चेतावनी)";
+      tMap["7. வதை தாரை"] = "7. वध तारा";
+      tMap["8. மைத்ர தாரை"] = "8. मित्र तारा";
+      tMap["9. பரம மைத்ர தாரை"] = "9. परम मित्र तारा";
+      tMap["ஜென்ம தாரை"] = "जन्म तारा";
+      tMap["சம்பத்து தாரை"] = "संपत तारा";
+      tMap["விபத்து தாரை"] = "विपत तारा";
+      tMap["சேம தாரை"] = "क्षेम तारा";
+      tMap["பிரத்யக் தாரை"] = "प्रत्यक तारा";
+      tMap["சாதக தாரை"] = "साधक तारा";
+      tMap["வதை தாரை"] = "वध तारा";
+      tMap["மைத்ர தாரை"] = "मित्र तारा";
+      tMap["பரம மைத்ர தாரை"] = "परम मित्र तारा";
+      tMap["தாரை"] = "तारा";
+      tMap["தாரைகளில்"] = "ताराओं में";
+      tMap["ஆதான நட்சத்திரம்"] = "आधान नक्षत्र";
+      tMap["கர்ம நட்சத்திரம்"] = "कर्म नक्षत्र";
+
+      // Extreme Degrees & Notes
+      tMap["வீட்டு அதிபதி"] = "भाव स्वामी";
+      tMap["(வீட்டு அதிபதி"] = "(भाव स्वामी";
+      tMap["கிரகங்களின் பாகை விவரம் (இறங்கு வரிசை):"] = "ग्रहों का अंश विवरण (अवरोही क्रम):";
+      tMap["கிரகங்களின் பாகை விவரம் (இறங்கு வரிசை)"] = "ग्रहों का अंश विवरण (अवरोही क्रम)";
+      tMap["கிரகங்களின் பாகை விவரம்"] = "ग्रहों का अंश विवरण";
+      tMap["இறங்கு வரிசை"] = "अवरोही क्रम";
+
+      // Special Lagna Points
+      tMap["இந்து லக்னம் (Indu Lagna)"] = "इंदु लग्न";
+      tMap["இந்து லக் (Indu லக்)"] = "इंदु लग्न";
+      tMap["இந்து லக்னம்"] = "इंदु लग्न";
+      tMap["இந்து லக்"] = "इंदु लग्न";
+      tMap["இந்து Asc (Indu Asc)"] = "इंदु लग्न";
+      tMap["இந்து"] = "इंदु";
+
+      // Nakshatra Details: Animals (Mirugam)
+      tMap["ஆண்குதிரை"] = "अश्व (नर घोड़ा)";
+      tMap["பெண்குதிரை"] = "अश्विनी (मादा घोड़ा)";
+      tMap["ஆண்யானை"] = "गज (नर हाथी)";
+      tMap["பெண்யானை"] = "हथिनी (मादा हाथी)";
+      tMap["பெண் ஆடு"] = "मेषी (मादा बकरी)";
+      tMap["ஆண்ஆடு"] = "मेष (नर बकरा)";
+      tMap["ஆண்நாகம்"] = "सर्प (नर नाग)";
+      tMap["பெண்சாரை"] = "सर्पिणी (मादा सांप)";
+      tMap["ஆண்நாய்"] = "श्वान (नर कुत्ता)";
+      tMap["பெண்நாய்"] = "श्वानी (मादा कुतिया)";
+      tMap["ஆண்பூனை"] = "मार्जार (नर बिल्ली)";
+      tMap["பெண்பூனை"] = "मार्जारी (मादा बिल्ली)";
+      tMap["ஆண்எலி"] = "मूषक (नर चूहा)";
+      tMap["பெண்எலி"] = "मूषिका (मादा चुहिया)";
+      tMap["ஆண்பசு"] = "वृषभ (बैल)";
+      tMap["பெண்பசு"] = "धेनु (गाय)";
+      tMap["ஆண்கீரி/பசு"] = "नकुल (नेवला)";
+      tMap["ஆண்கீரி"] = "नकुल (नेवला)";
+      tMap["பெண்கீரி"] = "मादा नेवला";
+      tMap["ஆண்எருமை"] = "महिष (भैंसा)";
+      tMap["பெண்எருமை"] = "महिषी (भैंस)";
+      tMap["ஆண்புலி"] = "व्याघ्र (बाघ)";
+      tMap["பெண்புலி"] = "व्याघ्री (बाघिन)";
+      tMap["ஆண்மான்"] = "मृग (नर हिरण)";
+      tMap["பெண்மான்"] = "मृगी (मादा हिरण)";
+      tMap["ஆண்குரங்கு"] = "वानर (नर बंदर)";
+      tMap["பெண்குரங்கு"] = "वानरी (मादा बंदर)";
+      tMap["ஆண்சிங்கம்"] = "सिंह (नर शेर)";
+      tMap["பெண்சிங்கம்"] = "सिंहनी (मादा शेरनी)";
+
+      // Birds (Pakshi)
+      tMap["ராசாளி"] = "गरुड़ / चील";
+      tMap["காகம்"] = "कौवा";
+      tMap["மயில்"] = "मोर";
+      tMap["ஆந்தை"] = "उल्लू";
+      tMap["கோழி"] = "मुर्गा / मुर्गी";
+      tMap["அன்றில்"] = "क्रौंच पक्षी";
+      tMap["அன்னம்"] = "हंस";
+      tMap["நீர்காகம்"] = "पनकौवा";
+      tMap["கிச்சிலி"] = "नीलकंठ पक्षी";
+      tMap["ஆண்கழுகு"] = "नर गिद्ध";
+      tMap["பெண்கழுகு"] = "मादा गिद्ध";
+      tMap["கழுகு"] = "गिद्ध";
+      tMap["கௌதாரி"] = "तीतर";
+      tMap["பருந்து"] = "चील";
+      tMap["மரங்கொத்தி"] = "कठफोड़वा";
+      tMap["தேனீ"] = "मधुमक्खी";
+      tMap["குருவி"] = "गौरैया";
+      tMap["வானம்பாடி"] = "चातक / लवा";
+      tMap["சக்கரவாளம்"] = "चक्रवाक";
+      tMap["செம்பருந்து"] = "लाल चील";
+      tMap["வலியான்"] = "भारद्वाज पक्षी";
+      tMap["நாரை"] = "बगुला / सारस";
+      tMap["பொன்வண்டு"] = "स्वर्ण भृंग";
+      tMap["அண்டங்காக்கை"] = "काला कौवा";
+      tMap["உள்ளான்"] = "जलमुर्गी पक्षी";
+      tMap["கோட்டான்"] = "उल्लू";
+      tMap["வல்லூறு"] = "बाज";
+
+      // Trees (Maram)
+      tMap["எட்டி"] = "कुचिला";
+      tMap["நெல்லி"] = "आंवला";
+      tMap["அத்தி(பா)"] = "गूलर";
+      tMap["அத்தி"] = "गूलर";
+      tMap["நாவல்(பா)"] = "जामुन";
+      tMap["நாவல்"] = "जामुन";
+      tMap["கருங்காலி"] = "खदिर (आबनूस)";
+      tMap["செங்கரு"] = "लाल खैर";
+      tMap["மூங்கில்"] = "बांस";
+      tMap["அரசு(பா)"] = "पीपल";
+      tMap["அரசு"] = "पीपल";
+      tMap["புன்னை(பா)"] = "पुन्नाग";
+      tMap["புன்னை"] = "पुन्नाग";
+      tMap["ஆல்(பா)"] = "बरगद";
+      tMap["ஆல்"] = "बरगद";
+      tMap["பலா(பா)"] = "कटहल";
+      tMap["பலா"] = "कटहल";
+      tMap["அலரி(பா)"] = "कनेर";
+      tMap["அலரி"] = "कनेर";
+      tMap["வில்வம்"] = "बेलपत्र";
+      tMap["மருதம்"] = "अर्जुन वृक्ष";
+      tMap["விளா"] = "कैथा";
+      tMap["மகிழம்"] = "मौलसिरी (बकुल)";
+      tMap["பராய்(பா)"] = "साखू";
+      tMap["பராய்"] = "साखू";
+      tMap["மராமரம்"] = "साल वृक्ष";
+      tMap["வஞ்சி(பா)"] = "बंज वृक्ष";
+      tMap["வஞ்சி"] = "बंज वृक्ष";
+      tMap["எருக்கு(பா)"] = "मदार (आक)";
+      tMap["எருக்கு"] = "मदार (आक)";
+      tMap["வன்னி"] = "शमी वृक्ष";
+      tMap["கடம்பு"] = "कदंब";
+      tMap["தேமா(பா)"] = "आम का पेड़";
+      tMap["தேமா"] = "आम का पेड़";
+      tMap["வேம்பு"] = "नीम";
+      tMap["இலுப்பை"] = "महुआ";
+
+      // Ganam, Naadi, Rajju, Angam
+      tMap["தேவ"] = "देव";
+      tMap["மனுஷ"] = "मनुष्य";
+      tMap["ராக்ஷஸ"] = "राक्षस";
+      tMap["தஷிண பார்சுவ நாடி"] = "दक्षिण पार्श्व नाड़ी";
+      tMap["மத்திய பார்சுவ நாடி"] = "मध्य पार्श्व नाड़ी";
+      tMap["வாம பார்சுவ நாடி"] = "वाम पार्श्व नाड़ी";
+      tMap["சிரசு(தலை)"] = "शिर (सिर)";
+      tMap["சிரசு"] = "शिर (सिर)";
+      tMap["ஏறுபாதம்"] = "आरोही पद";
+      tMap["ஏறுதொடை"] = "आरोही जंघा";
+      tMap["ஏறுவயிறு"] = "आरोही उदर";
+      tMap["ஏறுகழுத்து"] = "आरोही ग्रीवा";
+      tMap["இறங்குகழுத்து"] = "अवरोही ग्रीवा";
+      tMap["இறங்குவயிறு"] = "अवरोही उदर";
+      tMap["இறங்குதொடை"] = "अवरोही जंघा";
+      tMap["இறங்குபாதம்"] = "अवरोही पद";
+      tMap["சிரசு ரஜ்ஜு"] = "शिरो रज्जु";
+      tMap["கண்ட ரஜ்ஜு"] = "कंठ रज्जु";
+      tMap["உதர ரஜ்ஜு"] = "उदर रज्जु";
+      tMap["நாபி ரஜ்ஜு"] = "नाभि रज्जु";
+      tMap["கட்டி ரஜ்ஜு"] = "कटि रज्जु";
+      tMap["பாத ரஜ்ஜு"] = "पाद रज्जु";
+      tMap["ஆரோகண சிரசு ரஜ்ஜு"] = "आरोहण शिरो रज्जु";
+      tMap["அவரோகண சிரசு ரஜ்ஜு"] = "अवरोहण शिरो रज्जु";
+      tMap["யோனி"] = "योनि";
+      tMap["ரஜ்ஜு"] = "रज्जु";
+      tMap["நாடி"] = "नाड़ी";
+      tMap["அங்கம்"] = "अंग";
+      tMap["ஆண்"] = "पुरुष";
+      tMap["பெண்"] = "स्त्री";
+
+      // Kala Natpu & Kala Pagai phrases
+      tMap["கால நட்பு"] = "काल मित्रता";
+      tMap["காலப்பகை"] = "काल शत्रुता";
+      tMap["தற்போது காலநட்பு பருவம்"] = "वर्तमान काल मित्र अवधि";
+      tMap["தற்போது காலப்பகை பருவம்"] = "वर्तमान काल शत्रु अवधि";
+      tMap["காலநட்பு வயது & திசை விவரங்கள்:"] = "काल मित्र आयु और दशा विवरण:";
+      tMap["காலப்பகை வயது & திசை விவரங்கள்:"] = "काल शत्रु आयु और दशा विवरण:";
+      tMap["காலப்பகை தசா - புத்தி எச்சரிக்கைகள்:"] = "काल शत्रु दशा - भुक्ति चेतावनियाँ:";
+      tMap["திசை"] = "दशा";
+      tMap["தசை"] = "दशा";
+      tMap["புத்தி"] = "भुक्ति";
+      tMap["நடைபெறுகிறது"] = "वर्तमान में चल रही है";
+      tMap["தற்போது நடக்கிறது"] = "वर्तमान में जारी";
+      tMap["காலப்பகை அமைப்பாகும்"] = "एक काल शत्रु अवधि है";
 
     }
 

@@ -443,5 +443,7 @@
     "sunDegPlusFixedDeg": "Sun Degree + Fixed Degree Method",
     "lagnaAshtakavargaTitle": "Lagna's Own Ashtakavarga",
     "lagnaAshtakavargaEnabled": "Enabled: Lagna's own ashtakavarga (49 bindus) can be viewed as separate chart and table. Sarvashtakavarga is calculated as standard 337 bindus for 7 planets.",
-    "lagnaAshtakavargaDisabled": "Disabled: Only standard ashtakavarga (337 bindus) for 7 planets is calculated."
+    "lagnaAshtakavargaDisabled": "Disabled: Only standard ashtakavarga (337 bindus) for 7 planets is calculated.",
+    "vaasthu": "Vaasthu",
+    "vaasthuSubtitle": "Manaiyadi Sasthiram & GP Vaasthu"
 }

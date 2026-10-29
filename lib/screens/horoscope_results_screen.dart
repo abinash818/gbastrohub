@@ -2959,15 +2959,20 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       _buildDetailRow("குறைந்த பாகை பெற்ற கிரகம்", lowestDisplay, isPrimary: true),
       if (allDegrees.isNotEmpty) ...[
         const Divider(height: 16),
-        const Text(
-          "கிரகங்களின் பாகை விவரம் (இறங்கு வரிசை):",
-          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+        Text(
+          AstroTranslationService.translate(context, "கிரகங்களின் பாகை விவரம் (இறங்கு வரிசை):"),
+          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
         ),
         const SizedBox(height: 6),
         Wrap(
           spacing: 8,
           runSpacing: 6,
           children: allDegrees.map((p) {
+            final pName = AstroTranslationService.translate(
+              context,
+              p['planet_tamil'] ?? p['planet'] ?? '',
+              isPlanet: true,
+            );
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -2976,7 +2981,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                 border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.4)),
               ),
               child: Text(
-                "${p['planet_tamil']}: ${p['deg_formatted']}",
+                "$pName: ${p['deg_formatted']}",
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               ),
             );
@@ -3562,6 +3567,8 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       pTharais.forEach((p, info) {
         if (info['is_warning'] == true) {
           String pTamil = KPService.TAMIL_PLANETS_SHORT[p] ?? KPService.TAMIL_PLANETS[p] ?? p;
+          String pName = AstroTranslationService.translate(context, pTamil, isPlanet: true);
+          String nakName = AstroTranslationService.translate(context, info['nakshatra']?.toString() ?? '');
           int num = info['tharai_number'] ?? 0;
           String label;
           if (num == 7) {
@@ -3574,7 +3581,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
             label = info['tharai_name']?.toString() ?? '';
           }
           rows.add(_buildDetailRow(
-            "$pTamil (${info['nakshatra']})",
+            "$pName ($nakName)",
             label,
           ));
         }
@@ -3589,8 +3596,10 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       final pKarma = karma['planets_in_karma'] as List? ?? [];
       for (var pk in pKarma) {
         String pTamil = KPService.TAMIL_PLANETS_SHORT[pk['planet']] ?? pk['planet_tamil'] ?? pk['planet'];
+        String pName = AstroTranslationService.translate(context, pTamil, isPlanet: true);
+        String nakName = AstroTranslationService.translate(context, pk['nakshatra']?.toString() ?? '');
         rows.add(_buildDetailRow(
-          "$pTamil (${pk['nakshatra']})",
+          "$pName ($nakName)",
           pk['role'] ?? 'கர்ம நட்சத்திரம்',
         ));
       }

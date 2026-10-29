@@ -164,8 +164,8 @@ class DashboardScreen extends StatelessWidget {
                           ),
                           _buildPremiumButton(
                             context, 
-                            "வாஸ்து", 
-                            "மனை அடி சாஸ்திரம் & GP வாஸ்து",
+                            AppLocalizations.of(context)!.vaasthu, 
+                            AppLocalizations.of(context)!.vaasthuSubtitle,
                             "assets/images/vastu_planet.png",
                             null,
                             isVaasthuTrigger: true,

@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../services/device_service.dart';
 import '../services/access_service.dart';
 import '../services/subscription_service.dart';
+import '../services/cloud_sync_service.dart';
 import '../theme/app_colors.dart';
 import 'package:astrology_flutter/l10n/app_localizations.dart';
 
@@ -164,6 +165,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _proceedAfterAuth(User user, Map<String, dynamic> statusData) async {
+    // Automatically restore and sync saved horoscopes from cloud for this user's email
+    if (user.email != null && user.email!.isNotEmpty) {
+      CloudSyncService.syncAll(email: user.email).catchError((e) {
+        debugPrint("[CloudSync] Background sync error on login: $e");
+        return <String, dynamic>{'success': false};
+      });
+    }
+
     // Always initialize AccessService
     await AccessService().init();
 

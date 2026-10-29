@@ -1,17 +1,198 @@
-import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_html_to_pdf/flutter_html_to_pdf.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
+import 'package:tamil_pdf_shaper/tamil_pdf_shaper.dart';
 import 'kp_service.dart';
 import 'jamakkol_service.dart';
 import 'settings_service.dart';
-import 'pdf_helper_stub.dart' if (dart.library.html) 'pdf_helper_web.dart';
 import 'package:astrology_flutter/l10n/app_localizations.dart';
 
 class JamakkolOnePagePdfService {
+  static pw.Font? _headingFont;
+  static pw.Font? _bodyFont;
+
+  static const List<String> tamilNakshatras = [
+    "அசுவனி", "பரணி", "கிருத்திகை", "ரோகிணி", "மிருகசீர்ஷம்", "திருவாதிரை",
+    "புனர்பூசம்", "பூசம்", "ஆயில்யம்", "மகம்", "பூரம்", "உத்திரம்",
+    "அஸ்தம்", "சித்திரை", "சுவாதி", "விசாகம்", "அனுஷம்", "கேட்டை",
+    "மூலம்", "பூராடம்", "உத்திராடம்", "திருவோணம்", "அவிட்டம்", "சதயம்",
+    "பூரட்டாதி", "உத்திரட்டாதி", "ரேவதி"
+  ];
+
+  static const List<String> englishNakshatras = [
+    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashirsha", "Arudra",
+    "Punarvasu", "Pushya", "Aslesha", "Magha", "Purvaphalguni", "Uttaraphalguni",
+    "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshta",
+    "Mula", "Purvashada", "Uttarashada", "Shravana", "Dhanishta", "Shatabhisha",
+    "Purvabhadrapada", "Uttarabhadrapada", "Revati"
+  ];
+
+  static const List<String> hindiNakshatras = [
+    "अश्विनी", "भरणी", "कृत्तिका", "रोहिणी", "मृगशीर्ष", "आर्द्रा",
+    "पुनर्वसु", "पुष्य", "आश्लेषा", "मघा", "पूर्वाफाल्गुनी", "उत्तराफाल्गुनी",
+    "हस्त", "चित्रा", "स्वाती", "विशाखा", "अनुराधा", "ज्येष्ठा",
+    "मूल", "पूर्वाषाढ़ा", "उत्तराषाढ़ा", "श्रवण", "धनिष्ठा", "शतभिषा",
+    "पूर्वाभाद्रपद", "उत्तराभाद्रपद", "रेवती"
+  ];
+
+  static final Map<String, String> _engToTamStar = {
+    "Ashwini": "அசுவனி", "Bharani": "பரணி", "Krittika": "கிருத்திகை", "Rohini": "ரோகிணி",
+    "Mrigashirsha": "மிருகசீர்ஷம்", "Mrigashira": "மிருகசீர்ஷம்", "Arudra": "திருவாதிரை", "Ardra": "திருவாதிரை",
+    "Punarvasu": "புனர்பூசம்", "Pushya": "பூசம்", "Pushyami": "பூசம்", "Aslesha": "ஆயில்யம்", "Ashlesha": "ஆயில்யம்",
+    "Magha": "மகம்", "Purvaphalguni": "பூரம்", "Uttaraphalguni": "உத்திரம்", "Hastha": "அஸ்தம்", "Hasta": "அஸ்தம்",
+    "Chitra": "சித்திரை", "Swati": "சுவாதி", "Vishakha": "விசாகம்", "Visakha": "விசாகம்", "Anuradha": "அனுஷம்",
+    "Jyeshta": "கேட்டை", "Jyeshtha": "கேட்டை", "Mula": "மூலம்", "Moola": "மூலம்",
+    "Purvashada": "பூராடம்", "PurvaAshadha": "பூராடம்", "Uttarashada": "உத்திராடம்", "UttaraAshadha": "உத்திராடம்",
+    "Shravana": "திருவோணம்", "Dhanishta": "அவிட்டம்", "Shatabhisha": "சதயம்",
+    "Purvabhadrapada": "பூரட்டாதி", "Uttarabhadrapada": "உத்திரட்டாதி", "Revati": "ரேவதி", "Revathi": "ரேவதி",
+  };
+
+  static final Map<String, String> _engToHiStar = {
+    "Ashwini": "अश्विनी", "Bharani": "भरणी", "Krittika": "कृत्तिका", "Rohini": "रोहिणी",
+    "Mrigashirsha": "मृगशीर्ष", "Mrigashira": "मृगशीर्ष", "Arudra": "आर्द्रा", "Ardra": "आर्द्रा",
+    "Punarvasu": "पुनर्वसु", "Pushya": "पुष्य", "Pushyami": "पुष्य", "Aslesha": "आश्लेषा", "Ashlesha": "आश्लेषा",
+    "Magha": "मघा", "Purvaphalguni": "पूर्वाफाल्गुनी", "Uttaraphalguni": "उत्तराफाल्गुनी", "Hastha": "हस्त", "Hasta": "हस्त",
+    "Chitra": "चित्रा", "Swati": "स्वाती", "Vishakha": "विशाखा", "Visakha": "विशाखा", "Anuradha": "अनुराधा",
+    "Jyeshta": "ज्येष्ठा", "Jyeshtha": "ज्येष्ठा", "Mula": "मूल", "Moola": "मूल",
+    "Purvashada": "पूर्वाषाढ़ा", "PurvaAshadha": "पूर्वाषाढ़ा", "Uttarashada": "उत्तराषाढ़ा", "UttaraAshadha": "उत्तराषाढ़ा",
+    "Shravana": "श्रवण", "Dhanishta": "धनिष्ठा", "Shatabhisha": "शतभिषा",
+    "Purvabhadrapada": "पूर्वाभाद्रपद", "Uttarabhadrapada": "उत्तराभाद्रपद", "Revati": "रेवती", "Revathi": "रेवती",
+  };
+
+  static Future<void> _initFonts() async {
+    if (_headingFont == null || _bodyFont == null) {
+      try {
+        _headingFont = await TamilPdfFont.loadCustomFont('assets/fonts/Uni_Ila.Sundaram-02_shaped.ttf');
+        _bodyFont = await TamilPdfFont.loadCustomFont('assets/fonts/Uni_Ila.Sundaram-05_shaped.ttf');
+      } catch (e) {
+        debugPrint("Error loading shaped fonts, falling back: $e");
+        _headingFont = await TamilPdfFont.load();
+        _bodyFont = _headingFont;
+      }
+    }
+  }
+
+  static Map<String, String> _getStarPada(double deg, [String langCode = 'ta']) {
+    deg = (deg % 360.0 + 360.0) % 360.0;
+    int starIdx = (deg / (360.0 / 27.0)).floor() % 27;
+    int pada = ((deg % (360.0 / 27.0)) / (360.0 / 108.0)).floor() + 1;
+    String star;
+    if (langCode == 'hi') {
+      star = hindiNakshatras[starIdx];
+    } else if (langCode == 'en') {
+      star = englishNakshatras[starIdx];
+    } else {
+      star = tamilNakshatras[starIdx];
+    }
+    return {'star': star, 'pada': pada.toString()};
+  }
+
+  static String _getLocalizedWeekday(dynamic rawVara, DateTime dt, DateTime sunrise, AppLocalizations l10n) {
+    int? idx;
+    if (rawVara != null) {
+      final s = rawVara.toString().trim().toLowerCase();
+      final Map<String, int> engDayMap = {
+        'sunday': 0, 'sun': 0,
+        'monday': 1, 'mon': 1,
+        'tuesday': 2, 'tue': 2,
+        'wednesday': 3, 'wed': 3,
+        'thursday': 4, 'thu': 4,
+        'friday': 5, 'fri': 5,
+        'saturday': 6, 'sat': 6,
+      };
+      idx = engDayMap[s];
+      if (idx == null) {
+        final Map<String, int> otherDayMap = {
+          'ஞாயிறு': 0, 'ஞாயிற்றுக்கிழமை': 0, 'रविवार': 0,
+          'திங்கள்': 1, 'திங்கட்கிழமை': 1, 'सोमवार': 1,
+          'செவ்வாய்': 2, 'செவ்வாய்க்கிழமை': 2, 'मंगलवार': 2,
+          'புதன்': 3, 'புதன்கிழமை': 3, 'बुधवार': 3,
+          'வியாழன்': 4, 'வியாழக்கிழமை': 4, 'गुरुवार': 4,
+          'வெள்ளி': 5, 'வெள்ளிக்கிழமை': 5, 'शुक्रवार': 5,
+          'சனி': 6, 'சனிக்கிழமை': 6, 'शनिवार': 6,
+        };
+        for (var entry in otherDayMap.entries) {
+          if (rawVara.toString().contains(entry.key)) {
+            idx = entry.value;
+            break;
+          }
+        }
+      }
+    }
+
+    if (idx == null) {
+      idx = dt.weekday % 7;
+      if (dt.isBefore(sunrise)) {
+        idx = (idx - 1 + 7) % 7;
+      }
+    }
+
+    switch (idx % 7) {
+      case 0: return l10n.sunday;
+      case 1: return l10n.monday;
+      case 2: return l10n.tuesday;
+      case 3: return l10n.wednesday;
+      case 4: return l10n.thursday;
+      case 5: return l10n.friday;
+      case 6: return l10n.saturday;
+      default: return l10n.sunday;
+    }
+  }
+
+  static String _translatePlanet(dynamic p, String langCode) {
+    if (p == null) return "-";
+    String s = p.toString().trim();
+    if (s.isEmpty || s == "-") return "-";
+
+    final Map<String, String> enToTa = {
+      'Sun': 'சூரியன்', 'Moon': 'சந்திரன்', 'Mars': 'செவ்வாய்', 'Mercury': 'புதன்',
+      'Jupiter': 'குரு', 'Venus': 'சுக்கிரன்', 'Saturn': 'சனி', 'Rahu': 'ராகு', 'Ketu': 'கேது',
+      'Maanthi': 'மாந்தி', 'Gulika': 'குளிகன்',
+    };
+    final Map<String, String> enToHi = {
+      'Sun': 'सूर्य', 'Moon': 'चंद्र', 'Mars': 'मंगल', 'Mercury': 'बुध',
+      'Jupiter': 'गुरु', 'Venus': 'शुक्र', 'Saturn': 'शनि', 'Rahu': 'राहु', 'Ketu': 'केतु',
+      'Maanthi': 'मांदी', 'Gulika': 'गुलिक',
+    };
+
+    if (langCode == 'hi') {
+      return enToHi[s] ?? s;
+    } else if (langCode == 'en') {
+      return s;
+    } else {
+      return enToTa[s] ?? s;
+    }
+  }
+
+  static String _formatDeg(double deg) {
+    double degInSign = deg % 30.0;
+    int d = degInSign.floor();
+    int m = ((degInSign - d) * 60).floor();
+    return "${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
+  }
+
+  static DateTime _parseTime(String timeStr, DateTime baseDate) {
+    try {
+      final parts = timeStr.trim().split(' ');
+      final hms = parts[0].split(':');
+      int h = int.parse(hms[0]);
+      int m = int.parse(hms[1]);
+      int s = hms.length > 2 ? int.parse(hms[2]) : 0;
+      if (parts.length > 1) {
+        if (parts[1].toUpperCase() == "PM" && h < 12) h += 12;
+        if (parts[1].toUpperCase() == "AM" && h == 12) h = 0;
+      }
+      return DateTime(baseDate.year, baseDate.month, baseDate.day, h, m, s);
+    } catch (e) {
+      return baseDate;
+    }
+  }
+
+  /// Print preview on web or any platform
   static Future<void> showHtmlReport({
     required String name,
     required String gender,
@@ -23,24 +204,24 @@ class JamakkolOnePagePdfService {
     required AppLocalizations l10n,
     bool isAltNaming = false,
   }) async {
-    if (!kIsWeb) return;
-    final astro = await SettingsService.getAstrologerDetails();
-    
-    String muruganBase64 = "";
-    String ganapathyBase64 = "";
-    try {
-      final byteData = await rootBundle.load('assets/images/muruga.png');
-      muruganBase64 = base64Encode(byteData.buffer.asUint8List());
-      final byteDataG = await rootBundle.load('assets/images/ganapathy.png');
-      ganapathyBase64 = base64Encode(byteDataG.buffer.asUint8List());
-    } catch (e) {
-      debugPrint("Error loading images: $e");
-    }
-
-    final htmlContent = _buildFullHtml(name, gender, results, inputTime, place, lat, lon, isAltNaming, astro, muruganBase64, ganapathyBase64, l10n);
-    printHtmlWeb(htmlContent);
+    final bytes = await generate(
+      name: name,
+      gender: gender,
+      results: results,
+      inputTime: inputTime,
+      place: place,
+      lat: lat,
+      lon: lon,
+      l10n: l10n,
+      isAltNaming: isAltNaming,
+    );
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => bytes,
+      name: 'ஜாமக்கோள்_பிரசன்னம்.pdf',
+    );
   }
 
+  /// Generates the pure Dart PDF binary
   static Future<Uint8List> generate({
     required String name,
     required String gender,
@@ -52,111 +233,43 @@ class JamakkolOnePagePdfService {
     required AppLocalizations l10n,
     bool isAltNaming = false,
   }) async {
+    await _initFonts();
     final astro = await SettingsService.getAstrologerDetails();
-    
-    String muruganBase64 = "";
-    String ganapathyBase64 = "";
+    final customLogoBase64 = await SettingsService.getCustomLogo();
+
+    Uint8List? ganapathyImg;
+    Uint8List? appLogoImg;
+    Uint8List? customLogoImg;
     try {
-      final byteData = await rootBundle.load('assets/images/muruga.png');
-      muruganBase64 = base64Encode(byteData.buffer.asUint8List());
-      final byteDataG = await rootBundle.load('assets/images/ganapathy.png');
-      ganapathyBase64 = base64Encode(byteDataG.buffer.asUint8List());
-    } catch (e) {
-      debugPrint("Error loading images: $e");
+      ganapathyImg = (await rootBundle.load('assets/images/ganapathy.png')).buffer.asUint8List();
+    } catch (_) {}
+    try {
+      appLogoImg = (await rootBundle.load('assets/images/APPLOGO.png')).buffer.asUint8List();
+    } catch (_) {
+      try {
+        appLogoImg = (await rootBundle.load('assets/images/logo.png')).buffer.asUint8List();
+      } catch (_) {}
+    }
+    if (customLogoBase64 != null && customLogoBase64.isNotEmpty) {
+      try {
+        customLogoImg = base64Decode(customLogoBase64);
+      } catch (_) {}
     }
 
-    final htmlContent = _buildFullHtml(name, gender, results, inputTime, place, lat, lon, isAltNaming, astro, muruganBase64, ganapathyBase64, l10n);
-    
-    if (kIsWeb) {
-      printHtmlWeb(htmlContent);
-      return Uint8List(0);
-    }
-    
-    final Directory tempDir = await getTemporaryDirectory();
-    final File pdfFile = await FlutterHtmlToPdf.convertFromHtmlContent(htmlContent, tempDir.path, "jamakkol_${DateTime.now().millisecondsSinceEpoch}");
-    final Uint8List bytes = await pdfFile.readAsBytes();
-    await pdfFile.delete();
-    return bytes;
-  }
+    final pdf = pw.Document();
 
+    // Palette
+    final primaryColor = PdfColor.fromHex('#5D1204');     // Deep Maroon
+    final goldAccent = PdfColor.fromHex('#B58D3D');       // Temple Gold
+    final bgIvory = PdfColor.fromHex('#FFFDF9');          // Ivory background
+    final borderCol = PdfColor.fromHex('#D9C3A3');        // Border
+    final textDark = PdfColor.fromHex('#212121');         // Text
+    final textMuted = PdfColor.fromHex('#757575');        // Muted Text
+    final blueColor = PdfColor.fromHex('#0D47A1');        // Outer Planet Blue
+    final greenColor = PdfColor.fromHex('#1B5E20');       // Udayam Green
+    final redColor = PdfColor.fromHex('#B71C1C');         // Kavippu Red
 
-  static String _toLocal(String p, String langCode) {
-    if (p.isEmpty) return "-";
-    final shortMap = langCode == 'en' ? JamakkolService.JAMAKKOL_ENGLISH_SHORT : (langCode == 'hi' ? JamakkolService.JAMAKKOL_HINDI_SHORT : JamakkolService.JAMAKKOL_TAMIL_SHORT);
-    final fullMap = langCode == 'en' ? KPService.ENGLISH_PLANETS : (langCode == 'hi' ? KPService.HINDI_PLANETS : KPService.TAMIL_PLANETS);
-    final kpShortMap = langCode == 'en' ? KPService.ENGLISH_PLANET_SHORT : (langCode == 'hi' ? KPService.HINDI_PLANET_SHORT : KPService.TAMIL_PLANET_SHORT);
-    
-    for (var entry in fullMap.entries) {
-      if (entry.value == p || entry.key.toLowerCase() == p.toLowerCase()) {
-        String key = entry.key;
-        String capitalizedKey = key[0].toUpperCase() + key.substring(1);
-        return shortMap[key] ?? shortMap[capitalizedKey] ?? kpShortMap[key] ?? kpShortMap[capitalizedKey] ?? fullMap[key] ?? p;
-      }
-    }
-    
-    String capitalizedP = p[0].toUpperCase() + p.substring(1);
-    return shortMap[capitalizedP] ?? kpShortMap[capitalizedP] ?? fullMap[capitalizedP] ?? p;
-  }
-
-  static String _formatDateOnly(DateTime? dt) {
-    if (dt == null) return "-";
-    return "${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}";
-  }
-
-  static String _buildTimelineHtml(String title, List<dynamic> periods, String suffix, Map<String, dynamic>? selectedItem, AppLocalizations l10n, DateTime inputTime) {
-    if (periods.isEmpty) return "<div style='flex: 1; text-align: center; border: 0.3mm solid var(--border-orange); border-radius: 1mm; padding: 2mm;'>$title விபரங்கள் இல்லை</div>";
-
-    List<dynamic> displayList = [];
-    if (selectedItem != null) {
-      int idx = periods.indexOf(selectedItem);
-      if (idx != -1) {
-        displayList = periods.sublist(idx).take(9).toList();
-      } else {
-        displayList = [selectedItem];
-      }
-    } else {
-      displayList = periods.take(9).toList();
-    }
-    
-    String tableHtml = "<table style='width: 100%; border-collapse: collapse; font-size: 2.2mm;'>";
-    tableHtml += "<tr style='background: var(--header-blue); color: white;'><th style='padding: 1mm;'>அதிபதி</th><th style='padding: 1mm;'>ஆரம்பம்</th><th style='padding: 1mm;'>முடிவு</th></tr>";
-    
-    for (var p in displayList) {
-      final isToday = p == selectedItem || (selectedItem == null && inputTime.compareTo(p['start']) >= 0 && inputTime.compareTo(p['end']) <= 0);
-      final bg = isToday ? "background: rgba(181, 141, 61, 0.2); font-weight: bold;" : "";
-      
-      tableHtml += "<tr style='$bg text-align: center; border-bottom: 0.3mm solid var(--border-orange);'>";
-      tableHtml += "<td style='padding: 1mm; border: 0.3mm solid var(--border-orange);'>${_toLocal(p['lord'] ?? "-", l10n.localeName)}</td>";
-      tableHtml += "<td style='padding: 1mm; border: 0.3mm solid var(--border-orange);'>${_formatDateOnly(p['start'])}</td>";
-      tableHtml += "<td style='padding: 1mm; border: 0.3mm solid var(--border-orange);'>${_formatDateOnly(p['end'])}</td>";
-      tableHtml += "</tr>";
-    }
-    tableHtml += "</table>";
-
-    return """
-    <div style='flex: 1; border: 0.5mm solid var(--border-orange); border-radius: 1.5mm; overflow: hidden; margin: 0 1mm;'>
-      <div style='background: #eee; color: var(--text-red); font-weight: bold; text-align: center; padding: 1mm; font-size: 2.0mm; border-bottom: 0.5mm solid var(--border-orange);'>$title</div>
-      $tableHtml
-    </div>
-    """;
-  }
-
-  static Map<String, String> _getStarPada(double deg) {
-    String star = KPService.NAKSHATRAS[(deg / (360/27)).floor() % 27];
-    int pada = ((deg % (360/27)) / (360/108)).floor() + 1;
-    return {'star': star, 'pada': pada.toString()};
-  }
-
-  static String _buildFullHtml(String name, String gender, Map<dynamic, dynamic> results, DateTime inputTime, String place, double lat, double lon, bool isAltNaming, Map<String, dynamic> astro, String muruganBase64, String ganapathyBase64, AppLocalizations l10n) {
-    final dateStr = DateFormat('dd . MM . yyyy').format(inputTime);
-    final timeStr = DateFormat('hh:mm:ss a').format(inputTime);
-    
-    String shopName = astro['shop_name'] ?? astro['name'] ?? "ஜிபி அஸ்ட்ரோ ஜோதிட வித்யாலயம்";
-    String astroName = astro['astrologer_name'] ?? (astro['name'] != null ? "" : "Dr. Karunagaran");
-    String address = astro['address'] ?? "சென்னை";
-    String phone = astro['phone'] ?? "9800666225";
-    final nowStr = DateFormat('dd/MM/yyyy hh:mm a').format(DateTime.now());
-
+    // Data parsing
     final outer = results['outer'] as Map<dynamic, dynamic>? ?? {};
     final notes = results['notes'] as Map<dynamic, dynamic>? ?? {};
     final strength = results['strength'] as Map<dynamic, dynamic>? ?? {};
@@ -165,163 +278,1348 @@ class JamakkolOnePagePdfService {
     final arudamIdx = results['arudam_idx'] ?? 0;
     final kaviIdx = results['kavi_idx'] ?? 0;
 
-    final pan = inner['panchangam'] ?? {};
-    final details = inner['planet_details'] ?? {};
-    final pInfo = inner['planet_info'] ?? {};
+    final String langCode = l10n.localeName;
+
+    final pan = inner['panchangam'] as Map<dynamic, dynamic>? ?? {};
+    final details = inner['planet_details'] as Map<dynamic, dynamic>? ?? {};
+
+    final sunriseStr = pan['sunrise']?.toString() ?? "06:00 AM";
+    final sunsetStr = pan['sunset']?.toString() ?? "06:00 PM";
+    final sunrise = _parseTime(sunriseStr, inputTime);
+    final sunset = _parseTime(sunsetStr, inputTime);
+
+    final weekdayStr = _getLocalizedWeekday(pan['vara'], inputTime, sunrise, l10n);
+
     final moonDetails = details['moon'] ?? details['Moon'] ?? {};
-    final nakshatraStr = moonDetails['nakshatra']?.toString() ?? pan['nakshatra']?.toString() ?? "-";
-    final padaStr = moonDetails['pada']?.toString() ?? "-";
-    final weekdayStr = pan['vara']?.toString() ?? KPService.VARA_TAMIL[inputTime.weekday % 7] ?? "-";
+    final double? moonLon = (moonDetails['longitude'] as num?)?.toDouble();
+    String cleanStar = moonDetails['nakshatra']?.toString() ?? pan['nakshatra']?.toString() ?? "";
+    String padaStr = moonDetails['pada']?.toString() ?? pan['pada']?.toString() ?? "-";
     
-    String age = "-"; // Age can be calculated if birth time is available, else leave blank.
-    
+    if (moonLon != null) {
+      final sp = _getStarPada(moonLon, langCode);
+      cleanStar = sp['star']!;
+      if (padaStr == "-") padaStr = sp['pada']!;
+    } else if (cleanStar.isNotEmpty) {
+      if (langCode == 'hi') {
+        cleanStar = _engToHiStar[cleanStar] ?? cleanStar;
+      } else if (langCode != 'en') {
+        cleanStar = _engToTamStar[cleanStar] ?? cleanStar;
+      }
+    } else {
+      cleanStar = "-";
+    }
+
+    final String padaSuffix = langCode == 'en' ? "Pada" : (langCode == 'hi' ? "चरण" : "பாதம்");
+    final String starDisplay = padaStr != "-" ? "$cleanStar - $padaStr $padaSuffix" : cleanStar;
+
     final tamilYear = pan['tamil_year']?.toString() ?? "-";
     final tamilMonth = pan['tamil_month']?.toString() ?? "-";
     final tamilDate = pan['tamil_date']?.toString() ?? "-";
-    final thithiStr = pan['tithi']?.toString() ?? "-";
-    final pakshamStr = pan['paksham']?.toString() ?? "-";
-    final rasiStr = KPService.TAMIL_SIGNS[moonDetails['lords']?['sign']] ?? KPService.TAMIL_SIGNS[moonDetails['rasi']] ?? moonDetails['rasi'] ?? pan['rasi'] ?? "-";
-    final suniyaStr = pan['suniya_rasi']?.toString() ?? "-";
 
-    final lagnaSign = KPService.TAMIL_SIGNS[details['lagna']?['rasi']] ?? "-";
-    final udayamSign = KPService.TAMIL_SIGNS[KPService.SIGNS[udayamIdx % 12]] ?? "-";
-    final arudamSign = KPService.TAMIL_SIGNS[KPService.SIGNS[arudamIdx % 12]] ?? "-";
-    final kavippuSign = KPService.TAMIL_SIGNS[KPService.SIGNS[kaviIdx % 12]] ?? "-";
+    // Gowri
+    final segments = JamakkolService.calculateCurrentSegments(inputTime, sunrise, sunset, langCode: 'ta');
+    final gowriStr = segments['gowri']?.toString() ?? "-";
 
-    DateTime parseTime(String timeStr, DateTime baseDate) {
-      try {
-        final parts = timeStr.split(' ');
-        final hms = parts[0].split(':');
-        int h = int.parse(hms[0]);
-        int m = int.parse(hms[1]);
-        int s = hms.length > 2 ? int.parse(hms[2]) : 0;
-        if (parts[1] == "PM" && h < 12) h += 12;
-        if (parts[1] == "AM" && h == 12) h = 0;
-        return DateTime(baseDate.year, baseDate.month, baseDate.day, h, m, s);
-      } catch (e) {
-        return baseDate;
+    // Lagna
+    String lagnaSign = "-";
+    if (details.containsKey('lagna') && details['lagna'] != null) {
+      double lDeg = (details['lagna']['longitude'] as num?)?.toDouble() ?? 0.0;
+      int lIdx = (lDeg / 30.0).floor() % 12;
+      lagnaSign = langCode == 'ta'
+          ? (KPService.TAMIL_SIGNS[KPService.SIGNS[lIdx]] ?? KPService.SIGNS[lIdx])
+          : (langCode == 'hi'
+              ? (KPService.HINDI_SIGNS[KPService.SIGNS[lIdx]] ?? KPService.SIGNS[lIdx])
+              : KPService.SIGNS[lIdx]);
+    }
+
+    // Kuligathi Kalams (குளிகாதி காலங்கள் 6 காலங்கள்)
+    int weekdayNum = inputTime.weekday % 7;
+    if (inputTime.isBefore(sunrise)) {
+      weekdayNum = (weekdayNum - 1 + 7) % 7;
+    }
+    double dayMinutes = sunset.difference(sunrise).inMinutes.toDouble();
+    if (dayMinutes <= 0) dayMinutes = 720.0;
+    double daySegSecs = (dayMinutes * 60) / 8.0;
+
+    DateTime getDaySlot(int segIdx) {
+      return sunrise.add(Duration(seconds: (segIdx * daySegSecs).round()));
+    }
+
+    String formatSlot(DateTime start, DateTime end) {
+      return "${DateFormat('hh:mm a').format(start)} - ${DateFormat('hh:mm a').format(end)}";
+    }
+
+    // 1. ராகு காலம் (Rahu Kalam)
+    int rahuSeg = const [7, 1, 6, 4, 5, 3, 2][weekdayNum];
+    String rahuStr = formatSlot(getDaySlot(rahuSeg), getDaySlot(rahuSeg + 1));
+
+    // 2. எமகண்டம் (Yamakandam)
+    int yamaSeg = const [4, 3, 2, 1, 0, 6, 5][weekdayNum];
+    String yamaStr = formatSlot(getDaySlot(yamaSeg), getDaySlot(yamaSeg + 1));
+
+    // 3. குளிகை (Gulikai)
+    int kuliSeg = const [6, 5, 4, 3, 2, 1, 0][weekdayNum];
+    String kuligaiStr = formatSlot(getDaySlot(kuliSeg), getDaySlot(kuliSeg + 1));
+
+    // 4. காலன் (Kalan)
+    int kalanSeg = const [0, 6, 5, 4, 3, 2, 1][weekdayNum];
+    String kalanStr = formatSlot(getDaySlot(kalanSeg), getDaySlot(kalanSeg + 1));
+
+    // 5. அர்தபிரகணன் (Ardhapraharanan)
+    int arthaSeg = const [3, 2, 1, 0, 6, 5, 4][weekdayNum];
+    String arthaStr = formatSlot(getDaySlot(arthaSeg), getDaySlot(arthaSeg + 1));
+
+    // 6. இரவு எமகண்டம் (Night Yamakandam)
+    DateTime nextSr = sunrise.add(const Duration(days: 1));
+    double nightMinutes = nextSr.difference(sunset).inMinutes.toDouble();
+    if (nightMinutes <= 0) nightMinutes = 720.0;
+    double nightSegSecs = (nightMinutes * 60) / 8.0;
+
+    DateTime getNightSlot(int segIdx) {
+      return sunset.add(Duration(seconds: (segIdx * nightSegSecs).round()));
+    }
+
+    int nightYamaSeg = const [0, 6, 5, 4, 3, 2, 1][weekdayNum];
+    String nightYamaStr = formatSlot(getNightSlot(nightYamaSeg), getNightSlot(nightYamaSeg + 1));
+
+    // Header info
+    String shopName = astro['shop_name'] ?? astro['name'] ?? "ஜிபி அஸ்ட்ரோ ஜோதிட வித்யாலயம்";
+    String astroName = astro['astrologer_name'] ?? "";
+    String address = astro['address'] ?? "சென்னை";
+    String phone = astro['phone'] ?? "9800666225";
+    final dateStr = DateFormat('dd - MM - yyyy').format(inputTime);
+    final timeStr = DateFormat('hh:mm:ss a').format(inputTime);
+    final nowStr = DateFormat('dd/MM/yyyy hh:mm a').format(DateTime.now());
+    final prasannaNo = (results['prasannam_no'] ?? results['bhavar'] ?? place).toString();
+
+    // Longitudes for points
+    double uDeg = (outer['udayam_abs_deg'] as num?)?.toDouble() ?? 0.0;
+    double aDeg = (outer['arudam_abs_deg'] as num?)?.toDouble() ?? 0.0;
+    double kDeg = (30.0 - (aDeg % 30.0)) + (kaviIdx * 30.0);
+    kDeg = (kDeg % 360.0 + 360.0) % 360.0;
+
+    final subPlanets = results['sub_planets'] as JamakkolSubPlanets?;
+    double rahuKalamDeg = subPlanets != null ? ((subPlanets.rahu.rasi - 1) * 30.0 + subPlanets.rahu.degree) : 0.0;
+    double yamaDeg = subPlanets != null ? ((subPlanets.yamagandan.rasi - 1) * 30.0 + subPlanets.yamagandan.degree) : 0.0;
+    double mrityuDeg = subPlanets != null ? ((subPlanets.mrityu.rasi - 1) * 30.0 + subPlanets.mrityu.degree) : 0.0;
+    double maanthiDeg = (details['maanthi']?['longitude'] as num?)?.toDouble() ?? 0.0;
+
+    final pDegs = outer['planet_degrees'] as Map? ?? {};
+    final namingMap = isAltNaming ? JamakkolService.JAMAKKOL_TAMIL_ALT : JamakkolService.JAMAKKOL_TAMIL_SHORT;
+
+    // Outer planets mapped to signs
+    Map<String, List<String>> outerPlanetsBySign = {};
+    for (var sign in KPService.SIGNS) {
+      outerPlanetsBySign[sign] = [];
+    }
+    for (var pName in JamakkolService.JAMAKKOL_PLANETS) {
+      if (pDegs.containsKey(pName)) {
+        double deg = (pDegs[pName] as num).toDouble();
+        int sIdx = (deg / 30.0).floor() % 12;
+        String signName = KPService.SIGNS[sIdx];
+        String label = namingMap[pName] ?? pName;
+        int d = (deg % 30.0).floor();
+        int m = (((deg % 30.0) - d) * 60).floor();
+        String dStr = d.toString().padLeft(2, '0');
+        String mStr = m.toString().padLeft(2, '0');
+        outerPlanetsBySign[signName]?.add("$label $dStr:$mStr");
       }
     }
-    final sunrise = parseTime(pan['sunrise'] ?? "06:00 AM", inputTime);
-    final sunset = parseTime(pan['sunset'] ?? "06:00 PM", inputTime);
-    final segments = JamakkolService.calculateCurrentSegments(inputTime, sunrise, sunset, langCode: l10n.localeName);
-    final gowriStr = segments['gowri'] ?? "-";
 
-    final ayanamsa = inner['ayanamsa'] ?? "24° 12' 51\" (KP-Newcomb)";
-    final prasannaNo = results['prasannam_no'] ?? "-";
+    // Inner Gochara planets mapped to signs
+    Map<String, List<String>> innerPlanetsBySign = {};
+    for (var sign in KPService.SIGNS) {
+      innerPlanetsBySign[sign] = [];
+    }
+    final gocharaKeys = [
+      {'key': 'lagna', 'short': 'லக்'},
+      {'key': 'sun', 'short': 'சூரி'},
+      {'key': 'moon', 'short': 'சந்'},
+      {'key': 'mars', 'short': 'செவ்'},
+      {'key': 'mercury', 'short': 'புத'},
+      {'key': 'jupiter', 'short': 'குரு'},
+      {'key': 'venus', 'short': 'சுக்'},
+      {'key': 'saturn', 'short': 'சனி'},
+      {'key': 'rahu', 'short': 'இரா'},
+      {'key': 'ketu', 'short': 'கேது'},
+      {'key': 'maanthi', 'short': 'மாந்'},
+    ];
+    for (var p in gocharaKeys) {
+      final key = p['key']!;
+      if (details.containsKey(key) && details[key] != null) {
+        double lon = (details[key]['longitude'] as num?)?.toDouble() ?? 0.0;
+        int sIdx = (lon / 30.0).floor() % 12;
+        String signName = KPService.SIGNS[sIdx];
+        innerPlanetsBySign[signName]?.add(p['short']!);
+      }
+    }
 
-    final isTa = l10n.localeName == 'ta';
-    final isHi = l10n.localeName == 'hi';
+    // Kathir maps
+    final kathirMap = strength['rasi_kathir_map'] as Map<dynamic, dynamic>? ?? {};
+    final bhavasList = strength['bhavas'] as List<dynamic>? ?? [];
+    Map<String, dynamic> bhavaBySign = {};
+    for (var b in bhavasList) {
+      if (b is Map && b['sign'] != null) {
+        bhavaBySign[b['sign']] = b;
+      }
+    }
 
-    // Helper: Translate planet name (Jamakkol graha: Rahu -> பாம்பு)
-    String getPName(String name) {
-      if (name.toLowerCase() == 'rahu' || name == 'ராகு') {
+    final udayamSign = KPService.SIGNS[udayamIdx % 12];
+    final arudamSign = KPService.SIGNS[arudamIdx % 12];
+    final kavippuSign = KPService.SIGNS[kaviIdx % 12];
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(12),
+        theme: pw.ThemeData.withFont(base: _bodyFont!, bold: _headingFont!),
+        build: (pw.Context context) {
+          return pw.Container(
+            // Royal Outer Frame Border
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: primaryColor, width: 1.5),
+            ),
+            padding: const pw.EdgeInsets.all(3),
+            child: pw.Container(
+              // Inner Gold Accent Border
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: goldAccent, width: 0.8),
+                color: bgIvory,
+              ),
+              padding: const pw.EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                children: [
+                  // -----------------------------------------------------------
+                  // 1. TOP HEADER: Pillaiyar Suzhi & Astrologer Banner
+                  // -----------------------------------------------------------
+                  pw.Center(
+                    child: pw.Column(
+                      children: [
+                        pw.Text("உ".toTamilPdf, style: pw.TextStyle(font: _headingFont, fontSize: 16, color: primaryColor)),
+                        pw.Container(width: 18, height: 1.0, color: primaryColor, margin: const pw.EdgeInsets.only(top: 1)),
+                        pw.Container(width: 18, height: 1.0, color: primaryColor, margin: const pw.EdgeInsets.only(top: 1)),
+                      ],
+                    ),
+                  ),
+                  pw.SizedBox(height: 3),
+
+                  pw.Container(
+                    padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: borderCol, width: 0.8),
+                      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                      color: PdfColors.white,
+                    ),
+                    child: pw.Row(
+                      crossAxisAlignment: pw.CrossAxisAlignment.center,
+                      children: [
+                        // Left: Astrologer Photo (customLogo) or Ganapathy fallback
+                        if (customLogoImg != null)
+                          pw.Container(
+                            width: 48,
+                            height: 48,
+                            child: pw.ClipOval(
+                              child: pw.Image(pw.MemoryImage(customLogoImg), fit: pw.BoxFit.cover),
+                            ),
+                          )
+                        else if (ganapathyImg != null)
+                          pw.Container(
+                            width: 44,
+                            height: 44,
+                            child: pw.Image(pw.MemoryImage(ganapathyImg), fit: pw.BoxFit.contain),
+                          )
+                        else
+                          pw.SizedBox(width: 44),
+
+                        // Center: Astrologer Details
+                        pw.Expanded(
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.center,
+                            children: [
+                              pw.Text(shopName.toTamilPdf, style: pw.TextStyle(font: _headingFont, fontSize: 14, color: primaryColor)),
+                              if (astroName.isNotEmpty)
+                                pw.Text(astroName.toTamilPdf, style: pw.TextStyle(font: _headingFont, fontSize: 9.5, color: textDark)),
+                              pw.Text("$address | செல்: $phone".toTamilPdf, style: pw.TextStyle(font: _bodyFont, fontSize: 8.5, color: textMuted)),
+                            ],
+                          ),
+                        ),
+
+                        // Right: Ganapathy (when customLogo is on left) or App Logo
+                        if (customLogoImg != null && ganapathyImg != null)
+                          pw.Container(
+                            width: 44,
+                            height: 44,
+                            child: pw.Image(pw.MemoryImage(ganapathyImg), fit: pw.BoxFit.contain),
+                          )
+                        else if (appLogoImg != null)
+                          pw.Container(
+                            width: 44,
+                            height: 44,
+                            child: pw.Image(pw.MemoryImage(appLogoImg), fit: pw.BoxFit.contain),
+                          )
+                        else
+                          pw.SizedBox(width: 44),
+                      ],
+                    ),
+                  ),
+
+                  pw.SizedBox(height: 3),
+
+                  // Title Bar with Software Developer Credit
+                  pw.Container(
+                    padding: const pw.EdgeInsets.symmetric(vertical: 2.5, horizontal: 8),
+                    decoration: pw.BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+                    ),
+                    child: pw.Column(
+                      children: [
+                        pw.Text(
+                          "ஜாமக்கோள் பிரசன்னம்".toTamilPdf,
+                          style: pw.TextStyle(font: _headingFont, fontSize: 11.5, color: PdfColors.white),
+                        ),
+                        pw.SizedBox(height: 1),
+                        pw.Text(
+                          "SOFTWARE DEVELOPED BY GBASTRO SUITE / MO. NO - 9787067910 / 7373411173",
+                          style: pw.TextStyle(font: _bodyFont, fontSize: 5.8, color: goldAccent),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  pw.SizedBox(height: 4),
+
+                  // -----------------------------------------------------------
+                  // 2. PRASANNA DETAILS (3-Column Box)
+                  // -----------------------------------------------------------
+                  pw.Container(
+                    padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: borderCol, width: 0.8),
+                      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                      color: PdfColors.white,
+                    ),
+                    child: pw.Row(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        // Column 1
+                        pw.Expanded(
+                          flex: 30,
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              _buildDetailRow("பெயர்", name, font: _bodyFont, primaryColor: primaryColor, labelWidth: 54, fontSize: 7.0),
+                              _buildDetailRow("பிரசன்ன தேதி", dateStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 54, fontSize: 7.0),
+                              _buildDetailRow("பிரசன்ன நேரம்", timeStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 54, fontSize: 7.0),
+                              _buildDetailRow("ஊர் / இடம்", prasannaNo, font: _bodyFont, primaryColor: primaryColor, labelWidth: 54, fontSize: 7.0),
+                              _buildDetailRow("பாலினம்", gender, font: _bodyFont, primaryColor: primaryColor, labelWidth: 54, fontSize: 7.0),
+                              _buildDetailRow("சூரிய உதயம்", sunriseStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 54, fontSize: 7.0),
+                            ],
+                          ),
+                        ),
+                        pw.Container(width: 0.8, height: 68, color: borderCol, margin: const pw.EdgeInsets.symmetric(horizontal: 6)),
+                        // Column 2
+                        pw.Expanded(
+                          flex: 34,
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              _buildDetailRow("லக்னம்", lagnaSign, font: _bodyFont, primaryColor: primaryColor, labelWidth: 52, fontSize: 7.0),
+                              _buildDetailRow("தமிழ் தேதி", "$tamilYear, $tamilMonth $tamilDate", font: _bodyFont, primaryColor: primaryColor, labelWidth: 52, fontSize: 7.0),
+                              _buildDetailRow(langCode == 'ta' ? "கிழமை" : (langCode == 'hi' ? "वार" : "Weekday"), weekdayStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 52, fontSize: 7.0),
+                              _buildDetailRow(langCode == 'ta' ? "நட்சத்திரம்" : (langCode == 'hi' ? "நक्षत्र" : "Nakshatra"), starDisplay, font: _bodyFont, primaryColor: primaryColor, labelWidth: 52, fontSize: 7.0),
+                              _buildDetailRow("கௌரி", gowriStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 52, fontSize: 7.0),
+                              _buildDetailRow("சூரிய அஸ்தமனம்", sunsetStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 52, fontSize: 7.0),
+                            ],
+                          ),
+                        ),
+                        pw.Container(width: 0.8, height: 68, color: borderCol, margin: const pw.EdgeInsets.symmetric(horizontal: 6)),
+                        // Column 3: குளிகாதி காலங்கள்
+                        pw.Expanded(
+                          flex: 36,
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              _buildDetailRow("ராகு காலம்", rahuStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 56, fontSize: 7.0),
+                              _buildDetailRow("எமகண்டம்", yamaStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 56, fontSize: 7.0),
+                              _buildDetailRow("குளிகை", kuligaiStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 56, fontSize: 7.0),
+                              _buildDetailRow("காலன்", kalanStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 56, fontSize: 7.0),
+                              _buildDetailRow("அர்தபிரகணன்", arthaStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 56, fontSize: 7.0),
+                              _buildDetailRow("இரவு எமகண்டம்", nightYamaStr, font: _bodyFont, primaryColor: primaryColor, labelWidth: 56, fontSize: 7.0),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  pw.SizedBox(height: 5),
+
+                  // -----------------------------------------------------------
+                  // 3. DUAL CHARTS SIDE-BY-SIDE (ENLARGED & PROMINENT)
+                  // -----------------------------------------------------------
+                  pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      // Chart 1: ஜாமக்கோள் பிரசன்னம்
+                      pw.Expanded(
+                        child: _buildJamakkolChart(
+                          outerPlanetsBySign: outerPlanetsBySign,
+                          innerPlanetsBySign: innerPlanetsBySign,
+                          udayamSign: udayamSign,
+                          arudamSign: arudamSign,
+                          kavippuSign: kavippuSign,
+                          subPlanets: subPlanets,
+                          currentJamam: outer['current_jamam_planet']?.toString() ?? "-",
+                          font: _bodyFont!,
+                          headingFont: _headingFont!,
+                          primaryColor: primaryColor,
+                          borderCol: primaryColor,
+                          bgIvory: bgIvory,
+                          blueColor: blueColor,
+                          greenColor: greenColor,
+                          redColor: redColor,
+                        ),
+                      ),
+
+                      pw.SizedBox(width: 8),
+
+                      // Chart 2: கதிர்கள் கட்டம்
+                      pw.Expanded(
+                        child: _buildKathirgalChart(
+                          kathirMap: kathirMap,
+                          bhavaBySign: bhavaBySign,
+                          strength: strength,
+                          udayamSign: udayamSign,
+                          arudamSign: arudamSign,
+                          kavippuSign: kavippuSign,
+                          font: _bodyFont!,
+                          headingFont: _headingFont!,
+                          primaryColor: primaryColor,
+                          borderCol: primaryColor,
+                          bgIvory: bgIvory,
+                          goldAccent: goldAccent,
+                          greenColor: greenColor,
+                          blueColor: blueColor,
+                          redColor: redColor,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  pw.SizedBox(height: 4),
+
+                  // -----------------------------------------------------------
+                  // 4. SUBTITLE: (கிரக பாதசாரம் மற்றும் நிலைகள்)
+                  // -----------------------------------------------------------
+                  pw.Center(
+                    child: pw.Text(
+                      (langCode == 'ta'
+                          ? "(கிரக பாதசாரம் மற்றும் நிலைகள்)"
+                          : (langCode == 'hi' ? "(ग्रह पदचार एवं स्थिति)" : "(Planetary Positions & Padacharam)")).toTamilPdf,
+                      style: pw.TextStyle(font: _headingFont, fontSize: 8.8, color: primaryColor),
+                    ),
+                  ),
+
+                  pw.SizedBox(height: 2.5),
+
+                  // -----------------------------------------------------------
+                  // 5. DUAL TABLES SIDE-BY-SIDE (ENLARGED FONT & ROW HEIGHT)
+                  // -----------------------------------------------------------
+                  pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      // Table 1: ஜாமக்கோள்கள் மற்றும் முக்கிய புள்ளிகள்
+                      pw.Expanded(
+                        child: _buildPointsTable(
+                          uDeg: uDeg,
+                          aDeg: aDeg,
+                          kDeg: kDeg,
+                          rahuKalamDeg: rahuKalamDeg,
+                          yamaDeg: yamaDeg,
+                          mrityuDeg: mrityuDeg,
+                          maanthiDeg: maanthiDeg,
+                          pDegs: pDegs,
+                          namingMap: namingMap,
+                          font: _bodyFont!,
+                          headingFont: _headingFont!,
+                          primaryColor: primaryColor,
+                          borderCol: borderCol,
+                          bgIvory: bgIvory,
+                          langCode: langCode,
+                        ),
+                      ),
+
+                      pw.SizedBox(width: 8),
+
+                      // Table 2: கோச்சார கிரகங்கள்
+                      pw.Expanded(
+                        child: _buildGocharaTable(
+                          details: details,
+                          inner: inner,
+                          notes: notes,
+                          font: _bodyFont!,
+                          headingFont: _headingFont!,
+                          primaryColor: primaryColor,
+                          borderCol: borderCol,
+                          bgIvory: bgIvory,
+                          langCode: langCode,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  pw.SizedBox(height: 3.5),
+
+                  // -----------------------------------------------------------
+                  // 6. FLOATING CARD: ஜாமக்கோள் பிரசன்ன விபரம் (16 Points in 2 Columns)
+                  // -----------------------------------------------------------
+                  _buildJamakkolNotesCard(
+                    notes: notes,
+                    font: _bodyFont!,
+                    headingFont: _headingFont!,
+                    primaryColor: primaryColor,
+                    borderCol: borderCol,
+                    goldAccent: goldAccent,
+                    langCode: langCode,
+                  ),
+
+                  pw.Spacer(),
+
+                  // -----------------------------------------------------------
+                  // 7. FOOTER
+                  // -----------------------------------------------------------
+                  pw.Container(
+                    padding: const pw.EdgeInsets.only(top: 2),
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border(top: pw.BorderSide(color: borderCol, width: 0.5)),
+                    ),
+                    child: pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text("GB ASTRO ஜோதிட மென்பொருள்".toTamilPdf, style: pw.TextStyle(font: _bodyFont, fontSize: 6.8, color: textMuted)),
+                        pw.Text("அறிக்கை அச்சிடப்பட்ட நேரம்: $nowStr".toTamilPdf, style: pw.TextStyle(font: _bodyFont, fontSize: 6.8, color: textMuted)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    return pdf.save();
+  }
+
+  // ---------------------------------------------------------------------------
+  // HELPER: DETAIL ROW
+  // ---------------------------------------------------------------------------
+  static pw.Widget _buildDetailRow(
+    String label,
+    String value, {
+    required pw.Font? font,
+    required PdfColor primaryColor,
+    double labelWidth = 54,
+    double fontSize = 7.0,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 2.0),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            width: labelWidth,
+            child: pw.Text(
+              label.toTamilPdf,
+              style: pw.TextStyle(font: font, fontSize: fontSize, color: primaryColor),
+            ),
+          ),
+          pw.Text(": ", style: pw.TextStyle(font: font, fontSize: fontSize, color: primaryColor)),
+          pw.Expanded(
+            child: pw.Text(
+              value.toTamilPdf,
+              style: pw.TextStyle(font: font, fontSize: fontSize, color: PdfColor.fromHex('#212121')),
+              maxLines: 1,
+              overflow: pw.TextOverflow.clip,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // HELPER: CHART 1 (JAMAKKOL PRASANNAM)
+  // ---------------------------------------------------------------------------
+  static pw.Widget _buildJamakkolChart({
+    required Map<String, List<String>> outerPlanetsBySign,
+    required Map<String, List<String>> innerPlanetsBySign,
+    required String udayamSign,
+    required String arudamSign,
+    required String kavippuSign,
+    required JamakkolSubPlanets? subPlanets,
+    required String currentJamam,
+    required pw.Font font,
+    required pw.Font headingFont,
+    required PdfColor primaryColor,
+    required PdfColor borderCol,
+    required PdfColor bgIvory,
+    required PdfColor blueColor,
+    required PdfColor greenColor,
+    required PdfColor redColor,
+  }) {
+    pw.Widget cell(String sign) {
+      final outerList = outerPlanetsBySign[sign] ?? [];
+      final innerList = innerPlanetsBySign[sign] ?? [];
+
+      bool isUdayam = sign == udayamSign;
+      bool isArudam = sign == arudamSign;
+      bool isKavippu = sign == kavippuSign;
+
+      // Subplanets in this sign
+      List<String> subItems = [];
+      if (subPlanets != null) {
+        int sIdx = KPService.SIGNS.indexOf(sign) + 1;
+        if (subPlanets.rahu.rasi == sIdx) {
+          subItems.add("ரா.கா");
+        }
+        if (subPlanets.yamagandan.rasi == sIdx) {
+          subItems.add("எம");
+        }
+        if (subPlanets.mrityu.rasi == sIdx) {
+          subItems.add("மிரு");
+        }
+      }
+
+      PdfColor cellBg = bgIvory;
+      if (isUdayam) {
+        cellBg = PdfColor.fromHex('#E8F5E9');
+      } else if (isArudam) {
+        cellBg = PdfColor.fromHex('#E3F2FD');
+      } else if (isKavippu) {
+        cellBg = PdfColor.fromHex('#FFEBEE');
+      }
+
+      return pw.Container(
+        decoration: pw.BoxDecoration(
+          border: pw.Border.all(color: borderCol, width: 0.6),
+          color: cellBg,
+        ),
+        padding: const pw.EdgeInsets.all(2.0),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            // Top: Badges (No sign name)
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.end,
+              children: [
+                if (isUdayam)
+                  pw.Container(
+                    padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 1.0),
+                    decoration: pw.BoxDecoration(color: greenColor, borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5))),
+                    child: pw.Text("உதயம்".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 6.2, color: PdfColors.white)),
+                  ),
+                if (isArudam)
+                  pw.Container(
+                    margin: const pw.EdgeInsets.only(left: 1),
+                    padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 1.0),
+                    decoration: pw.BoxDecoration(color: blueColor, borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5))),
+                    child: pw.Text("ஆரூ".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 6.2, color: PdfColors.white)),
+                  ),
+                if (isKavippu)
+                  pw.Container(
+                    margin: const pw.EdgeInsets.only(left: 1),
+                    padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 1.0),
+                    decoration: pw.BoxDecoration(color: redColor, borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5))),
+                    child: pw.Text("கவி".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 6.2, color: PdfColors.white)),
+                  ),
+                if (!isUdayam && !isArudam && !isKavippu)
+                  pw.SizedBox(height: 8),
+              ],
+            ),
+
+            // Middle: Outer Jamakkol Graha
+            if (outerList.isNotEmpty)
+              pw.Container(
+                alignment: pw.Alignment.centerLeft,
+                child: pw.Text(
+                  outerList.join(", ").toTamilPdf,
+                  style: pw.TextStyle(font: headingFont, fontSize: 7.2, color: blueColor),
+                ),
+              ),
+
+            // Subplanets
+            if (subItems.isNotEmpty)
+              pw.Text(
+                subItems.join(" ").toTamilPdf,
+                style: pw.TextStyle(font: headingFont, fontSize: 6.5, color: PdfColor.fromHex('#6A1B9A')),
+              ),
+
+            // Bottom: Inner Gochara Grahas
+            pw.Container(
+              alignment: pw.Alignment.bottomRight,
+              child: pw.Text(
+                innerList.join(" ").toTamilPdf,
+                style: pw.TextStyle(font: headingFont, fontSize: 7.2, color: primaryColor),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Center 2x2 Box
+    pw.Widget centerBox() {
+      return pw.Container(
+        decoration: pw.BoxDecoration(
+          border: pw.Border.all(color: borderCol, width: 0.6),
+          color: PdfColors.white,
+        ),
+        padding: const pw.EdgeInsets.all(4),
+        child: pw.Column(
+          mainAxisAlignment: pw.MainAxisAlignment.center,
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Text(
+              "ஜாமக்கோள்".toTamilPdf,
+              style: pw.TextStyle(font: headingFont, fontSize: 10.5, color: primaryColor),
+            ),
+            pw.Text(
+              "பிரசன்னக் கட்டம்".toTamilPdf,
+              style: pw.TextStyle(font: headingFont, fontSize: 10.5, color: primaryColor),
+            ),
+            pw.Container(width: 46, height: 0.6, color: primaryColor, margin: const pw.EdgeInsets.symmetric(vertical: 2.5)),
+            pw.Text("உதயம்: ${KPService.TAMIL_SIGNS[udayamSign]}".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: greenColor)),
+            pw.Text("ஆரூடம்: ${KPService.TAMIL_SIGNS[arudamSign]}".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: blueColor)),
+            pw.Text("கவிப்பு: ${KPService.TAMIL_SIGNS[kavippuSign]}".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: redColor)),
+          ],
+        ),
+      );
+    }
+
+    const double chartH = 205;
+
+    return pw.Container(
+      height: chartH,
+      decoration: pw.BoxDecoration(border: pw.Border.all(color: borderCol, width: 1.0)),
+      child: pw.Column(
+        children: [
+          // Row 0: Meenam, Mesham, Rishabam, Mithunam
+          pw.Expanded(
+            child: pw.Row(
+              children: [
+                pw.Expanded(child: cell('Pisces')),
+                pw.Expanded(child: cell('Aries')),
+                pw.Expanded(child: cell('Taurus')),
+                pw.Expanded(child: cell('Gemini')),
+              ],
+            ),
+          ),
+          // Middle Section (Rows 1 & 2)
+          pw.Expanded(
+            flex: 2,
+            child: pw.Row(
+              children: [
+                // Left Column: Kumbam, Makaram
+                pw.Expanded(
+                  child: pw.Column(
+                    children: [
+                      pw.Expanded(child: cell('Aquarius')),
+                      pw.Expanded(child: cell('Capricorn')),
+                    ],
+                  ),
+                ),
+                // Center Box (2x2)
+                pw.Expanded(flex: 2, child: centerBox()),
+                // Right Column: Kadagam, Simmam
+                pw.Expanded(
+                  child: pw.Column(
+                    children: [
+                      pw.Expanded(child: cell('Cancer')),
+                      pw.Expanded(child: cell('Leo')),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Row 3: Dhanusu, Viruchigam, Thulam, Kanni
+          pw.Expanded(
+            child: pw.Row(
+              children: [
+                pw.Expanded(child: cell('Sagittarius')),
+                pw.Expanded(child: cell('Scorpio')),
+                pw.Expanded(child: cell('Libra')),
+                pw.Expanded(child: cell('Virgo')),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // HELPER: CHART 2 (KATHIRGAL CHART)
+  // ---------------------------------------------------------------------------
+  static pw.Widget _buildKathirgalChart({
+    required Map<dynamic, dynamic> kathirMap,
+    required Map<String, dynamic> bhavaBySign,
+    required Map<dynamic, dynamic> strength,
+    required String udayamSign,
+    required String arudamSign,
+    required String kavippuSign,
+    required pw.Font font,
+    required pw.Font headingFont,
+    required PdfColor primaryColor,
+    required PdfColor borderCol,
+    required PdfColor bgIvory,
+    required PdfColor goldAccent,
+    required PdfColor greenColor,
+    required PdfColor blueColor,
+    required PdfColor redColor,
+  }) {
+    pw.Widget cell(String sign) {
+      final bData = bhavaBySign[sign] as Map<String, dynamic>?;
+      final totalK = bData?['totalDisplay'] ?? kathirMap[sign] ?? "-";
+      final rasiK = bData?['rasiDisplay'] ?? JamakkolService.RASI_KATHIR[sign]?.toString() ?? "-";
+      final planetK = bData?['planetDisplay'] ?? "0";
+
+      bool isUdayam = sign == udayamSign;
+      bool isArudam = sign == arudamSign;
+      bool isKavippu = sign == kavippuSign;
+
+      PdfColor cellBg = bgIvory;
+      if (isUdayam) {
+        cellBg = PdfColor.fromHex('#E8F5E9');
+      } else if (isArudam) {
+        cellBg = PdfColor.fromHex('#E3F2FD');
+      } else if (isKavippu) {
+        cellBg = PdfColor.fromHex('#FFEBEE');
+      }
+
+      return pw.Container(
+        decoration: pw.BoxDecoration(
+          border: pw.Border.all(color: borderCol, width: 0.6),
+          color: cellBg,
+        ),
+        padding: const pw.EdgeInsets.all(2.0),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            // Top: Badges (No sign name)
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.end,
+              children: [
+                if (isUdayam)
+                  pw.Text("(உத)".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 6.5, color: greenColor))
+                else if (isArudam)
+                  pw.Text("(ஆரூ)".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 6.5, color: blueColor))
+                else if (isKavippu)
+                  pw.Text("(கவி)".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 6.5, color: redColor))
+                else
+                  pw.SizedBox(height: 8),
+              ],
+            ),
+
+            // Middle: Total Kathir
+            pw.Center(
+              child: pw.Text(
+                "$totalK கதிர்".toTamilPdf,
+                style: pw.TextStyle(font: headingFont, fontSize: 9.5, color: primaryColor),
+              ),
+            ),
+
+            // Bottom: Formula (Rasi + Planet)
+            pw.Text(
+              "ராசி:$rasiK + கிர:$planetK".toTamilPdf,
+              style: pw.TextStyle(font: font, fontSize: 5.8, color: textColDark),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Center 2x2 Box
+    pw.Widget centerBox() {
+      final uTotal = strength['udayam']?['totalDisplay'] ?? strength['udayam']?['total'] ?? "-";
+      final aTotal = strength['arudam']?['totalDisplay'] ?? strength['arudam']?['total'] ?? "-";
+      final kTotal = strength['kavi']?['totalDisplay'] ?? strength['kavi']?['total'] ?? "-";
+
+      return pw.Container(
+        decoration: pw.BoxDecoration(
+          border: pw.Border.all(color: borderCol, width: 0.6),
+          color: PdfColors.white,
+        ),
+        padding: const pw.EdgeInsets.all(4),
+        child: pw.Column(
+          mainAxisAlignment: pw.MainAxisAlignment.center,
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Text(
+              "கதிர்கள்".toTamilPdf,
+              style: pw.TextStyle(font: headingFont, fontSize: 11.5, color: primaryColor),
+            ),
+            pw.Container(width: 46, height: 0.6, color: primaryColor, margin: const pw.EdgeInsets.symmetric(vertical: 2.5)),
+            pw.Text("உதயக் கதிர்: $uTotal".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: greenColor)),
+            pw.Text("ஆருடக் கதிர்: $aTotal".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: blueColor)),
+            pw.Text("கவிப்புக் கதிர்: $kTotal".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: redColor)),
+          ],
+        ),
+      );
+    }
+
+    const double chartH = 205;
+
+    return pw.Container(
+      height: chartH,
+      decoration: pw.BoxDecoration(border: pw.Border.all(color: borderCol, width: 1.0)),
+      child: pw.Column(
+        children: [
+          pw.Expanded(
+            child: pw.Row(
+              children: [
+                pw.Expanded(child: cell('Pisces')),
+                pw.Expanded(child: cell('Aries')),
+                pw.Expanded(child: cell('Taurus')),
+                pw.Expanded(child: cell('Gemini')),
+              ],
+            ),
+          ),
+          pw.Expanded(
+            flex: 2,
+            child: pw.Row(
+              children: [
+                pw.Expanded(
+                  child: pw.Column(
+                    children: [
+                      pw.Expanded(child: cell('Aquarius')),
+                      pw.Expanded(child: cell('Capricorn')),
+                    ],
+                  ),
+                ),
+                pw.Expanded(flex: 2, child: centerBox()),
+                pw.Expanded(
+                  child: pw.Column(
+                    children: [
+                      pw.Expanded(child: cell('Cancer')),
+                      pw.Expanded(child: cell('Leo')),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          pw.Expanded(
+            child: pw.Row(
+              children: [
+                pw.Expanded(child: cell('Sagittarius')),
+                pw.Expanded(child: cell('Scorpio')),
+                pw.Expanded(child: cell('Libra')),
+                pw.Expanded(child: cell('Virgo')),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static const PdfColor textColDark = PdfColor.fromInt(0xFF263238);
+
+  // ---------------------------------------------------------------------------
+  // HELPER: TABLE 1 (JAMAKKOL GRAHAS & KEY POINTS)
+  // ---------------------------------------------------------------------------
+  static pw.Widget _buildPointsTable({
+    required double uDeg,
+    required double aDeg,
+    required double kDeg,
+    required double rahuKalamDeg,
+    required double yamaDeg,
+    required double mrityuDeg,
+    required double maanthiDeg,
+    required Map pDegs,
+    required Map namingMap,
+    required pw.Font font,
+    required pw.Font headingFont,
+    required PdfColor primaryColor,
+    required PdfColor borderCol,
+    required PdfColor bgIvory,
+    required String langCode,
+  }) {
+    List<Map<String, dynamic>> rows = [
+      {'num': '1', 'name': 'உதயம்', 'deg': uDeg},
+      {'num': '2', 'name': 'ஆரூடம்', 'deg': aDeg},
+      {'num': '3', 'name': 'கவிப்பு', 'deg': kDeg},
+      {'num': '4', 'name': 'இராகு காலம்', 'deg': rahuKalamDeg},
+      {'num': '5', 'name': 'எமகண்டன்', 'deg': yamaDeg},
+      {'num': '6', 'name': 'மிருத்யு', 'deg': mrityuDeg},
+      {'num': '7', 'name': 'குளிகன்/மாந்தி', 'deg': maanthiDeg},
+      {'num': '8', 'name': 'பாம்பு', 'deg': (pDegs['Rahu'] as num?)?.toDouble() ?? 0.0},
+      {'num': '9', 'name': 'சூரியன்', 'deg': (pDegs['Sun'] as num?)?.toDouble() ?? 0.0},
+      {'num': '10', 'name': 'சந்திரன்', 'deg': (pDegs['Moon'] as num?)?.toDouble() ?? 0.0},
+      {'num': '11', 'name': 'செவ்வாய்', 'deg': (pDegs['Mars'] as num?)?.toDouble() ?? 0.0},
+      {'num': '12', 'name': 'புதன்', 'deg': (pDegs['Mercury'] as num?)?.toDouble() ?? 0.0},
+      {'num': '13', 'name': 'குரு', 'deg': (pDegs['Jupiter'] as num?)?.toDouble() ?? 0.0},
+      {'num': '14', 'name': 'சுக்கிரன்', 'deg': (pDegs['Venus'] as num?)?.toDouble() ?? 0.0},
+      {'num': '15', 'name': 'சனி', 'deg': (pDegs['Saturn'] as num?)?.toDouble() ?? 0.0},
+    ];
+
+    return pw.Container(
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: borderCol, width: 0.8),
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+      ),
+      child: pw.Column(
+        children: [
+          // Table Header
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 4),
+            decoration: pw.BoxDecoration(
+              color: primaryColor,
+              borderRadius: const pw.BorderRadius.only(topLeft: pw.Radius.circular(2.5), topRight: pw.Radius.circular(2.5)),
+            ),
+            child: pw.Center(
+              child: pw.Text(
+                "ஜாமக்கோள்கள் மற்றும் முக்கிய புள்ளிகள்".toTamilPdf,
+                style: pw.TextStyle(font: headingFont, fontSize: 8.5, color: PdfColors.white),
+              ),
+            ),
+          ),
+          // Sub Header Row
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 2.5, horizontal: 3),
+            color: PdfColor.fromHex('#F5ECE3'),
+            child: pw.Row(
+              children: [
+                pw.SizedBox(width: 95, child: pw.Text("கிரகம் / புள்ளி".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: primaryColor))),
+                pw.SizedBox(width: 60, child: pw.Text("பாகை".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: primaryColor), textAlign: pw.TextAlign.center)),
+                pw.Expanded(child: pw.Text("நட்சத்திரம்/பாதம்".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: primaryColor), textAlign: pw.TextAlign.right)),
+              ],
+            ),
+          ),
+          // Data Rows
+          ...rows.map((r) {
+            double deg = r['deg'] as double;
+            var sp = _getStarPada(deg, langCode);
+            String degStr = _formatDeg(deg);
+            String label = "${r['num']}. ${r['name']}";
+            bool isEven = int.parse(r['num']) % 2 == 0;
+
+            return pw.Container(
+              padding: const pw.EdgeInsets.symmetric(vertical: 1.6, horizontal: 3),
+              decoration: pw.BoxDecoration(
+                color: isEven ? PdfColor.fromHex('#FAF7F2') : PdfColors.white,
+                border: pw.Border(top: pw.BorderSide(color: borderCol, width: 0.3)),
+              ),
+              child: pw.Row(
+                children: [
+                  pw.SizedBox(width: 95, child: pw.Text(label.toTamilPdf, style: pw.TextStyle(font: font, fontSize: 7.2, color: textColDark))),
+                  pw.SizedBox(width: 60, child: pw.Text(degStr.toTamilPdf, style: pw.TextStyle(font: font, fontSize: 7.2, color: primaryColor), textAlign: pw.TextAlign.center)),
+                  pw.Expanded(child: pw.Text("${sp['star']} - ${sp['pada']}".toTamilPdf, style: pw.TextStyle(font: font, fontSize: 7.2, color: textColDark), textAlign: pw.TextAlign.right)),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // HELPER: TABLE 2 (GOCHARA GRAHAS)
+  // ---------------------------------------------------------------------------
+  static pw.Widget _buildGocharaTable({
+    required Map details,
+    required Map inner,
+    required Map notes,
+    required pw.Font font,
+    required pw.Font headingFont,
+    required PdfColor primaryColor,
+    required PdfColor borderCol,
+    required PdfColor bgIvory,
+    required String langCode,
+  }) {
+    final planetsList = [
+      {'name': '1. லக்னம்', 'key': 'lagna'},
+      {'name': '2. சூரியன்', 'key': 'sun'},
+      {'name': '3. சந்திரன்', 'key': 'moon'},
+      {'name': '4. செவ்வாய்', 'key': 'mars'},
+      {'name': '5. புதன்', 'key': 'mercury'},
+      {'name': '6. குரு', 'key': 'jupiter'},
+      {'name': '7. சுக்கிரன்', 'key': 'venus'},
+      {'name': '8. சனி', 'key': 'saturn'},
+      {'name': '9. ராகு', 'key': 'rahu'},
+      {'name': '10. கேது', 'key': 'ketu'},
+      {'name': '11. மாந்தி', 'key': 'maanthi'},
+    ];
+
+    // Extra Rows to maintain symmetrical 15 rows with Table 1
+    final uLord = notes['udayam_lord_house']?.toString() ?? "-";
+    final aLord = notes['arudam_lord_house']?.toString() ?? "-";
+    final bLord = notes['badhaka_lord_details'] as Map? ?? {};
+    final eLord = notes['eighth_lord_details'] as Map? ?? {};
+
+    String uLordStr = "-";
+    if (uLord != "-") {
+      uLordStr = langCode == 'en' ? "House $uLord" : (langCode == 'hi' ? "$uLord भाव" : "$uLord-ம் பாவம்");
+    }
+
+    String aLordStr = "-";
+    if (aLord != "-") {
+      aLordStr = langCode == 'en' ? "House $aLord" : (langCode == 'hi' ? "$aLord भाव" : "$aLord-ம் பாவம்");
+    }
+
+    String bLordStr = "-";
+    if (bLord.isNotEmpty && bLord['lord'] != null) {
+      String p = _translatePlanet(bLord['lord'], langCode);
+      String h = bLord['house']?.toString() ?? "";
+      bLordStr = langCode == 'en' ? "$p (in $h)" : (langCode == 'hi' ? "$p ($h में)" : "$p ($h-ல்)");
+    }
+
+    String eLordStr = "-";
+    if (eLord.isNotEmpty && eLord['lord'] != null) {
+      String p = _translatePlanet(eLord['lord'], langCode);
+      String h = eLord['house']?.toString() ?? "";
+      eLordStr = langCode == 'en' ? "$p (in $h)" : (langCode == 'hi' ? "$p ($h में)" : "$p ($h-ல்)");
+    }
+
+    final extraRows = [
+      {'name': '12. உதயாதிபதி நின்ற பாவம்', 'val': uLordStr},
+      {'name': '13. ஆருடாதிபதி நின்ற பாவம்', 'val': aLordStr},
+      {'name': '14. பாதகாதிபதி நின்ற பாவம்', 'val': bLordStr},
+      {'name': '15. எட்டாம் அதிபதி நின்ற பாவம்', 'val': eLordStr},
+    ];
+
+    return pw.Container(
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: borderCol, width: 0.8),
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+      ),
+      child: pw.Column(
+        children: [
+          // Table Header
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 4),
+            decoration: pw.BoxDecoration(
+              color: primaryColor,
+              borderRadius: const pw.BorderRadius.only(topLeft: pw.Radius.circular(2.5), topRight: pw.Radius.circular(2.5)),
+            ),
+            child: pw.Center(
+              child: pw.Text(
+                "கோச்சார கிரகங்கள்".toTamilPdf,
+                style: pw.TextStyle(font: headingFont, fontSize: 8.5, color: PdfColors.white),
+              ),
+            ),
+          ),
+          // Sub Header Row
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 2.5, horizontal: 3),
+            color: PdfColor.fromHex('#F5ECE3'),
+            child: pw.Row(
+              children: [
+                pw.SizedBox(width: 95, child: pw.Text("கிரகம்".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: primaryColor))),
+                pw.SizedBox(width: 60, child: pw.Text("பாகை".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: primaryColor), textAlign: pw.TextAlign.center)),
+                pw.Expanded(child: pw.Text("நட்சத்திரம்/பாதம்".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: primaryColor), textAlign: pw.TextAlign.right)),
+              ],
+            ),
+          ),
+          // Planet Rows
+          ...planetsList.map((p) {
+            String key = p['key']!;
+            double deg = 0.0;
+            String spStr = "-";
+            if (details.containsKey(key) && details[key] != null) {
+              deg = (details[key]['longitude'] as num?)?.toDouble() ?? 0.0;
+              var sp = _getStarPada(deg, langCode);
+              spStr = "${sp['star']} - ${sp['pada']}";
+            }
+            String degStr = _formatDeg(deg);
+            int idx = planetsList.indexOf(p) + 1;
+            bool isEven = idx % 2 == 0;
+
+            return pw.Container(
+              padding: const pw.EdgeInsets.symmetric(vertical: 1.6, horizontal: 3),
+              decoration: pw.BoxDecoration(
+                color: isEven ? PdfColor.fromHex('#FAF7F2') : PdfColors.white,
+                border: pw.Border(top: pw.BorderSide(color: borderCol, width: 0.3)),
+              ),
+              child: pw.Row(
+                children: [
+                  pw.SizedBox(width: 95, child: pw.Text(p['name']!.toTamilPdf, style: pw.TextStyle(font: font, fontSize: 7.2, color: textColDark))),
+                  pw.SizedBox(width: 60, child: pw.Text(degStr.toTamilPdf, style: pw.TextStyle(font: font, fontSize: 7.2, color: primaryColor), textAlign: pw.TextAlign.center)),
+                  pw.Expanded(child: pw.Text(spStr.toTamilPdf, style: pw.TextStyle(font: font, fontSize: 7.2, color: textColDark), textAlign: pw.TextAlign.right)),
+                ],
+              ),
+            );
+          }),
+
+          // Extra Symmetrical Rows
+          ...extraRows.map((r) {
+            int idx = planetsList.length + extraRows.indexOf(r) + 1;
+            bool isEven = idx % 2 == 0;
+            return pw.Container(
+              padding: const pw.EdgeInsets.symmetric(vertical: 1.6, horizontal: 3),
+              decoration: pw.BoxDecoration(
+                color: isEven ? PdfColor.fromHex('#FAF7F2') : PdfColors.white,
+                border: pw.Border(top: pw.BorderSide(color: borderCol, width: 0.3)),
+              ),
+              child: pw.Row(
+                children: [
+                  pw.SizedBox(width: 145, child: pw.Text(r['name']!.toTamilPdf, style: pw.TextStyle(font: font, fontSize: 6.8, color: textColDark))),
+                  pw.Expanded(child: pw.Text(r['val']!.toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.0, color: primaryColor), textAlign: pw.TextAlign.right)),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // HELPER: FLOATING CARD - JAMAKKOL PRASANNA VIVARAM (16 POINTS IN 2 COLUMNS)
+  // ---------------------------------------------------------------------------
+  static pw.Widget _buildJamakkolNotesCard({
+    required Map<dynamic, dynamic> notes,
+    required pw.Font font,
+    required pw.Font headingFont,
+    required PdfColor primaryColor,
+    required PdfColor borderCol,
+    required PdfColor goldAccent,
+    required String langCode,
+  }) {
+    final isTa = langCode == 'ta';
+    final isHi = langCode == 'hi';
+
+    String getPName(dynamic name) {
+      if (name == null) return "-";
+      String n = name.toString().trim();
+      if (n.toLowerCase() == 'rahu' || n == 'ராகு') {
         return isTa ? "பாம்பு" : (isHi ? "राहु" : "Snake");
       }
-      return KPService.TAMIL_PLANETS[name] ?? name;
+      return _translatePlanet(n, langCode);
     }
 
-    // Helper: Translate star lord (நட்சத்திராதிபதி எப்போதும் ராகு/கேது - பாம்பு அல்ல)
-    String getStarLordName(String name) {
+    String getStarLordName(dynamic name) {
+      if (name == null) return "-";
+      return _translatePlanet(name.toString().trim(), langCode);
+    }
+
+    String getRName(dynamic name) {
+      if (name == null) return "-";
+      String n = name.toString().trim();
+      if (n.isEmpty || n == "-") return "-";
       if (isTa) {
-        return KPService.TAMIL_PLANETS[name] ?? name;
+        return KPService.TAMIL_SIGNS[n] ?? _engToTamStar[n] ?? n;
       } else if (isHi) {
-        return name == 'Rahu' ? 'राहु' : (name == 'Ketu' ? 'केतु' : name);
+        return KPService.HINDI_SIGNS[n] ?? _engToHiStar[n] ?? n;
       }
-      return name;
-    }
-    
-    // Helper: Translate rasi name
-    String getRName(String name) {
-      return KPService.TAMIL_SIGNS[name] ?? name;
+      return n;
     }
 
-    // 1. Planet contacting Udayam
+    String formatDegVal(num? val) {
+      if (val == null) return "00:00";
+      double d = (val.toDouble() % 30.0 + 30.0) % 30.0;
+      int deg = d.floor();
+      int min = ((d - deg) * 60).floor();
+      return "${deg.toString().padLeft(2, '0')}:${min.toString().padLeft(2, '0')}";
+    }
+
+    // 1. Udayam star pada
+    final uStar = notes['udayam_star'] as Map? ?? {};
+    String uStarStr = "-";
+    if (uStar.isNotEmpty) {
+      String degStr = formatDegVal(uStar['deg'] as num?);
+      String nak = getRName(uStar['nakshatra']);
+      String pada = (uStar['pada'] ?? "-").toString();
+      String lord = getStarLordName(uStar['lord']);
+      String lordship = (uStar['lordship'] ?? "").toString();
+      uStarStr = "$degStr $nak $pada $lord $lordship".trim();
+    }
+
+    // 2. Planet contacting Udayam
     final uContacts = notes['udayam_contact'] as List? ?? [];
     String uContactStr = "-";
     if (uContacts.isNotEmpty) {
       uContactStr = uContacts.map((c) {
         String p = getPName(c['planet']);
-        double deg = c['deg'] % 30;
-        int d = deg.floor();
-        int m = ((deg - d) * 60).floor();
-        String degStr = "${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
+        String degStr = formatDegVal(c['deg'] as num?);
+        String h = (c['house'] ?? "").toString();
+        String l = (c['lordship'] ?? "").toString();
         return isTa 
-            ? "$p\_$degStr / பாவம் ${c['house']} / ${c['lordship']}"
-            : (isHi ? "$p\_$degStr / भाव ${c['house']} / ${c['lordship']}" : "$p\_$degStr / House ${c['house']} / ${c['lordship']}");
+            ? "$p\_$degStr / பாவம் $h / $l"
+            : (isHi ? "$p\_$degStr / भाव $h / $l" : "$p\_$degStr / H$h / $l");
       }).join(", ");
-    }
-
-    // 2. Udayam star pada
-    final uStar = notes['udayam_star'] as Map? ?? {};
-    String uStarStr = "-";
-    if (uStar.isNotEmpty) {
-      double uDeg = uStar['deg'] % 30;
-      int ud = uDeg.floor();
-      int um = ((uDeg - ud) * 60).floor();
-      uStarStr = "${ud.toString().padLeft(2, '0')}:${um.toString().padLeft(2, '0')} ${getRName(uStar['nakshatra'])} ${uStar['pada']} ${getStarLordName(uStar['lord'])} ${uStar['lordship']}";
     }
 
     // 3. Crossed planet
     final crossed = notes['crossed_planet'] as Map?;
     String crossedStr = "-";
     if (crossed != null) {
-      double cDeg = crossed['deg'] % 30;
-      int cd = cDeg.floor();
-      int cm = ((cDeg - cd) * 60).floor();
-      String cDegStr = "${cd.toString().padLeft(2, '0')}:${cm.toString().padLeft(2, '0')}";
-      crossedStr = "${getPName(crossed['planet'])} ${crossed['lordship']} = $cDegStr";
+      String p = getPName(crossed['planet']);
+      String l = (crossed['lordship'] ?? "").toString();
+      String degStr = formatDegVal(crossed['deg'] as num?);
+      crossedStr = "$p $l = $degStr";
     }
 
-    // 4. Arudam House
-    final aHouse = notes['arudam_house_details'] as Map? ?? {};
-    String aHouseStr = "-";
-    if (aHouse.isNotEmpty) {
-      double aDeg = aHouse['deg'] % 30;
-      int ad = aDeg.floor();
-      int am = ((aDeg - ad) * 60).floor();
-      String aDegStr = "${ad.toString().padLeft(2, '0')}:${am.toString().padLeft(2, '0')}";
-      aHouseStr = "${aHouse['house']} ${getPName(aHouse['lord'])} ${aHouse['lordship']} $aDegStr ${getRName(aHouse['nakshatra'])} ${aHouse['pada']}";
-    }
+    // 4. Udayam lord house
+    String uLordHouseStr = (notes['udayam_lord_house'] ?? "-").toString();
 
     // 5. Planet contacting Arudam
     final aContact = notes['arudam_contact'] as Map?;
     String aContactStr = "-";
     if (aContact != null) {
-      double acDeg = aContact['deg'] % 30;
-      int acd = acDeg.floor();
-      int acm = ((acDeg - acd) * 60).floor();
-      String acDegStr = "${acd.toString().padLeft(2, '0')}:${acm.toString().padLeft(2, '0')}";
-      aContactStr = "${getPName(aContact['planet'])}\_$acDegStr ${getRName(aContact['nakshatra'])} ${aContact['pada']}";
+      String p = getPName(aContact['planet']);
+      String degStr = formatDegVal(aContact['deg'] as num?);
+      String nak = getRName(aContact['nakshatra']);
+      String pada = (aContact['pada'] ?? "").toString();
+      aContactStr = "$p\_$degStr $nak $pada".trim();
     }
 
-    // 6. Kavippu House
+    // 6. Arudam House
+    final aHouse = notes['arudam_house_details'] as Map? ?? {};
+    String aHouseStr = "-";
+    if (aHouse.isNotEmpty) {
+      String h = (aHouse['house'] ?? "").toString();
+      String lord = getPName(aHouse['lord']);
+      String lShip = (aHouse['lordship'] ?? "").toString();
+      String degStr = formatDegVal(aHouse['deg'] as num?);
+      String nak = getRName(aHouse['nakshatra']);
+      String pada = (aHouse['pada'] ?? "").toString();
+      aHouseStr = "$h $lord $lShip $degStr $nak $pada".trim();
+    }
+
+    // 7. Arudam lord house
+    String aLordHouseStr = (notes['arudam_lord_house'] ?? "-").toString();
+
+    // 8. Kavippu House
     final kHouse = notes['kavi_house_details'] as Map? ?? {};
     String kHouseStr = "-";
     if (kHouse.isNotEmpty) {
-      double kDeg = kHouse['deg'] % 30;
-      int kd = kDeg.floor();
-      int km = ((kDeg - kd) * 60).floor();
-      String kDegStr = "${kd.toString().padLeft(2, '0')}:${km.toString().padLeft(2, '0')}";
-      kHouseStr = "${kHouse['house']} $kDegStr ${getRName(kHouse['nakshatra'])} ${kHouse['pada']}";
+      String h = (kHouse['house'] ?? "").toString();
+      String degStr = formatDegVal(kHouse['deg'] as num?);
+      String nak = getRName(kHouse['nakshatra']);
+      String pada = (kHouse['pada'] ?? "").toString();
+      kHouseStr = "$h $degStr $nak $pada".trim();
     }
 
-    // 7. Planet covered by Kavippu
+    // 9. Planet covered by Kavippu
     final kPlanet = notes['kavi_planet_details'] as Map?;
     String kPlanetStr = "-";
     if (kPlanet != null) {
-      double kpDeg = kPlanet['deg'] % 30;
-      int kpd = kpDeg.floor();
-      int kpm = ((kpDeg - kpd) * 60).floor();
-      String kpDegStr = "${kpd.toString().padLeft(2, '0')}:${kpm.toString().padLeft(2, '0')}";
-      kPlanetStr = "${getPName(kPlanet['planet'])} - ${kPlanet['lordship']} = $kpDegStr ${getRName(kPlanet['nakshatra'])} ${kPlanet['pada']}";
+      String p = getPName(kPlanet['planet']);
+      String l = (kPlanet['lordship'] ?? "").toString();
+      String degStr = formatDegVal(kPlanet['deg'] as num?);
+      String nak = getRName(kPlanet['nakshatra']);
+      String pada = (kPlanet['pada'] ?? "").toString();
+      kPlanetStr = "$p - $l = $degStr $nak $pada".trim();
     }
-
-    // 4. Udayam Lord House
-    String uLordHouseStr = (notes['udayam_lord_house'] ?? "-").toString();
-
-    // 8. Arudam Lord House
-    String aLordHouseStr = (notes['arudam_lord_house'] ?? "-").toString();
 
     // 10. Udayam vs Arudam
     String uVsAStr = (notes['udayam_vs_arudam'] ?? "-").toString();
@@ -335,636 +1633,165 @@ class JamakkolOnePagePdfService {
     // 13. Arudam vs Kavippu
     String aVsKStr = (notes['arudam_vs_kavi'] ?? "-").toString();
 
-    // 11. 8th Lord
-    final eLord = notes['eighth_lord_details'] as Map? ?? {};
-    String eLordStr = "-";
-    if (eLord.isNotEmpty) {
-      eLordStr = isTa 
-          ? "${getPName(eLord['lord'])} \_ ${eLord['house']}-ல்"
-          : (isHi ? "${getPName(eLord['lord'])} \_ ${eLord['house']} वें भाव में" : "${getPName(eLord['lord'])} in House ${eLord['house']}");
-    }
-
-    // 12. Badhakadhipathi
-    final bLord = notes['badhaka_lord_details'] as Map? ?? {};
-    String bLordStr = "-";
-    if (bLord.isNotEmpty) {
-      String bTypeLabel = isTa
-          ? (bLord['type_offset'] == 11 ? "சர ராசி 11" : (bLord['type_offset'] == 9 ? "ஸ்திர ராசி 9" : "உபய ராசி 7"))
-          : (isHi ? (bLord['type_offset'] == 11 ? "चर राशि 11" : (bLord['type_offset'] == 9 ? "स्थिर राशि 9" : "द्विस्वभाव राशि 7")) : "Badhaka House ${bLord['type_offset']}");
-      bLordStr = isTa
-          ? "${getPName(bLord['lord'])} ($bTypeLabel) ${bLord['house']} \_ல்"
-          : (isHi ? "${getPName(bLord['lord'])} ($bTypeLabel) ${bLord['house']} वें भाव में" : "${getPName(bLord['lord'])} ($bTypeLabel) in House ${bLord['house']}");
-    }
-
-    // 13. Parivarthanai
-    final parivarthanas = notes['parivarthana'] as List? ?? [];
-    String parivarthanaiStr = parivarthanas.isEmpty 
-        ? (isTa ? "இல்லை" : (isHi ? "नहीं है" : "None"))
-        : parivarthanas.map((p) {
-            final parts = p.toString().split('-');
-            return "${getPName(parts[0])} - ${getPName(parts[1])}";
-          }).join(", ");
-
     // 14. Sootchuma Rasi
     final sootchuma = notes['sootchuma_details'] as Map? ?? {};
-    String sootchumaStr = (sootchuma['rasi'] != null && sootchuma['rasi'].toString().isNotEmpty)
-        ? getRName(sootchuma['rasi'].toString())
-        : "-";
+    String sootchumaStr = getRName(sootchuma['rasi'] ?? "-");
 
     // 15. Outer Planet Ucham / Neecham
     final uchamList = (notes['ucham_planets'] as List?)?.cast<String>() ?? [];
     final neechamList = (notes['neecham_planets'] as List?)?.cast<String>() ?? [];
-
-    String getFullPName(String p) {
-      if (isTa) return KPService.TAMIL_PLANETS[p] ?? p;
-      if (isHi) return KPService.HINDI_PLANETS[p] ?? p;
-      return KPService.ENGLISH_PLANETS[p] ?? p;
-    }
-
-    String getFullSignName(String s) {
-      if (isTa) return KPService.TAMIL_SIGNS[s] ?? s;
-      if (isHi) return KPService.HINDI_SIGNS[s] ?? s;
-      return KPService.ENGLISH_SIGNS[s] ?? s;
-    }
-
-    String uchamNeechamStr = "-";
     List<String> unParts = [];
     if (uchamList.isNotEmpty) {
-      String uNames = uchamList.map(getFullPName).join(", ");
+      String uNames = uchamList.map((p) => _translatePlanet(p, langCode)).join(", ");
       unParts.add(isTa ? "உச்சம் _ $uNames" : (isHi ? "उच्च _ $uNames" : "Exalted _ $uNames"));
     }
     if (neechamList.isNotEmpty) {
-      String nNames = neechamList.map(getFullPName).join(", ");
+      String nNames = neechamList.map((p) => _translatePlanet(p, langCode)).join(", ");
       unParts.add(isTa ? "நீச்சம் _ $nNames" : (isHi ? "नीच _ $nNames" : "Debilitated _ $nNames"));
     }
-    if (unParts.isNotEmpty) {
-      uchamNeechamStr = unParts.join("<br>");
-    }
+    String uchamNeechamStr = unParts.isNotEmpty ? unParts.join(", ") : "-";
 
     // 16. Rasi Parivarthanai
     final pDetails = notes['parivarthana_details'] as List? ?? [];
     String parivarthanaiDisplayStr = "-";
     if (pDetails.isNotEmpty) {
       parivarthanaiDisplayStr = pDetails.map((d) {
-        String s1Name = getFullSignName(d['sign1'] ?? "");
-        String s2Name = getFullSignName(d['sign2'] ?? "");
-        String p1Name = getFullPName(d['planet1'] ?? "");
-        String p2Name = getFullPName(d['planet2'] ?? "");
-        return "${s1Name}_${s2Name}<br>$p1Name $p2Name";
-      }).join("<br><br>");
+        String s1 = getRName(d['sign1'] ?? "");
+        String s2 = getRName(d['sign2'] ?? "");
+        String p1 = _translatePlanet(d['planet1'] ?? "", langCode);
+        String p2 = _translatePlanet(d['planet2'] ?? "", langCode);
+        return "${s1}_${s2} ($p1, $p2)";
+      }).join(", ");
     }
 
-    // Chart Gen
-    Map<String, List<Map<String, dynamic>>> rasiEntries = {};
-    for (var sign in KPService.SIGNS) rasiEntries[sign] = [];
-    
-    final langCode = l10n.localeName;
-    String udayamLabel = langCode == 'en' ? 'Ud' : (langCode == 'hi' ? 'उद' : 'உத');
-    String arudamLabel = langCode == 'en' ? 'Ar' : (langCode == 'hi' ? 'आ' : 'ஆரூ');
-    String kaviLabel = langCode == 'en' ? 'Ka' : (langCode == 'hi' ? 'क' : 'கவி');
+    final col1Items = [
+      {'name': isTa ? '1. உதயம் நின்ற நட்சத்திர பாதம்' : (isHi ? '1. उदय नक्षत्र पाद' : '1. Udayam Star Pada'), 'val': uStarStr},
+      {'name': isTa ? '2. உதயம் தொடர்பு கொள்ளும் கிரகம்' : (isHi ? '2. उदय संपर्क ग्रह' : '2. Planet Contacting Udayam'), 'val': uContactStr},
+      {'name': isTa ? '3. உதயத்தைக் கடந்த கிரகம்' : (isHi ? '3. उदय पार किया ग्रह' : '3. Planet Passed Udayam'), 'val': crossedStr},
+      {'name': isTa ? '4. உதயாதிபதி நின்ற பாவம்' : (isHi ? '4. उदयाधिपति भाव' : '4. Udayam Lord House'), 'val': uLordHouseStr},
+      {'name': isTa ? '5. ஆருடம் தொடர்பு கொள்ளும் கிரகம்' : (isHi ? '5. आरूढ़ संपर्क ग्रह' : '5. Planet Contacting Arudam'), 'val': aContactStr},
+      {'name': isTa ? '6. ஆருடம் உள்ள பாவம்' : (isHi ? '6. आरूढ़ भाव विवरण' : '6. Arudam House Details'), 'val': aHouseStr},
+      {'name': isTa ? '7. ஆருட அதிபதி நின்ற பாவம்' : (isHi ? '7. आरूढ़ाधिपति भाव' : '7. Arudam Lord House'), 'val': aLordHouseStr},
+      {'name': isTa ? '8. கவிப்புள்ள பாவம்' : (isHi ? '8. कविप्पु भाव विवरण' : '8. Kavippu House Details'), 'val': kHouseStr},
+    ];
 
-    // 1. Jamakkol Udayam (Always compulsory and visible)
-    String jUdayamSign = KPService.SIGNS[udayamIdx % 12];
-    double jUdayamDeg = (outer['udayam_abs_deg'] ?? 0.0) % 30;
-    int jd = jUdayamDeg.floor();
-    int jm = ((jUdayamDeg - jd) * 60).floor();
-    rasiEntries[jUdayamSign]?.add({
-      'label': "<span style='color:green; font-weight:bold'>$udayamLabel&nbsp;${jd.toString().padLeft(2, '0')}:${jm.toString().padLeft(2, '0')}</span>",
-      'deg': jUdayamDeg,
-    });
+    final col2Items = [
+      {'name': isTa ? '9. கவிக்கப்படும் கிரகம்' : (isHi ? '9. कविप्पु ग्रसित ग्रह' : '9. Planet Covered by Kavippu'), 'val': kPlanetStr},
+      {'name': isTa ? '10. உதயம் vs ஆருடம்' : (isHi ? '10. उदय vs आरूढ़' : '10. Udayam vs Arudam'), 'val': uVsAStr},
+      {'name': isTa ? '11. உதயம் vs கவிப்பு' : (isHi ? '11. उदय vs कविप्पु' : '11. Udayam vs Kavippu'), 'val': uVsKStr},
+      {'name': isTa ? '12. ஆருடம் vs உதயம்' : (isHi ? '12. आरूढ़ vs उदय' : '12. Arudam vs Udayam'), 'val': aVsUStr},
+      {'name': isTa ? '13. ஆருடம் vs கவிப்பு' : (isHi ? '13. आरूढ़ vs कविप्पु' : '13. Arudam vs Kavippu'), 'val': aVsKStr},
+      {'name': isTa ? '14. சூட்சும ராசி' : (isHi ? '14. सूक्ष्म राशि' : '14. Sootchuma Rasi'), 'val': sootchumaStr},
+      {'name': isTa ? '15. உச்சம் / நீச்சம்' : (isHi ? '15. उच्च / नीच' : '15. Exalted / Debilitated'), 'val': uchamNeechamStr},
+      {'name': isTa ? '16. இராசி பரிவர்த்தனை' : (isHi ? '16. राशि परिवर्तन' : '16. Rasi Parivarthanai'), 'val': parivarthanaiDisplayStr},
+    ];
 
-    // 2. Lagna (Shown when Jamakkol planet switch is OFF)
-    String lagnaLabel = langCode == 'en' ? 'Asc' : (langCode == 'hi' ? 'लग्न' : 'லக்');
-    if (!isAltNaming && details['lagna'] != null) {
-      String lSign = details['lagna']['rasi'] ?? KPService.SIGNS[0];
-      double lLon = (details['lagna']['longitude'] ?? 0.0) % 30;
-      int ld = lLon.floor();
-      int lm = ((lLon - ld) * 60).floor();
-      rasiEntries[lSign]?.add({
-        'label': "<span style='color:#1565C0; font-weight:bold'>$lagnaLabel&nbsp;${ld.toString().padLeft(2, '0')}:${lm.toString().padLeft(2, '0')}</span>",
-        'deg': lLon,
-      });
+    pw.Widget buildNoteRow(Map<String, String> item, bool isEven) {
+      return pw.Container(
+        padding: const pw.EdgeInsets.symmetric(vertical: 1.2, horizontal: 3),
+        decoration: pw.BoxDecoration(
+          color: isEven ? PdfColor.fromHex('#FAF7F2') : PdfColors.white,
+          border: pw.Border(top: pw.BorderSide(color: borderCol, width: 0.3)),
+        ),
+        child: pw.Row(
+          children: [
+            pw.SizedBox(
+              width: 110,
+              child: pw.Text(
+                item['name']!.toTamilPdf,
+                style: pw.TextStyle(font: font, fontSize: 6.6, color: PdfColor.fromHex('#2E2E2E')),
+                maxLines: 1,
+                overflow: pw.TextOverflow.clip,
+              ),
+            ),
+            pw.Text(": ", style: pw.TextStyle(font: font, fontSize: 6.6, color: primaryColor)),
+            pw.Expanded(
+              child: pw.Text(
+                item['val']!.toTamilPdf,
+                style: pw.TextStyle(font: headingFont, fontSize: 6.6, color: primaryColor),
+                maxLines: 1,
+                overflow: pw.TextOverflow.clip,
+                textAlign: pw.TextAlign.right,
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    // 3. Inner Planets (Shown when Jamakkol planet switch is OFF)
-    if (!isAltNaming) {
-      details.forEach((pKey, pVal) {
-        String k = pKey.toString();
-        if (k == 'lagna' || k == 'fortuna' || k == 'maanthi') return; // Skip Lagna, Fortuna & Maanthi (handled as Upagraha)
-        
-        String sign = pVal['rasi'];
-        double pLon = (pVal['longitude'] ?? 0.0) % 30;
-        int d = pLon.floor();
-        int m = ((pLon - d) * 60).floor();
-          
-        bool isRetro = pInfo[k[0].toUpperCase() + k.substring(1)]?['isRetro'] ?? false;
-        double planetLon = (pVal['longitude'] ?? 0.0).toDouble();
-        double sunLon = (details['sun']?['longitude'] ?? 0.0).toDouble();
-        bool isCombust = JamakkolService.isPlanetCombust(k[0].toUpperCase() + k.substring(1), planetLon, sunLon, isRetro);
-
-        String pName = _toLocal(k, langCode);
-        if (k == 'sun') pName = langCode == 'en' ? 'Sun' : (langCode == 'hi' ? 'सू' : 'சூ');
-        if (k == 'moon') pName = langCode == 'en' ? 'Mon' : (langCode == 'hi' ? 'चं' : 'சந்');
-
-        String suffix = "";
-        if (isRetro && k != 'rahu' && k != 'ketu') {
-          suffix += (langCode == 'en') ? "R" : "வ";
-        }
-        if (isCombust) {
-          if (suffix.isNotEmpty) suffix += ",";
-          suffix += (langCode == 'en') ? "C" : ((langCode == 'hi') ? "அ" : "அ");
-        }
-        if (suffix.isNotEmpty) {
-          pName = "$pName($suffix)";
-        }
-
-        rasiEntries[sign]?.add({
-          'label': "$pName&nbsp;${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}",
-          'deg': pLon,
-        });
-      });
-    }
-
-    double aDeg = (outer['arudam_abs_deg'] ?? 0.0).toDouble();
-    double aDegInSign = aDeg % 30.0;
-    int aD = aDegInSign.floor();
-    int aM = ((aDegInSign - aD) * 60).floor();
-    rasiEntries[KPService.SIGNS[arudamIdx % 12]]?.add({
-      'label': "<span style='color:red; font-weight:bold'>$arudamLabel&nbsp;${aD.toString().padLeft(2, '0')}:${aM.toString().padLeft(2, '0')}</span>",
-      'deg': aDegInSign,
-    });
-    
-    double kDegInSign = 30.0 - aDegInSign;
-    if (kDegInSign >= 30.0) kDegInSign = 29.9999;
-    int kD = kDegInSign.floor();
-    int kM = ((kDegInSign - kD) * 60).floor();
-    rasiEntries[KPService.SIGNS[kaviIdx % 12]]?.add({
-      'label': "<span style='color:purple; font-weight:bold'>$kaviLabel&nbsp;${kD.toString().padLeft(2, '0')}:${kM.toString().padLeft(2, '0')}</span>",
-      'deg': kDegInSign,
-    });
-
-    final subPlanets = results['sub_planets'] as JamakkolSubPlanets?;
-    if (subPlanets != null) {
-      String getSubPlanetDisplayName(String name, String lang) {
-        if (lang == 'ta') {
-          if (name == "Marana") return "மார";
-          if (name == "Rahu") return "ரா.கா";
-          if (name == "Mrityu") return "மிரு";
-          if (name == "Yamagandan") return "எம";
-        } else if (lang == 'hi') {
-          if (name == "Marana") return "मार";
-          if (name == "Rahu") return "रा";
-          if (name == "Mrityu") return "मृ";
-          if (name == "Yamagandan") return "यम";
-        } else {
-          if (name == "Marana") return "Mar";
-          if (name == "Rahu") return "Rah";
-          if (name == "Mrityu") return "Mri";
-          if (name == "Yamagandan") return "Yama";
-        }
-        return name;
-      }
-
-      void addSubPlanet(SubPlanetResult sp) {
-        String sign = KPService.SIGNS[sp.rasi - 1];
-        double degInSign = sp.degree;
-        int d = degInSign.floor();
-        int m = ((degInSign - d) * 60).floor();
-        String name = getSubPlanetDisplayName(sp.name, langCode);
-        
-        // Define color based on subplanet name
-        String color;
-        if (sp.name == "Marana") color = "#00695C"; // Dark teal
-        else if (sp.name == "Rahu") color = "purple";
-        else if (sp.name == "Mrityu") color = "brown";
-        else if (sp.name == "Yamagandan") color = "darkorange";
-        else color = "#B58D3D";
-
-        rasiEntries[sign]?.add({
-          'label': "<span style='color:$color; font-weight:bold'>$name&nbsp;${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}</span>",
-          'deg': degInSign,
-        });
-      }
-      addSubPlanet(subPlanets.rahu);
-      addSubPlanet(subPlanets.mrityu);
-      addSubPlanet(subPlanets.yamagandan);
-    }
-
-    // Add Maanthi as Upagraha (Always visible in both states)
-    if (details.containsKey('maanthi') && details['maanthi'] != null) {
-      double mLon = (details['maanthi']['longitude'] ?? 0.0) % 30;
-      String mSign = details['maanthi']['rasi'] ?? KPService.SIGNS[0];
-      int md = mLon.floor();
-      int mm = ((mLon - md) * 60).floor();
-      String mLabel = langCode == 'en' ? 'Maa' : (langCode == 'hi' ? 'मां' : 'மாந்');
-      rasiEntries[mSign]?.add({
-        'label': "<span style='color:#795548; font-weight:bold'>$mLabel&nbsp;${md.toString().padLeft(2, '0')}:${mm.toString().padLeft(2, '0')}</span>",
-        'deg': mLon,
-      });
-    }
-
-    // Degree-wise sort for each rasi box (Jamakkol only):
-    // Mesham to Vrischikam: 0° top to 30° bottom (column / ascending)
-    // Dhanusu to Meenam: 0° bottom to 30° top (column-reverse / descending)
-    const reverseSigns = {"Sagittarius", "Capricorn", "Aquarius", "Pisces"};
-    Map<String, List<String>> rasiMap = {};
-    for (var sign in KPService.SIGNS) {
-      final list = rasiEntries[sign] ?? [];
-      if (reverseSigns.contains(sign)) {
-        list.sort((a, b) => (b['deg'] as double).compareTo(a['deg'] as double));
-      } else {
-        list.sort((a, b) => (a['deg'] as double).compareTo(b['deg'] as double));
-      }
-      rasiMap[sign] = list.map((e) => e['label'] as String).toList();
-    }
-
-    String renderOuterLabel(String sign) {
-        final borderPlanets = outer['border_planets'] as Map? ?? {};
-        if (borderPlanets.containsKey(sign)) {
-            String label = borderPlanets[sign].toString();
-            // In PDF we can use &nbsp; for space
-            return label.replaceAll(' ', '&nbsp;');
-        }
-        return "";
-    }
-
-    String r(String sign) {
-        final innerItems = rasiMap[sign] ?? [];
-        String innerHtml = innerItems.join('<br>');
-        String outerHtml = renderOuterLabel(sign);
-        
-        final strength = results['strength'] as Map<String, dynamic>?;
-        final kathirMap = strength?['rasi_kathir_map'] as Map<String, String>?;
-        String kathirHtml = "";
-        if (kathirMap != null && kathirMap.containsKey(sign)) {
-          kathirHtml = "<div style='position: absolute; bottom: 0; left: 0; padding: 0.4mm 0.8mm; font-size: 1.8mm; font-weight: bold; color: #C2410C; background: #FFF7ED; border-radius: 0.5mm; border: 0.2mm solid #FDBA74;'>${kathirMap[sign]}</div>";
-        }
-
-        String outerDiv = "";
-        if (outerHtml.isNotEmpty) {
-            String style = "";
-            if (['Aries', 'Taurus', 'Gemini'].contains(sign)) {
-                style = "position: absolute; bottom: 100%; left: 0; right: 0; text-align: center; padding-bottom: 1.5mm; color: #1E3A8A; font-weight: bold; font-size: 2.2mm; white-space: nowrap;";
-            } else if (['Cancer', 'Leo', 'Virgo'].contains(sign)) {
-                style = "position: absolute; left: 100%; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; padding-top: 1.5mm; color: #1E3A8A; font-weight: bold; font-size: 2.2mm; white-space: nowrap;";
-            } else if (['Libra', 'Scorpio', 'Sagittarius'].contains(sign)) {
-                style = "position: absolute; top: 100%; left: 0; right: 0; text-align: center; padding-top: 1.5mm; color: #1E3A8A; font-weight: bold; font-size: 2.2mm; white-space: nowrap;";
-            } else if (['Capricorn', 'Aquarius', 'Pisces'].contains(sign)) {
-                style = "position: absolute; right: 100%; top: 50%; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; padding-top: 1.5mm; color: #1E3A8A; font-weight: bold; font-size: 2.2mm; white-space: nowrap;";
-            }
-            outerDiv = "<div style='$style'>$outerHtml</div>";
-        }
-
-        return """
-        <div style='position: relative; height: 100%; width: 100%;'>
-            $outerDiv
-            $kathirHtml
-            <div style='position: absolute; bottom: 0; right: 0; padding: 1mm; text-align: right;'>$innerHtml</div>
-        </div>
-        """;
-    }
-
-    // Pathasaram Tables
-    String outerPathaHtml = "";
-    double uDeg = outer['udayam_abs_deg'] ?? 0.0;
-    double aDegPatha = outer['arudam_abs_deg'] ?? 0.0;
-    double kDeg = (30.0 - (aDegPatha % 30.0)) + (kaviIdx * 30.0);
-    kDeg = (kDeg % 360.0 + 360.0) % 360.0;
-
-    String udayamName = langCode == 'en' ? 'Udayam' : (langCode == 'hi' ? 'उदयम' : 'உதயம்');
-    String arudamName = langCode == 'en' ? 'Arudam' : (langCode == 'hi' ? 'आरूढम' : 'ஆரூடம்');
-    String kavippuName = langCode == 'en' ? 'Kavippu' : (langCode == 'hi' ? 'कविप्पु' : 'கவிப்பு');
-
-    void addOuterRow(String name, double deg) {
-      int d = deg.floor();
-      int m = ((deg - d) * 60).floor();
-      var sp = _getStarPada(deg);
-      outerPathaHtml += "<tr><td>$name</td><td>$d° $m'</td><td>${sp['star']}</td><td>${sp['pada']}</td></tr>";
-    }
-    addOuterRow(udayamName, uDeg);
-    addOuterRow(arudamName, aDegPatha);
-    addOuterRow(kavippuName, kDeg);
-
-    if (subPlanets != null) {
-      String getSubPlanetFullName(String name, String lang) {
-        if (lang == 'ta') {
-          if (name == "Rahu") return "ராகு காலம்";
-          if (name == "Yamagandan") return "எமகண்டன்";
-          if (name == "Mrityu") return "மிருத்யு";
-        } else if (lang == 'hi') {
-          if (name == "Rahu") return "राहु काल";
-          if (name == "Yamagandan") return "यमगंडम";
-          if (name == "Mrityu") return "मृत्यु";
-        } else {
-          if (name == "Rahu") return "Rahu Kalam";
-          if (name == "Yamagandan") return "Yamagandan";
-          if (name == "Mrityu") return "Mrityu";
-        }
-        return name;
-      }
-      void addSubPlanetRow(SubPlanetResult sp) {
-        double deg = (sp.rasi - 1) * 30.0 + sp.degree;
-        addOuterRow(getSubPlanetFullName(sp.name, langCode), deg);
-      }
-      addSubPlanetRow(subPlanets.rahu);
-      addSubPlanetRow(subPlanets.yamagandan);
-      addSubPlanetRow(subPlanets.mrityu);
-    }
-
-    if (details.containsKey('maanthi')) {
-      double mDeg = (details['maanthi']['longitude'] ?? 0.0).toDouble();
-      String mName = langCode == 'en' ? 'Maanthi' : (langCode == 'hi' ? 'मांदी' : 'மாந்தி');
-      addOuterRow(mName, mDeg);
-    }
-
-    final pDegs = outer['planet_degrees'] as Map? ?? {};
-    final namingMap = isAltNaming ? JamakkolService.JAMAKKOL_TAMIL_ALT : JamakkolService.JAMAKKOL_TAMIL_SHORT;
-    for (var pName in JamakkolService.JAMAKKOL_PLANETS) {
-      double deg = (pDegs[pName] ?? 0.0).toDouble();
-      addOuterRow(namingMap[pName] ?? pName, deg);
-    }
-
-    String innerPathaHtml = "";
-    final keys = ['lagna', 'sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn', 'rahu', 'ketu', 'maanthi'];
-    for (var key in keys) {
-      if (!details.containsKey(key)) continue;
-      double deg = (details[key]['longitude'] ?? 0.0).toDouble();
-      String nameKey = key[0].toUpperCase() + key.substring(1);
-      String name = _toLocal(nameKey, langCode);
-      if (key == 'lagna') name = langCode == 'en' ? 'Lagna' : (langCode == 'hi' ? 'लग्न' : 'லக்னம்');
-      if (key == 'maanthi') name = langCode == 'en' ? 'Maanthi' : (langCode == 'hi' ? 'मांदी' : 'மாந்தி');
-      int d = deg.floor();
-      int m = ((deg - d) * 60).floor();
-      var sp = _getStarPada(deg);
-      innerPathaHtml += "<tr><td>$name</td><td>$d° $m'</td><td>${sp['star']}</td><td>${sp['pada']}</td></tr>";
-    }
-
-    // Dasa
-    final dasaList = inner['dasa'] as List<dynamic>? ?? [];
-    Map<String, dynamic>? currentDasa;
-    Map<String, dynamic>? currentBukthi;
-    List<dynamic> bukthiList = [];
-    List<dynamic> antharamList = [];
-
-    if (dasaList.isNotEmpty) {
-      for (var d in dasaList) {
-        if (inputTime.compareTo(d['start']) >= 0 && inputTime.compareTo(d['end']) <= 0) {
-          currentDasa = d;
-          bukthiList = d['subPeriods'] ?? [];
-          for (var b in bukthiList) {
-            if (inputTime.compareTo(b['start']) >= 0 && inputTime.compareTo(b['end']) <= 0) {
-              currentBukthi = b;
-              antharamList = b['subPeriods'] ?? [];
-              break;
-            }
-          }
-          break;
-        }
-      }
-    }
-
-    return """
-    <!DOCTYPE html>
-    <html lang="ta">
-    <head>
-      <meta charset="utf-8"/>
-      <title>Jamakkol - $name</title>
-      <style>
-        html { -webkit-text-size-adjust: none; text-size-adjust: none; }
-        :root { --border-orange: #E0D4BE; --header-blue: #5D1204; --text-red: #5D1204; --text-green: #B58D3D; }
-        body { font-family: sans-serif; margin: 0; padding: 2mm; color: #333; font-size: 2.8mm; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        @media screen {
-          body { background: #f3f4f6; display: flex; flex-direction: column; align-items: center; }
-          .page { background: white; width: 210mm; min-height: 297mm; padding: 4mm; box-shadow: 0 0 3mm rgba(0,0,0,0.1); margin: 4mm 0; position: relative; box-sizing: border-box; overflow: hidden; }
-          .inner-page { border: 0.5mm solid var(--text-red); padding: 2mm; min-height: 285mm; box-sizing: border-box; display: flex; flex-direction: column; }
-        }
-        @media print {
-          @page { size: A4; margin: 0mm; }
-          body { background: white; padding: 5mm; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .page { width: 100%; padding: 0; box-shadow: none; margin: 0; box-sizing: border-box; height: 287mm; overflow: hidden; }
-          .inner-page { border: 0.5mm solid var(--text-red); padding: 2mm; box-sizing: border-box; height: 100%; display: flex; flex-direction: column; }
-        }
-        .header { border-bottom: 0.5mm solid var(--text-red); margin-bottom: 1.5mm; padding-bottom: 1mm; }
-        .header-top { display: flex; justify-content: space-between; }
-        .header-title { color: var(--text-red); font-weight: bold; font-size: 5.5mm; line-height: 1.1; }
-        .header-sub { font-size: 2.8mm; color: #555; line-height: 1.2; }
-        .banner { background: var(--text-red); color: white; text-align: center; padding: 0.8mm; font-weight: bold; font-size: 4.4mm; margin: 1mm 0; border-radius: 1mm; }
-        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm; margin-bottom: 1.5mm; border-bottom: 0.3mm solid #eee; padding-bottom: 1mm; }
-        .detail-row { display: flex; margin-bottom: 0.3mm; font-size: 2.9mm; }
-        .detail-label { width: 28mm; color: var(--text-red); font-weight: bold; }
-        
-        .grid-chart { width: 100%; max-width: 100mm; margin: 0 auto; border-collapse: collapse; table-layout: fixed; }
-        .grid-chart td { border: 0.3mm solid var(--text-red); height: 19.2mm; text-align: center; font-size: 2.4mm; font-weight: bold; padding: 0; vertical-align: middle; background: #FAF6EE; }
-        .chart-title { color: var(--text-red); font-size: 3.5mm; font-weight: bold; line-height: 1.1; margin-bottom: 1mm; }
-        
-        .patha-tables { display: flex; justify-content: space-between; margin-bottom: 1.5mm; }
-        .data-table { width: 48%; border-collapse: collapse; font-size: 2.1mm; border: 0.3mm solid var(--border-orange); }
-        .data-table th { background: #eee; border: 0.3mm solid var(--border-orange); padding: 0.5mm; font-weight: bold; color: var(--text-red); }
-        .data-table td { border: 0.3mm solid var(--border-orange); padding: 0.5mm; text-align: center; }
-
-        .timeline-row { display: flex; gap: 2mm; margin-top: 1.5mm; }
-        
-        .footer { text-align: center; font-size: 2.0mm; margin-top: 1.5mm; font-style: italic; border-top: 0.3mm dashed #ccc; padding-top: 0.5mm; }
-        .print-btn {
-           position: fixed;
-           top: 5mm;
-           right: 5mm;
-           background: var(--text-red);
-           color: white;
-           border: none;
-           padding: 2mm 5mm;
-           font-size: 3.8mm;
-           font-weight: bold;
-           border-radius: 1mm;
-           cursor: pointer;
-           z-index: 1000;
-           box-shadow: 0 1mm 2mm rgba(0,0,0,0.3);
-        }
-        .print-btn:hover { background: #4A0E03; }
-        @media print { .print-btn { display: none !important; } }</style>
-    </head>
-    <body>
-      <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
-      <div class="page">
-        <div class="inner-page">
-          <div class="header">
-            <div class="header-top" style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="flex: 0 0 auto; text-align: left; margin-right: 4mm;">
-                 ${ganapathyBase64.isNotEmpty ? '<img src="data:image/png;base64,$ganapathyBase64" style="height: 19.5mm; width: 15.6mm; object-fit: contain;" alt="Ganapathy" />' : ''}
-              </div>
-              <div style="flex: 1; text-align: center; min-width: 0;">
-                <div class="header-title">${shopName}</div>
-                <div class="header-sub" style="white-space: pre-line; margin-top: 1mm;">$astroName<br>$address</div>
-                <div style="color: var(--text-red); font-size: 2.8mm; margin-top: 1mm;">$phone | $nowStr</div>
-              </div>
-              <div style="flex: 0 0 auto; text-align: right; margin-left: 4mm;">
-                 ${muruganBase64.isNotEmpty ? '<img src="data:image/png;base64,$muruganBase64" style="height: 19.5mm; width: 18mm; object-fit: contain;" alt="Murugan" />' : ''}
-              </div>
-            </div>
-          </div>
-          <div class="banner">ஜாமக்கோள் பிரசன்னம் <span style="font-size: 2.5mm; font-weight: normal; margin-left: 1.5mm;"> </span></div>
-          
-          <div class="details-grid">
-            <div>
-              <div class="detail-row"><span class="detail-label">பெயர்</span>: <span style="color:var(--text-red)">$name</span></div>
-              <div class="detail-row"><span class="detail-label">நட்சத்திரம்</span>: <span style="color:#333">$nakshatraStr - $padaStr பாதம்</span></div>
-              <div class="detail-row"><span class="detail-label">இராசி</span>: <span style="color:#333">$rasiStr இராசி</span></div>
-              <div class="detail-row"><span class="detail-label">தேதி</span>: <span style="color:var(--text-red)">$dateStr</span></div>
-              <div class="detail-row"><span class="detail-label">நேரம்</span>: <span style="color:#333">${timeStr}</span></div>
-            </div>
-            <div>
-              <div class="detail-row"><span class="detail-label">தமிழ் தேதி</span>: <span style="color:#333">$tamilYear வருடம், $tamilMonth - $tamilDate</span></div>
-              <div class="detail-row"><span class="detail-label">திதி</span>: <span style="color:#333">$thithiStr</span></div>
-              <div class="detail-row"><span class="detail-label">பட்சம்</span>: <span style="color:#333">$pakshamStr</span></div>
-              <div class="detail-row"><span class="detail-label">கிழமை</span>: <span style="color:#333">$weekdayStr</span></div>
-            </div>
-          </div>
-
-          <div style="display: flex; margin: 2mm 0; align-items: stretch; border: 0.5mm solid #1E3A8A; border-radius: 1mm; background: #FAF6EE;">
-            <div style="flex: 0 0 55%; padding: 10mm 10mm; background: #fff; box-sizing: border-box;">
-                <table class="grid-chart" style="margin: 0; border: 0.5mm solid var(--text-red); background: #FAF6EE; width: 100%;">
-                    <tr><td>${r('Pisces')}</td><td>${r('Aries')}</td><td>${r('Taurus')}</td><td>${r('Gemini')}</td></tr>
-                    <tr><td>${r('Aquarius')}</td><td colspan="2" rowspan="2" style="text-align: center; background: #fff;"><div class="chart-title" style="font-size:3mm;">${langCode == 'en' ? 'Jamakkol<br>Prasannam Chart' : (langCode == 'hi' ? 'जामक्कोल<br>प्रसन्नम कुंडली' : 'ஜாமக்கோள்<br>பிரசன்னம் கட்டம்')}</div></td><td>${r('Cancer')}</td></tr>
-                    <tr><td>${r('Capricorn')}</td><td>${r('Leo')}</td></tr>
-                    <tr><td>${r('Sagittarius')}</td><td>${r('Scorpio')}</td><td>${r('Libra')}</td><td>${r('Virgo')}</td></tr>
-                </table>
-            </div>
-            
-            <div style="flex: 1; border-left: 0.5mm solid #1E3A8A; padding: 2mm 3mm; display: flex; flex-direction: column; justify-content: center;">
-                <div style="background: var(--header-blue); color: white; padding: 1mm; font-size: 2.2mm; font-weight: bold; text-align: center; border-radius: 0.5mm; margin-bottom: 1.5mm;">
-                   📄 ${isTa ? "ஜாமக்கோள் பிரசன்ன விபரம்" : (isHi ? "जामक्कोल प्रसन्न विवरण" : "Jamakkol Prasannam Details")}
-                </div>
-                
-                <table style="width: 100%; font-size: 2.05mm; line-height: 1.35; margin-bottom: 1mm;">
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">1. உதயம் நின்ற நட்சத்திர பாதம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uStarStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">2. உதயம் தொடர்பு கொள்ளும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uContactStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">3. உதயத்தைக் கடந்த கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$crossedStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">4. உதயாதிபதி நின்ற பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uLordHouseStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">5. ஆருடம் தொடர்பு கொள்ளும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aContactStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">6. ஆருடம் உள்ள பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aHouseStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">7. ஆருட அதிபதி நின்ற பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aLordHouseStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">8. கவிப்புள்ள பாவம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$kHouseStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">9. கவிக்கப்படும் கிரகம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$kPlanetStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">10. உதயம் vs ஆருடம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uVsAStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">11. உதயம் vs கவிப்பு</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uVsKStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">12. ஆருடம் vs உதயம்</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aVsUStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">13. ஆருடம் vs கவிப்பு</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$aVsKStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">14. சூட்சும ராசி</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$sootchumaStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">${isTa ? "15. உச்சம் / நீச்சம்" : (isHi ? "15. उच्च / नीच" : "15. Exalted / Debilitated")}</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$uchamNeechamStr</td></tr>
-                  <tr><td style="color: #555; font-weight: bold; padding-bottom: 0.2mm;">${isTa ? "16. இராசி பரிவர்த்தனை" : (isHi ? "16. राशि परिवर्तन" : "16. Rasi Parivarthanai")}</td><td style="text-align: right; color: var(--header-blue); font-weight: bold;">$parivarthanaiDisplayStr</td></tr>
-                </table>
-
-                <div style="background: var(--header-blue); color: white; padding: 1mm; font-size: 2.2mm; font-weight: bold; text-align: center; border-radius: 0.5mm; margin-bottom: 1.5mm;">
-                   ⚡ ${isTa ? "முக்கிய கதிர் அம்சங்கள்" : (isHi ? "मुख्य रश्मि बिंदु" : "Key Kathir Features")}
-                </div>
-                
-                <table style="width: 100%; font-size: 2.2mm; line-height: 1.4; border-collapse: collapse;">
-                  <tr style="border-bottom: 0.3mm solid #ccc; color: #555;">
-                     <th style="text-align: left; padding-bottom: 0.5mm;">அம்சம்</th>
-                     <th style="text-align: center; padding-bottom: 0.5mm;">ராசி</th>
-                     <th style="text-align: center; padding-bottom: 0.5mm;">அதிபதி</th>
-                     <th style="text-align: right; padding-bottom: 0.5mm;">மொத்தம்</th>
-                  </tr>
-                  <tr>
-                     <td style="color: var(--header-blue); font-weight: bold; padding: 0.5mm 0;">உதயம்</td>
-                     <td style="text-align: center; color: var(--header-blue); font-weight: bold;">${strength['udayam']?['rasi'] ?? '-'}</td>
-                     <td style="text-align: center; color: var(--header-blue); font-weight: bold;">${strength['udayam']?['lord'] ?? '-'}</td>
-                     <td style="text-align: right; color: #E65100; font-weight: bold;">${strength['udayam']?['total'] ?? '-'}</td>
-                  </tr>
-                  <tr>
-                     <td style="color: var(--header-blue); font-weight: bold; padding: 0.5mm 0;">ஆரூடம்</td>
-                     <td style="text-align: center; color: var(--header-blue); font-weight: bold;">${strength['arudam']?['rasi'] ?? '-'}</td>
-                     <td style="text-align: center; color: var(--header-blue); font-weight: bold;">${strength['arudam']?['lord'] ?? '-'}</td>
-                     <td style="text-align: right; color: #E65100; font-weight: bold;">${strength['arudam']?['total'] ?? '-'}</td>
-                  </tr>
-                  <tr>
-                     <td style="color: var(--header-blue); font-weight: bold; padding: 0.5mm 0;">கவிப்பு</td>
-                     <td style="text-align: center; color: var(--header-blue); font-weight: bold;">${strength['kavi']?['rasi'] ?? '-'}</td>
-                     <td style="text-align: center; color: var(--header-blue); font-weight: bold;">${strength['kavi']?['lord'] ?? '-'}</td>
-                     <td style="text-align: right; color: #E65100; font-weight: bold;">${strength['kavi']?['total'] ?? '-'}</td>
-                  </tr>
-                  <tr style="border-top: 0.3mm solid #ccc;">
-                     <td colspan="3" style="color: var(--header-blue); font-weight: bold; padding-top: 1mm;">ஜாமக் கிரகம் (${strength['jamam']?['planet'] ?? '-'})</td>
-                     <td style="text-align: right; color: #E65100; font-weight: bold; padding-top: 1mm;">${strength['jamam']?['total'] ?? '-'}</td>
-                  </tr>
-                </table>
-            </div>
-          </div>
-
-          
-          
-          <div style="color:var(--text-red); font-weight:bold; text-align:center; font-size: 3.5mm; margin-bottom:1.5mm;">${langCode == 'en' ? 'Padasaram (Planets and Key Points)' : (langCode == 'hi' ? 'पादसारम (ग्रह और मुख्य बिंदु)' : 'பாதசாரம் (கிரகங்கள் மற்றும் முக்கிய புள்ளிகள்)')}</div>
-          <div class="patha-tables">
-              <table class="data-table">
-                  <tr><th colspan="4">${langCode == 'en' ? 'Jamakkol Planets & Points' : (langCode == 'hi' ? 'जामक्कोल ग्रह और बिंदु' : 'ஜாம கிரகங்கள் மற்றும் முக்கிய புள்ளிகள்')}</th></tr>
-                  <tr><th>${l10n.planet}</th><th>${langCode == 'en' ? 'Degree' : (langCode == 'hi' ? 'अंश' : 'பாகை')}</th><th>${l10n.nakshatraLabel}</th><th>${langCode == 'en' ? 'Pada' : (langCode == 'hi' ? 'पाद' : 'பாதம்')}</th></tr>
-                  $outerPathaHtml
-              </table>
-              <table class="data-table">
-                  <tr><th colspan="4">${langCode == 'en' ? 'Inner Chart Planets' : (langCode == 'hi' ? 'आंतरिक चक्र ग्रह' : 'உள்வட்ட கிரகங்கள்')}</th></tr>
-                  <tr><th>${l10n.planet}</th><th>${langCode == 'en' ? 'Degree' : (langCode == 'hi' ? 'अंश' : 'பாகை')}</th><th>${l10n.nakshatraLabel}</th><th>${langCode == 'en' ? 'Pada' : (langCode == 'hi' ? 'पाद' : 'பாதம்')}</th></tr>
-                  $innerPathaHtml
-              </table>
-          </div>
-
-          <div class="timeline-row" style="margin-top: 0;">
-            ${_buildTimelineHtml(l10n.dasaTitle, dasaList, l10n.dasaTitle, currentDasa, l10n, inputTime)}
-            ${_buildTimelineHtml(l10n.bukthiTitle, bukthiList, l10n.bukthiTitle, currentBukthi, l10n, inputTime)}
-            <div style="flex: 1; border: 0.5mm solid var(--text-red); border-radius: 1.5mm; overflow: hidden; margin: 0 1mm; padding: 2mm; display: flex; flex-direction: column; justify-content: space-evenly; background: linear-gradient(135deg, #FFFDF8, #FAF6EE); box-shadow: inset 0 0 1mm rgba(93,18,4,0.1);">
-               <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 0.3mm dashed #E0D4BE; padding-bottom: 1mm;">
-                  <b style="color:var(--text-red); font-size: 3.5mm; letter-spacing: 0.5px;">${l10n.localeName == 'en' ? "Lagna" : (l10n.localeName == 'hi' ? "लग्न" : "லக்னம்")}</b> 
-                  <span style="font-weight:bold; color:var(--text-red); font-size: 4.2mm; background: rgba(181, 141, 61, 0.2); padding: 0.5mm 2mm; border-radius: 1mm;">$lagnaSign</span>
-               </div>
-               <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 0.3mm dashed #E0D4BE; padding: 1mm 0;">
-                  <b style="color:var(--text-red); font-size: 3.5mm; letter-spacing: 0.5px;">${l10n.localeName == 'en' ? "Udayam" : (l10n.localeName == 'hi' ? "उदयम" : "உதயம்")}</b> 
-                  <span style="font-weight:bold; color:var(--text-red); font-size: 4.2mm; background: rgba(181, 141, 61, 0.2); padding: 0.5mm 2mm; border-radius: 1mm;">$udayamSign</span>
-               </div>
-               <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 0.3mm dashed #E0D4BE; padding: 1mm 0;">
-                  <b style="color:var(--text-red); font-size: 3.5mm; letter-spacing: 0.5px;">${l10n.localeName == 'en' ? "Arudam" : (l10n.localeName == 'hi' ? "आरूढम" : "ஆரூடம்")}</b> 
-                  <span style="font-weight:bold; color:var(--text-red); font-size: 4.2mm; background: rgba(181, 141, 61, 0.2); padding: 0.5mm 2mm; border-radius: 1mm;">$arudamSign</span>
-               </div>
-               <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 0.3mm dashed #E0D4BE; padding: 1mm 0;">
-                  <b style="color:var(--text-red); font-size: 3.5mm; letter-spacing: 0.5px;">${l10n.localeName == 'en' ? "Kavippu" : (l10n.localeName == 'hi' ? "कविप्पु" : "கவிப்பு")}</b> 
-                  <span style="font-weight:bold; color:var(--text-red); font-size: 4.2mm; background: rgba(181, 141, 61, 0.2); padding: 0.5mm 2mm; border-radius: 1mm;">$kavippuSign</span>
-               </div>
-               <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1mm;">
-                  <b style="color:var(--text-red); font-size: 3.5mm; letter-spacing: 0.5px;">${l10n.localeName == 'en' ? "Gowri" : (l10n.localeName == 'hi' ? "गौरी" : "கௌரி")}</b> 
-                  <span style="font-weight:bold; color:var(--text-red); font-size: 4.2mm; background: rgba(181, 141, 61, 0.2); padding: 0.5mm 2mm; border-radius: 1mm;">$gowriStr</span>
-               </div>
-            </div>
-          </div>
-
-          <div class="footer">Created by GB Astro Astrology Software | Mobile: +91 96006 66225</div>
-        </div>
-      </div>
-    
-<div class="zoom-controls">
-  <button onclick="zoomIn()" title="Zoom In">+</button>
-  <button onclick="zoomOut()" title="Zoom Out">-</button>
-  <button onclick="window.print()" title="Print/Save PDF">🖨</button>
-</div>
-<style>
-  .zoom-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-  .zoom-controls button { width: 45px; height: 45px; border-radius: 50%; border: none; background: #5D1204; color: white; font-size: 24px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; }
-  .zoom-controls button:hover { background: #B58D3D; }
-  @media print { .zoom-controls { display: none !important; } }
-</style>
-<script>
-  let currentZoom = 1.0;
-  function zoomIn() {
-    currentZoom += 0.1;
-    document.body.style.zoom = currentZoom;
+    return pw.Container(
+      margin: const pw.EdgeInsets.only(top: 3.5),
+      decoration: pw.BoxDecoration(
+        color: PdfColor.fromHex('#DFD5C6'), // subtle warm drop-shadow offset
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3.5)),
+      ),
+      padding: const pw.EdgeInsets.only(bottom: 1.2, right: 1.2),
+      child: pw.Container(
+        decoration: pw.BoxDecoration(
+          color: PdfColors.white,
+          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+          border: pw.Border.all(color: goldAccent, width: 0.7),
+        ),
+        child: pw.Column(
+          children: [
+            // Floating Card Header Banner
+            pw.Container(
+              padding: const pw.EdgeInsets.symmetric(vertical: 2.2, horizontal: 6),
+              decoration: pw.BoxDecoration(
+                color: primaryColor,
+                borderRadius: const pw.BorderRadius.only(
+                  topLeft: pw.Radius.circular(2.5),
+                  topRight: pw.Radius.circular(2.5),
+                ),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Row(
+                    children: [
+                      pw.Container(width: 3, height: 7.5, color: goldAccent, margin: const pw.EdgeInsets.only(right: 5)),
+                      pw.Text(
+                        (isTa ? "ஜாமக்கோள் பிரசன்ன விபரம்" : (isHi ? "जामक्कोल प्रश्न विवरण" : "Jamakkol Prasanna Notes")).toTamilPdf,
+                        style: pw.TextStyle(font: headingFont, fontSize: 8.0, color: PdfColors.white),
+                      ),
+                    ],
+                  ),
+                  pw.Text(
+                    (isTa ? "(முக்கிய குறிப்புகள் 1 - 16)" : (isHi ? "(मुख्य बिंदु 1 - 16)" : "(Key Notes 1 - 16)")).toTamilPdf,
+                    style: pw.TextStyle(font: font, fontSize: 6.5, color: goldAccent),
+                  ),
+                ],
+              ),
+            ),
+            // Floating Card 2-Column Body
+            pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Left Column: Items 1 to 8
+                pw.Expanded(
+                  child: pw.Column(
+                    children: [
+                      for (int i = 0; i < col1Items.length; i++)
+                        buildNoteRow(col1Items[i], i % 2 == 1),
+                    ],
+                  ),
+                ),
+                // Center Divider
+                pw.Container(width: 0.5, height: 8 * 12.0, color: borderCol),
+                // Right Column: Items 9 to 16
+                pw.Expanded(
+                  child: pw.Column(
+                    children: [
+                      for (int i = 0; i < col2Items.length; i++)
+                        buildNoteRow(col2Items[i], i % 2 == 1),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
-  function zoomOut() {
-    currentZoom -= 0.1;
-    if(currentZoom < 0.3) currentZoom = 0.3;
-    document.body.style.zoom = currentZoom;
-  }
-</script>
-
-</body>
-    </html>
-    """;
-  }
-
 }

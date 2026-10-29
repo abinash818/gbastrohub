@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../main.dart';
 import '../components/custom_drawer.dart';
+import '../services/cloud_sync_service.dart';
 
 class SavedHoroscopesScreen extends StatefulWidget {
   const SavedHoroscopesScreen({super.key});
@@ -17,11 +18,14 @@ class SavedHoroscopesScreen extends StatefulWidget {
 class _SavedHoroscopesScreenState extends State<SavedHoroscopesScreen> {
   List<Map<String, dynamic>> _savedList = [];
   bool _isLoading = true;
+  bool _isSyncing = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSavedHoroscopes();
+    _loadSavedHoroscopes().then((_) {
+      _syncWithCloud(showFeedback: false);
+    });
   }
 
   Future<void> _loadSavedHoroscopes() async {
@@ -31,27 +35,67 @@ class _SavedHoroscopesScreenState extends State<SavedHoroscopesScreen> {
     setState(() {
       _savedList = saved.map((item) {
         final decoded = jsonDecode(item) as Map<String, dynamic>;
-        // Ensure date is a string for the list and handle conversion if needed
         return decoded;
       }).toList().reversed.toList(); // Show newest first
       _isLoading = false;
     });
   }
 
+  Future<void> _syncWithCloud({bool showFeedback = false}) async {
+    if (_isSyncing) return;
+    setState(() => _isSyncing = true);
+
+    try {
+      final res = await CloudSyncService.syncAll();
+      if (res['success'] == true) {
+        await _loadSavedHoroscopes();
+        if (showFeedback && mounted) {
+          final int restored = res['restoredCount'] ?? 0;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(restored > 0 
+                ? 'கிளவுட் சிங்க் முடிந்தது! $restored ஜாதகங்கள் மீட்கப்பட்டது.' 
+                : 'அனைத்து ஜாதகங்களும் கிளவுடில் புதுப்பிக்கப்பட்டுள்ளன.'),
+              backgroundColor: const Color(0xFF1B5E20),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else if (showFeedback && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res['message'] ?? 'சிங்க் தோல்வியடைந்தது'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("[CloudSync] Error in screen sync: $e");
+    } finally {
+      if (mounted) setState(() => _isSyncing = false);
+    }
+  }
+
   Future<void> _deleteItem(int index) async {
-    // Note: _savedList is reversed, so we need to find the correct index in SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    List<String> saved = prefs.getStringList('saved_horoscopes') ?? [];
-    
-    // Reverse again to match original storage order if we want to remove by index
-    // Or simpler: remove from _savedList and rebuild the string list
+    final itemToDelete = _savedList[index];
+    final String? itemId = (itemToDelete['id'] ?? itemToDelete['item_id'])?.toString();
+
     setState(() {
       _savedList.removeAt(index);
     });
     
-    // Map back to JSON strings and reverse again to store original order (oldest first)
+    final prefs = await SharedPreferences.getInstance();
     final List<String> updated = _savedList.reversed.map((e) => jsonEncode(e)).toList();
     await prefs.setStringList('saved_horoscopes', updated);
+
+    // Delete from cloud in background
+    if (itemId != null && itemId.isNotEmpty) {
+      CloudSyncService.deleteFromCloud(itemId: itemId).catchError((e) {
+        debugPrint("[CloudSync] Background delete error: $e");
+        return false;
+      });
+    }
   }
 
   @override
@@ -65,6 +109,20 @@ class _SavedHoroscopesScreenState extends State<SavedHoroscopesScreen> {
         centerTitle: true,
         backgroundColor: AppColors.background,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: _isSyncing 
+              ? const SizedBox(
+                  width: 18, 
+                  height: 18, 
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                )
+              : const Icon(Icons.cloud_sync_rounded, color: AppColors.primary, size: 24),
+            tooltip: 'கிளவுட் சிங்க் (Cloud Sync)',
+            onPressed: _isSyncing ? null : () => _syncWithCloud(showFeedback: true),
+          ),
+          const SizedBox(width: 8),
+        ],
         leading: isWide ? null : Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu_rounded, color: AppColors.primary, size: 24),

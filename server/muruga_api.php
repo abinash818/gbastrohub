@@ -18,6 +18,28 @@ try {
     try {
         $conn->exec("ALTER TABLE app_users ADD COLUMN custom_features TEXT DEFAULT NULL");
     } catch(PDOException $e) { /* Ignore if exists */ }
+
+    // Auto-create user_saved_horoscopes table if not exists (Minimal footprint schema)
+    try {
+        $conn->exec("CREATE TABLE IF NOT EXISTS user_saved_horoscopes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_email VARCHAR(191) NOT NULL,
+            item_id VARCHAR(100) NOT NULL,
+            chart_type VARCHAR(30) NOT NULL DEFAULT 'horoscope',
+            name VARCHAR(150) NOT NULL,
+            gender VARCHAR(20) DEFAULT 'male',
+            date_time VARCHAR(50) NOT NULL,
+            place VARCHAR(150) DEFAULT '',
+            latitude DECIMAL(10, 6) DEFAULT 0.0,
+            longitude DECIMAL(10, 6) DEFAULT 0.0,
+            timezone DECIMAL(4, 2) DEFAULT 5.5,
+            ayanamsa INT DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_user_item (user_email, item_id),
+            INDEX idx_user_email (user_email)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    } catch(PDOException $e) { /* Ignore if exists */ }
 } catch(PDOException $exception) {
     echo json_encode(array("error" => "Connection error: " . $exception->getMessage()));
     exit();
@@ -181,6 +203,168 @@ if (!empty($data->action)) {
         } else {
             echo json_encode(array("success" => false, "message" => "Failed to add device."));
         }
+    }
+
+    // 4. Save/Update Single Horoscope to Cloud (Minimal footprint)
+    if ($action == "save_horoscope") {
+        $email = !empty($data->email) ? trim($data->email) : '';
+        $item_id = !empty($data->item_id) ? trim($data->item_id) : '';
+        $chart_type = !empty($data->chart_type) ? trim($data->chart_type) : 'horoscope';
+        $name = !empty($data->name) ? trim($data->name) : '';
+        $gender = !empty($data->gender) ? trim($data->gender) : 'male';
+        $date_time = !empty($data->date_time) ? trim($data->date_time) : '';
+        $place = !empty($data->place) ? trim($data->place) : '';
+        $latitude = isset($data->latitude) ? floatval($data->latitude) : 0.0;
+        $longitude = isset($data->longitude) ? floatval($data->longitude) : 0.0;
+        $timezone = isset($data->timezone) ? floatval($data->timezone) : 5.5;
+        $ayanamsa = isset($data->ayanamsa) ? intval($data->ayanamsa) : 1;
+
+        if (empty($email) || empty($item_id) || empty($name) || empty($date_time)) {
+            echo json_encode(array("success" => false, "message" => "Missing required fields (email, item_id, name, date_time)"));
+            exit();
+        }
+
+        $query = "INSERT INTO user_saved_horoscopes 
+                    (user_email, item_id, chart_type, name, gender, date_time, place, latitude, longitude, timezone, ayanamsa)
+                  VALUES 
+                    (:email, :item_id, :chart_type, :name, :gender, :date_time, :place, :lat, :lon, :tz, :ayanamsa)
+                  ON DUPLICATE KEY UPDATE 
+                    chart_type = VALUES(chart_type),
+                    name = VALUES(name),
+                    gender = VALUES(gender),
+                    date_time = VALUES(date_time),
+                    place = VALUES(place),
+                    latitude = VALUES(latitude),
+                    longitude = VALUES(longitude),
+                    timezone = VALUES(timezone),
+                    ayanamsa = VALUES(ayanamsa)";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bindParam(":email", $email);
+        $stmt->bindParam(":item_id", $item_id);
+        $stmt->bindParam(":chart_type", $chart_type);
+        $stmt->bindParam(":name", $name);
+        $stmt->bindParam(":gender", $gender);
+        $stmt->bindParam(":date_time", $date_time);
+        $stmt->bindParam(":place", $place);
+        $stmt->bindParam(":lat", $latitude);
+        $stmt->bindParam(":lon", $longitude);
+        $stmt->bindParam(":tz", $timezone);
+        $stmt->bindParam(":ayanamsa", $ayanamsa);
+
+        if ($stmt->execute()) {
+            echo json_encode(array("success" => true, "message" => "Horoscope saved to cloud successfully."));
+        } else {
+            echo json_encode(array("success" => false, "message" => "Failed to save horoscope to cloud."));
+        }
+        exit();
+    }
+
+    // 5. Delete Horoscope from Cloud
+    if ($action == "delete_horoscope") {
+        $email = !empty($data->email) ? trim($data->email) : '';
+        $item_id = !empty($data->item_id) ? trim($data->item_id) : '';
+
+        if (empty($email) || empty($item_id)) {
+            echo json_encode(array("success" => false, "message" => "Missing email or item_id"));
+            exit();
+        }
+
+        $stmt = $conn->prepare("DELETE FROM user_saved_horoscopes WHERE user_email = :email AND item_id = :item_id");
+        $stmt->bindParam(":email", $email);
+        $stmt->bindParam(":item_id", $item_id);
+
+        if ($stmt->execute()) {
+            echo json_encode(array("success" => true, "message" => "Horoscope deleted from cloud."));
+        } else {
+            echo json_encode(array("success" => false, "message" => "Failed to delete horoscope."));
+        }
+        exit();
+    }
+
+    // 6. Get All Horoscopes for User
+    if ($action == "get_horoscopes") {
+        $email = !empty($data->email) ? trim($data->email) : '';
+        if (empty($email)) {
+            echo json_encode(array("success" => false, "message" => "Email is required"));
+            exit();
+        }
+
+        $stmt = $conn->prepare("SELECT item_id, chart_type, name, gender, date_time, place, latitude, longitude, timezone, ayanamsa, created_at FROM user_saved_horoscopes WHERE user_email = :email ORDER BY created_at DESC");
+        $stmt->bindParam(":email", $email);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode(array("success" => true, "count" => count($rows), "items" => $rows));
+        exit();
+    }
+
+    // 7. Batch Sync: Upload local items & download cloud items in one roundtrip
+    if ($action == "batch_sync_horoscopes") {
+        $email = !empty($data->email) ? trim($data->email) : '';
+        if (empty($email)) {
+            echo json_encode(array("success" => false, "message" => "Email is required"));
+            exit();
+        }
+
+        $local_items = !empty($data->items) && is_array($data->items) ? $data->items : array();
+
+        if (!empty($local_items)) {
+            $insertQuery = "INSERT INTO user_saved_horoscopes 
+                                (user_email, item_id, chart_type, name, gender, date_time, place, latitude, longitude, timezone, ayanamsa)
+                            VALUES 
+                                (:email, :item_id, :chart_type, :name, :gender, :date_time, :place, :lat, :lon, :tz, :ayanamsa)
+                            ON DUPLICATE KEY UPDATE 
+                                chart_type = VALUES(chart_type),
+                                name = VALUES(name),
+                                gender = VALUES(gender),
+                                date_time = VALUES(date_time),
+                                place = VALUES(place),
+                                latitude = VALUES(latitude),
+                                longitude = VALUES(longitude),
+                                timezone = VALUES(timezone),
+                                ayanamsa = VALUES(ayanamsa)";
+            $stmt = $conn->prepare($insertQuery);
+
+            foreach ($local_items as $item) {
+                if (empty($item->item_id) || empty($item->name) || empty($item->date_time)) continue;
+                $c_type = !empty($item->chart_type) ? $item->chart_type : 'horoscope';
+                $c_gender = !empty($item->gender) ? $item->gender : 'male';
+                $c_place = !empty($item->place) ? $item->place : '';
+                $c_lat = isset($item->latitude) ? floatval($item->latitude) : 0.0;
+                $c_lon = isset($item->longitude) ? floatval($item->longitude) : 0.0;
+                $c_tz = isset($item->timezone) ? floatval($item->timezone) : 5.5;
+                $c_ay = isset($item->ayanamsa) ? intval($item->ayanamsa) : 1;
+
+                $stmt->execute([
+                    ':email' => $email,
+                    ':item_id' => strval($item->item_id),
+                    ':chart_type' => $c_type,
+                    ':name' => $item->name,
+                    ':gender' => $c_gender,
+                    ':date_time' => strval($item->date_time),
+                    ':place' => $c_place,
+                    ':lat' => $c_lat,
+                    ':lon' => $c_lon,
+                    ':tz' => $c_tz,
+                    ':ayanamsa' => $c_ay
+                ]);
+            }
+        }
+
+        // Return latest complete cloud list for this user
+        $fetchStmt = $conn->prepare("SELECT item_id, chart_type, name, gender, date_time, place, latitude, longitude, timezone, ayanamsa, created_at FROM user_saved_horoscopes WHERE user_email = :email ORDER BY created_at DESC");
+        $fetchStmt->bindParam(":email", $email);
+        $fetchStmt->execute();
+        $all_items = $fetchStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode(array(
+            "success" => true,
+            "message" => "Sync complete",
+            "count" => count($all_items),
+            "items" => $all_items
+        ));
+        exit();
     }
 }
 ?>

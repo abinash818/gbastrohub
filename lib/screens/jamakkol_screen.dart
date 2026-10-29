@@ -13,8 +13,13 @@ import '../widgets/location_search_dialog.dart';
 import '../services/location_data.dart';
 import 'package:astrology_flutter/l10n/app_localizations.dart';
 import '../services/astro_translation_service.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+import 'saved_prasannams_screen.dart';
 import '../widgets/custom_wheel_picker.dart';
 import '../widgets/custom_time_wheel_picker.dart';
+import '../services/cloud_sync_service.dart';
 
 class JamakkolScreen extends StatefulWidget {
   const JamakkolScreen({super.key});
@@ -38,6 +43,8 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
   double? _inputLat;
   double? _inputLon;
   double? _inputTz;
+  String? _inputName;
+  bool _shouldAutoSave = false;
 
   // 'Now' variables
   DateTime _nowTime = DateTime.now();
@@ -65,6 +72,11 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
         _inputLon = args['lon'] ?? 80.2707;
         _inputTz = args['tz'] ?? 5.5;
         _inputLocationName = args['place'] ?? 'Chennai (சென்னை)';
+        _inputName = args['name'];
+        _shouldAutoSave = args['autoSave'] == true;
+        if (args['arudam_idx'] != null) {
+          _selectedArudamIdx = (args['arudam_idx'] as num).toInt();
+        }
         _showIppothu = false;
       } else {
         _showIppothu = true;
@@ -194,6 +206,11 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
         _selectedArudamIdx = arudamIdx; // Sync UI
         _isLoading = false;
       });
+
+      if (_shouldAutoSave) {
+        _shouldAutoSave = false;
+        _savePrasannamDirectly(customName: _inputName, showToast: true);
+      }
     } catch (e) {
       debugPrint("Error calculating Jamakkol: $e");
       if (mounted) {
@@ -205,6 +222,260 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     }
   }
 
+  Future<void> _savePrasannamDirectly({String? customName, bool showToast = true}) async {
+    if (_results == null) return;
+
+    DateTime timeToUse = _showIppothu ? _nowTime : (_inputTime ?? _nowTime);
+    String placeToUse = _showIppothu ? _nowLocationName : (_inputLocationName ?? _nowLocationName);
+    double latToUse = _showIppothu ? _nowLat : (_inputLat ?? _nowLat);
+    double lonToUse = _showIppothu ? _nowLon : (_inputLon ?? _nowLon);
+    double tzToUse = _showIppothu ? _nowTz : (_inputTz ?? _nowTz);
+
+    final udayamIdx = _results?['udayam_idx'] ?? 0;
+    final arudamIdx = _results?['arudam_idx'] ?? 0;
+    final kaviIdx = _results?['kavi_idx'] ?? 0;
+
+    String udayamSign = KPService.TAMIL_SIGNS[KPService.SIGNS[udayamIdx % 12]] ?? '';
+    String arudamSign = KPService.TAMIL_SIGNS[KPService.SIGNS[arudamIdx % 12]] ?? '';
+    String kavippuSign = KPService.TAMIL_SIGNS[KPService.SIGNS[kaviIdx % 12]] ?? '';
+
+    final String finalName = (customName != null && customName.trim().isNotEmpty)
+        ? customName.trim()
+        : ((_inputName != null && _inputName!.trim().isNotEmpty) ? _inputName!.trim() : 'பிரசன்னம்');
+
+    final int ayanamsaMode = await SettingsService.getAyanamsa();
+    final String ayanamsaName = ayanamsaMode == 1 ? 'Raman' : 'Lahari 1940';
+
+    final newItem = {
+      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'name': finalName,
+      'date': timeToUse.toIso8601String(),
+      'place': placeToUse,
+      'lat': latToUse,
+      'lon': lonToUse,
+      'tz': tzToUse,
+      'arudam_idx': _selectedArudamIdx,
+      'udayam': udayamSign,
+      'arudam': arudamSign,
+      'kavippu': kavippuSign,
+      'ayanamsa': ayanamsaName,
+      'created_at': DateTime.now().toIso8601String(),
+    };
+
+    final prefs = await SharedPreferences.getInstance();
+    List<String> saved = prefs.getStringList('saved_jamakkol_prasannams') ?? [];
+    saved.add(jsonEncode(newItem));
+    await prefs.setStringList('saved_jamakkol_prasannams', saved);
+
+    // Background cloud save (Fire-and-forget)
+    CloudSyncService.saveToCloud(item: newItem, chartType: 'jamakkol').catchError((e) {
+      debugPrint("[CloudSync] Background save error: $e");
+      return false;
+    });
+
+    if (mounted) {
+      setState(() {
+        _inputName = finalName;
+      });
+      if (showToast) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('"$finalName" பிரசன்னம் வெற்றிகரமாக சேமிக்கப்பட்டது!'),
+            backgroundColor: const Color(0xFF1B5E20),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showSavePrasannamDialog() async {
+    if (_results == null) return;
+
+    DateTime timeToUse = _showIppothu ? _nowTime : (_inputTime ?? _nowTime);
+    String placeToUse = _showIppothu ? _nowLocationName : (_inputLocationName ?? _nowLocationName);
+
+    final udayamIdx = _results?['udayam_idx'] ?? 0;
+    final arudamIdx = _results?['arudam_idx'] ?? 0;
+    final kaviIdx = _results?['kavi_idx'] ?? 0;
+
+    String udayamSign = KPService.TAMIL_SIGNS[KPService.SIGNS[udayamIdx % 12]] ?? '';
+    String arudamSign = KPService.TAMIL_SIGNS[KPService.SIGNS[arudamIdx % 12]] ?? '';
+    String kavippuSign = KPService.TAMIL_SIGNS[KPService.SIGNS[kaviIdx % 12]] ?? '';
+
+    final TextEditingController nameController = TextEditingController(text: _inputName ?? '');
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: Colors.white,
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAF6EE),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.4)),
+                ),
+                child: const Icon(Icons.bookmark_add_rounded, color: Color(0xFFB58D3D), size: 22),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'பிரசன்னத்தை சேமிக்க',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.primary),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'கேள்வி அல்லது பெயர்:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey.shade800),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: nameController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'எ.கா: மேற்கு திசை பார்த்த வீடு வாங்கலாமா?',
+                    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFFB58D3D)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFAF7F2),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.2)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.primary),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              "${DateFormat('dd-MM-yyyy').format(timeToUse)} | ${DateFormat('hh:mm:ss a').format(timeToUse)}",
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on_rounded, size: 14, color: AppColors.primary),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              placeToUse,
+                              style: TextStyle(fontSize: 11.5, color: Colors.grey.shade700),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          _buildMiniBadge("உதயம்: $udayamSign", const Color(0xFF1B5E20)),
+                          _buildMiniBadge("ஆரூடம்: $arudamSign", const Color(0xFF0D47A1)),
+                          _buildMiniBadge("கவிப்பு: $kavippuSign", const Color(0xFFB71C1C)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('ரத்து (Cancel)', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              onPressed: () async {
+                final name = nameController.text.trim();
+                Navigator.pop(ctx);
+                await _savePrasannamDirectly(customName: name, showToast: true);
+              },
+              child: const Text('சேமி (Save)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _openSavedPrasannams() async {
+    final selected = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SavedPrasannamsScreen(selectMode: true),
+      ),
+    );
+
+    if (selected != null && mounted) {
+      _loadPrasannamData(selected);
+    }
+  }
+
+  void _loadPrasannamData(Map<String, dynamic> item) {
+    setState(() {
+      DateTime dt;
+      if (item['date'] is DateTime) {
+        dt = item['date'];
+      } else {
+        dt = DateTime.tryParse(item['date'].toString()) ?? DateTime.now();
+      }
+      _inputName = item['name'];
+      _inputTime = dt;
+      _inputLocationName = item['place'] ?? 'Chennai (சென்னை)';
+      _inputLat = (item['lat'] ?? item['latitude'] as num?)?.toDouble() ?? 13.0827;
+      _inputLon = (item['lon'] ?? item['longitude'] as num?)?.toDouble() ?? 80.2707;
+      _inputTz = (item['tz'] ?? item['timezone'] as num?)?.toDouble() ?? 5.5;
+      if (item['arudam_idx'] != null) {
+        _selectedArudamIdx = (item['arudam_idx'] as num).toInt();
+      }
+      _showIppothu = false;
+    });
+    _calculateJamakkol();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('"${item['name']}" பிரசன்னம் ஏற்றப்பட்டது!'),
+        backgroundColor: const Color(0xFF1B5E20),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -212,7 +483,24 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.jamakkolPrasannamTitle, style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: AppColors.primary)),
+          title: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                AppLocalizations.of(context)!.jamakkolPrasannamTitle, 
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: AppColors.primary, fontSize: 17),
+              ),
+              if (_inputName != null && _inputName!.trim().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    _inputName!,
+                    style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF5D1204), fontSize: 11.5),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
           centerTitle: true,
           backgroundColor: AppColors.background,
           elevation: 0,
@@ -224,7 +512,18 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: AppColors.primary),
+              icon: const Icon(Icons.bookmark_add_outlined, color: AppColors.primary, size: 22),
+              tooltip: 'பிரசன்னத்தை சேமி (Save)',
+              onPressed: _showSavePrasannamDialog,
+            ),
+            IconButton(
+              icon: const Icon(Icons.folder_open_rounded, color: AppColors.primary, size: 22),
+              tooltip: 'சேமிக்கப்பட்டவை (Saved List)',
+              onPressed: _openSavedPrasannams,
+            ),
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded, color: AppColors.primary, size: 22),
+              tooltip: 'புதுப்பி (Refresh)',
               onPressed: () {
                 setState(() {
                   _nowTime = DateTime.now();
@@ -236,17 +535,49 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.picture_as_pdf, color: AppColors.primary),
+              icon: const Icon(Icons.picture_as_pdf, color: AppColors.primary, size: 22),
+              tooltip: 'PDF',
               onPressed: () async {
                 if (_results == null) return;
-                if (kIsWeb) {
-                  JamakkolOnePagePdfService.showHtmlReport(name: AppLocalizations.of(context)!.tabPrasannam, gender: "-", results: _results!, inputTime: _inputTime ?? _nowTime, place: _inputLocationName ?? _nowLocationName, lat: _inputLat ?? _nowLat, lon: _inputLon ?? _nowLon, isAltNaming: _isAltNaming, l10n: AppLocalizations.of(context)!);
-                  return;
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (c) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                );
+                try {
+                  final bytes = await JamakkolOnePagePdfService.generate(
+                    name: (_inputName != null && _inputName!.trim().isNotEmpty)
+                        ? _inputName!.trim()
+                        : AppLocalizations.of(context)!.tabPrasannam,
+                    gender: "-",
+                    results: _results!,
+                    inputTime: _inputTime ?? _nowTime,
+                    place: _inputLocationName ?? _nowLocationName,
+                    lat: _inputLat ?? _nowLat,
+                    lon: _inputLon ?? _nowLon,
+                    isAltNaming: _isAltNaming,
+                    l10n: AppLocalizations.of(context)!,
+                  );
+                  if (!mounted) return;
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PdfViewerScreen(
+                        pdfBytes: bytes,
+                        fileName: "ஜாமக்கோள்_பிரசன்னம்.pdf",
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error generating PDF: $e')),
+                    );
+                  }
                 }
-                final bytes = await JamakkolOnePagePdfService.generate(name: AppLocalizations.of(context)!.tabPrasannam, gender: "-", results: _results!, inputTime: _inputTime ?? _nowTime, place: _inputLocationName ?? _nowLocationName, lat: _inputLat ?? _nowLat, lon: _inputLon ?? _nowLon, isAltNaming: _isAltNaming, l10n: AppLocalizations.of(context)!);
-                if (!mounted) return;
-                Navigator.push(context, MaterialPageRoute(builder: (_) => PdfViewerScreen(pdfBytes: bytes, fileName: "ஜாமக்கோள்_பிரசன்னம்.pdf")));
-              }
+              },
             ),
             const SizedBox(width: 8),
           ],

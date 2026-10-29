@@ -21,6 +21,7 @@ import '../theme/app_colors.dart';
 import '../components/custom_drawer.dart';
 import '../widgets/custom_date_input_field.dart';
 import '../widgets/custom_time_input_field.dart';
+import '../services/cloud_sync_service.dart';
 import 'package:astrology_flutter/l10n/app_localizations.dart';
 
 class InputScreen extends StatefulWidget {
@@ -110,7 +111,9 @@ class _InputScreenState extends State<InputScreen> {
         _selectedTime.minute,
       );
 
+      final String uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
       final Map<String, dynamic> inputs = <String, dynamic>{
+        'id': uniqueId,
         'name': _nameController.text,
         'gender': _selectedGender,
         'date': dt.toIso8601String(), // Convert to string for storage
@@ -125,6 +128,13 @@ class _InputScreenState extends State<InputScreen> {
         List<String> saved = prefs.getStringList('saved_horoscopes') ?? [];
         saved.add(jsonEncode(inputs));
         await prefs.setStringList('saved_horoscopes', saved);
+
+        // Background cloud save (Fire-and-forget)
+        CloudSyncService.saveToCloud(item: inputs, chartType: 'horoscope').catchError((e) {
+          debugPrint("[CloudSync] Background save error: $e");
+          return false;
+        });
+
         // Show confirmation
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart';
 import '../widgets/custom_date_input_field.dart';
 import '../widgets/custom_time_input_field.dart';
 import 'package:astrology_flutter/l10n/app_localizations.dart';
+import 'saved_prasannams_screen.dart';
 
 class JamakkolInputScreen extends StatefulWidget {
   final bool isPopup;
@@ -23,6 +24,7 @@ class JamakkolInputScreen extends StatefulWidget {
 
 class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _timeController = TextEditingController();
   final TextEditingController _placeController = TextEditingController();
@@ -33,6 +35,7 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
   int _selectedSecond = 0;
+  bool _savePrasannam = false;
 
   @override
   void initState() {
@@ -44,6 +47,18 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
     _dateController.text = DateFormat('dd/MM/yyyy').format(_selectedDate);
     _updateTimeFieldDisplay();
     _loadDefaultLocation();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _dateController.dispose();
+    _timeController.dispose();
+    _placeController.dispose();
+    _latController.dispose();
+    _longController.dispose();
+    _tzController.dispose();
+    super.dispose();
   }
 
   void _updateTimeFieldDisplay() {
@@ -78,6 +93,37 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
       _dateController.text = DateFormat('dd/MM/yyyy').format(_selectedDate);
       _updateTimeFieldDisplay();
     });
+  }
+
+  Future<void> _showSavedPrasannamsDialog() async {
+    final selected = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SavedPrasannamsScreen(selectMode: true),
+      ),
+    );
+
+    if (selected != null && mounted) {
+      setState(() {
+        DateTime dt;
+        if (selected['date'] is DateTime) {
+          dt = selected['date'];
+        } else {
+          dt = DateTime.tryParse(selected['date'].toString()) ?? DateTime.now();
+        }
+        _nameController.text = selected['name'] ?? '';
+        _placeController.text = selected['place'] ?? 'Chennai (சென்னை)';
+        _latController.text = ((selected['lat'] ?? selected['latitude']) ?? 13.0827).toString();
+        _longController.text = ((selected['lon'] ?? selected['longitude']) ?? 80.2707).toString();
+        _tzController.text = ((selected['tz'] ?? selected['timezone']) ?? 5.5).toString();
+        _selectedDate = dt;
+        _selectedTime = TimeOfDay.fromDateTime(dt);
+        _selectedSecond = dt.second;
+        _dateController.text = DateFormat('dd/MM/yyyy').format(dt);
+        _updateTimeFieldDisplay();
+        _savePrasannam = false;
+      });
+    }
   }
 
   Future<int?> _promptForSeconds(BuildContext context, int initialSeconds) async {
@@ -127,11 +173,13 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
       );
 
       final inputs = {
+        'name': _nameController.text.trim(),
         'date': dt,
         'lat': double.parse(_latController.text),
         'lon': double.parse(_longController.text),
         'tz': double.tryParse(_tzController.text) ?? 5.5,
         'place': _placeController.text,
+        'autoSave': _savePrasannam,
       };
 
       if (widget.isPopup) {
@@ -139,6 +187,102 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
       }
       Navigator.pushNamed(context, '/jamakkol', arguments: inputs);
     }
+  }
+
+  Widget _buildNameField() {
+    final bool isTa = AppLocalizations.of(context)!.localeName == 'ta';
+    return TextFormField(
+      controller: _nameController,
+      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF5D1204)),
+      decoration: InputDecoration(
+        labelText: isTa ? 'கேள்வி அல்லது பெயர் (விருப்பப்பட்டால்)' : 'Question or Name (Optional)',
+        labelStyle: TextStyle(color: const Color(0xFF5D1204).withOpacity(0.6), fontSize: 13),
+        hintText: isTa ? 'எ.கா: வீடு வாங்கலாமா? / ரமேஷ்' : 'e.g. Ramesh / Buying House?',
+        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+        prefixIcon: const Icon(Icons.help_outline_rounded, color: AppColors.primary, size: 20),
+        suffixIcon: IconButton(
+          icon: const Icon(Icons.folder_open_rounded, color: AppColors.primary, size: 20),
+          tooltip: isTa ? 'சேமிக்கப்பட்டவை (Saved List)' : 'Saved Prasannams',
+          onPressed: _showSavedPrasannamsDialog,
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xFFB58D3D), width: 1.0),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.4), width: 1.0),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xFFB58D3D), width: 1.8),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSaveCheckbox() {
+    final bool isTa = AppLocalizations.of(context)!.localeName == 'ta';
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFB58D3D).withOpacity(0.35)),
+      ),
+      child: CheckboxListTile(
+        value: _savePrasannam,
+        onChanged: (v) => setState(() => _savePrasannam = v ?? false),
+        title: Text(
+          isTa ? 'இந்த பிரசன்னத்தைச் சேமிக்கவும்' : 'Save this Prasannam',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF5D1204),
+          ),
+        ),
+        activeColor: AppColors.primary,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+        controlAffinity: ListTileControlAffinity.leading,
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: const LinearGradient(
+          colors: AppColors.primaryGradient,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        border: Border.all(color: const Color(0xFFE65100), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF5D1204).withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: const Color(0xFF5D1204),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          elevation: 0,
+        ),
+        child: Text(
+          AppLocalizations.of(context)!.submitBtn,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF5D1204)),
+        ),
+      ),
+    );
   }
 
   @override
@@ -153,6 +297,9 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
         elevation: 10,
         child: Container(
           width: 550,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.88,
+          ),
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -163,43 +310,51 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
                   Text(AppLocalizations.of(context)!.jamakkolPrasannamTitle, style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primary, fontSize: 20)),
                   Row(
                     children: [
-                      IconButton(icon: const Icon(Icons.access_time_rounded, color: AppColors.primary), onPressed: _setCurrentDateTime),
-                      IconButton(icon: const Icon(Icons.close, color: AppColors.primary), onPressed: () => Navigator.of(context).pop()),
+                      IconButton(
+                        icon: const Icon(Icons.folder_open_rounded, color: AppColors.primary), 
+                        tooltip: 'சேமிக்கப்பட்டவை (Saved List)',
+                        onPressed: _showSavedPrasannamsDialog,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.access_time_rounded, color: AppColors.primary), 
+                        tooltip: AppLocalizations.of(context)!.nowTooltip,
+                        onPressed: _setCurrentDateTime,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: AppColors.primary), 
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
                     ],
                   ),
                 ],
               ),
               const Divider(color: AppColors.primary, thickness: 1),
-              const SizedBox(height: 16),
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
+              const SizedBox(height: 12),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(child: _buildDateField()),
-                        const SizedBox(width: 15),
-                        Expanded(child: _buildTimeField()),
+                        _buildNameField(),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(child: _buildDateField()),
+                            const SizedBox(width: 15),
+                            Expanded(child: _buildTimeField()),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildPlaceField(),
+                        const SizedBox(height: 16),
+                        _buildSaveCheckbox(),
+                        const SizedBox(height: 24),
+                        _buildSubmitButton(),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    _buildPlaceField(),
-                    const SizedBox(height: 40),
-                    Container(
-                      height: 60,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        gradient: const LinearGradient(colors: AppColors.primaryGradient, begin: Alignment.topCenter, end: Alignment.bottomCenter),
-                        border: Border.all(color: const Color(0xFFE65100), width: 1.5),
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _submit,
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent, foregroundColor: const Color(0xFF5D1204), elevation: 0),
-                        child: Text(AppLocalizations.of(context)!.submitBtn, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -222,6 +377,11 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.folder_open_rounded, color: AppColors.primary),
+            tooltip: 'சேமிக்கப்பட்டவை (Saved List)',
+            onPressed: _showSavedPrasannamsDialog,
+          ),
           IconButton(
             icon: const Icon(Icons.access_time_rounded, color: AppColors.primary),
             tooltip: AppLocalizations.of(context)!.nowTooltip,
@@ -249,50 +409,23 @@ class _JamakkolInputScreenState extends State<JamakkolInputScreen> {
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(child: _buildDateField()),
-                  const SizedBox(width: 15),
-                  Expanded(child: _buildTimeField()),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _buildPlaceField(),
-              const SizedBox(height: 40),
-              Container(
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  gradient: const LinearGradient(
-                    colors: AppColors.primaryGradient,
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  border: Border.all(color: const Color(0xFFE65100), width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF5D1204).withOpacity(0.15),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: const Color(0xFF5D1204),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    AppLocalizations.of(context)!.submitBtn,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF5D1204)),
-                  ),
-                ),
-              ),
-            ],
+                        children: [
+                          _buildNameField(),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(child: _buildDateField()),
+                              const SizedBox(width: 15),
+                              Expanded(child: _buildTimeField()),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          _buildPlaceField(),
+                          const SizedBox(height: 16),
+                          _buildSaveCheckbox(),
+                          const SizedBox(height: 32),
+                          _buildSubmitButton(),
+                        ],
                       ),
                     ),
                   ),

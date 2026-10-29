@@ -13,6 +13,7 @@ import 'screens/numerology_input_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/subscription_plans_screen.dart';
 import 'screens/saved_horoscopes_screen.dart';
+import 'screens/saved_prasannams_screen.dart';
 import 'screens/jamakkol_screen.dart';
 import 'screens/jamakkol_input_screen.dart';
 import 'screens/horoscope_workspace_screen.dart';
@@ -103,6 +104,7 @@ class AstrologyApp extends StatelessWidget {
         '/settings': (context) => const SettingsScreen(),
         '/subscriptions': (context) => const SubscriptionPlansScreen(),
         '/saved_horoscopes': (context) => const SavedHoroscopesScreen(),
+        '/saved_prasannams': (context) => const SavedPrasannamsScreen(selectMode: false),
         '/astro_tools': (context) => const AstroToolsScreen(),
         '/panchangam': (context) => const PanchangamScreen(),
         '/jamakkol': (context) => const JamakkolScreen(),

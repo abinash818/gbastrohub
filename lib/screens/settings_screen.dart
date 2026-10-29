@@ -496,6 +496,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildChartStyleSelector() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -505,7 +506,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                AstroTranslationService.translate(context, "ஜாதகக் கட்ட நடைமுறை (Chart Style)"),
+                l10n.chartStyleTitle,
                 style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)),
               ),
             ),
@@ -518,12 +519,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             segments: [
               ButtonSegment(
                 value: 'south_indian',
-                label: Text(AstroTranslationService.translate(context, "தென்னிந்திய முறை")),
+                label: Text(l10n.southIndian),
                 icon: const Icon(Icons.grid_on_rounded, size: 18),
               ),
               ButtonSegment(
                 value: 'north_indian',
-                label: Text(AstroTranslationService.translate(context, "வடஇந்திய முறை")),
+                label: Text(l10n.northIndian),
                 icon: const Icon(Icons.diamond_outlined, size: 18),
               ),
             ],
@@ -544,7 +545,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          AstroTranslationService.translate(context, "* தேர்ந்தெடுக்கப்படும் கட்ட நடைமுறை அனைத்து ஜாதகப் பக்கங்களிலும் உடனே பயன்பாட்டிற்கு வரும்."),
+          l10n.chartStyleHint,
           style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontStyle: FontStyle.italic),
         ),
       ],
@@ -552,6 +553,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildNodeSelector() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -559,7 +561,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             const Icon(Icons.settings_suggest_outlined, color: Color(0xFFB58D3D), size: 20),
             const SizedBox(width: 10),
-            Expanded(child: Text(AstroTranslationService.translate(context, "ராகு/கேது (Node Calculation)"), style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)))),
+            Expanded(child: Text(l10n.nodeCalculationTitle, style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)))),
           ],
         ),
         const SizedBox(height: 16),
@@ -567,8 +569,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: double.infinity,
           child: SegmentedButton<bool>(
             segments: [
-              ButtonSegment(value: false, label: Text(AstroTranslationService.translate(context, "சராசரி (Mean Node)"))),
-              ButtonSegment(value: true, label: Text(AstroTranslationService.translate(context, "உண்மை (True Node)"))),
+              ButtonSegment(value: false, label: Text(l10n.meanNode)),
+              ButtonSegment(value: true, label: Text(l10n.trueNode)),
             ],
             selected: {_useTrueNode},
             onSelectionChanged: (Set<bool> newSelection) {
@@ -587,7 +589,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          AstroTranslationService.translate(context, "* பாரம்பரிய பஞ்சாங்கங்கள் 'சராசரி' (Mean Node) முறையை பயன்படுத்துகின்றன."),
+          l10n.meanNodeHint,
           style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontStyle: FontStyle.italic),
         ),
       ],
@@ -595,6 +597,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildYearLengthSelector() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -602,7 +605,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             const Icon(Icons.calendar_month_outlined, color: Color(0xFFB58D3D), size: 20),
             const SizedBox(width: 10),
-            Expanded(child: Text(AstroTranslationService.translate(context, "திசை வருட அளவு (Dasa Year Length)"), style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)))),
+            Expanded(child: Text(l10n.dasaYearLengthTitle, style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)))),
           ],
         ),
         const SizedBox(height: 16),
@@ -610,8 +613,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: double.infinity,
           child: SegmentedButton<double>(
             segments: [
-              ButtonSegment(value: 360.0, label: Text(AstroTranslationService.translate(context, "360 நாட்கள்"))),
-              ButtonSegment(value: 365.25, label: Text(AstroTranslationService.translate(context, "365.25 நாட்கள்"))),
+              ButtonSegment(value: 360.0, label: Text(l10n.days360)),
+              ButtonSegment(value: 365.25, label: Text(l10n.days365)),
             ],
             selected: {_dasaYearLength},
             onSelectionChanged: (Set<double> newSelection) {
@@ -630,7 +633,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          AstroTranslationService.translate(context, "* 365.25 என்பது நவீன முறை (Default). 360 என்பது பாரம்பரிய முறை."),
+          l10n.dasaYearLengthHint,
           style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontStyle: FontStyle.italic),
         ),
       ],
@@ -638,6 +641,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAyanamsaSelector() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -645,7 +649,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             const Icon(Icons.blur_circular_outlined, color: Color(0xFFB58D3D), size: 20),
             const SizedBox(width: 10),
-            Expanded(child: Text(AstroTranslationService.translate(context, "அயனாம்சம் (Ayanamsa Mode)"), style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)))),
+            Expanded(child: Text(l10n.ayanamsaModeTitle, style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)))),
           ],
         ),
         const SizedBox(height: 16),
@@ -664,13 +668,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             dropdownColor: Colors.white,
             style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 15, color: const Color(0xFF5D1204)),
             items: [
-              DropdownMenuItem(value: 0, child: Text(AstroTranslationService.translate(context, "Lahiri (Chitra Paksha)"))),
-              DropdownMenuItem(value: 1, child: Text(AstroTranslationService.translate(context, "Raman"))),
-              DropdownMenuItem(value: 2, child: Text(AstroTranslationService.translate(context, "KP Old (Original)"))),
-              DropdownMenuItem(value: 3, child: Text(AstroTranslationService.translate(context, "KP New (Modern)"))),
-              DropdownMenuItem(value: 4, child: Text(AstroTranslationService.translate(context, "KP Straight Line (Khullar)"))),
-              DropdownMenuItem(value: 5, child: Text(AstroTranslationService.translate(context, "KP-Newcomb (Auto)"))),
-              DropdownMenuItem(value: 6, child: Text(AstroTranslationService.translate(context, "பயனர் விருப்பம் (Custom Ayanamsa)"))),
+              const DropdownMenuItem(value: 0, child: Text("Lahiri (Chitra Paksha)")),
+              const DropdownMenuItem(value: 1, child: Text("Raman")),
+              const DropdownMenuItem(value: 2, child: Text("KP Old (Original)")),
+              const DropdownMenuItem(value: 3, child: Text("KP New (Modern)")),
+              const DropdownMenuItem(value: 4, child: Text("KP Straight Line (Khullar)")),
+              const DropdownMenuItem(value: 5, child: Text("KP-Newcomb (Auto)")),
+              DropdownMenuItem(value: 6, child: Text(l10n.customAyanamsa)),
             ],
             onChanged: (int? newSelection) {
               if (newSelection != null) {
@@ -725,6 +729,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildBhavaMethodSelector() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -734,7 +739,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                AstroTranslationService.translate(context, "பாவகக் கணித முறை (Bhava Chalit Method)"),
+                l10n.bhavaMethodTitle,
                 style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)),
               ),
             ),
@@ -747,11 +752,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             segments: [
               ButtonSegment<int>(
                 value: 0,
-                label: Text(AstroTranslationService.translate(context, "பிளசிடஸ் / KP (Placidus)")),
+                label: Text(l10n.placidusKp),
               ),
               ButtonSegment<int>(
                 value: 1,
-                label: Text(AstroTranslationService.translate(context, "ஸ்ரீபதி (Sripati)")),
+                label: Text(l10n.sripati),
               ),
             ],
             selected: {_bhavaMethod},
@@ -761,19 +766,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               });
               SettingsService.saveBhavaMethod(newSelection.first);
             },
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-                if (states.contains(MaterialState.selected)) {
-                  return AppColors.primary;
-                }
-                return Colors.white;
-              }),
-              foregroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-                if (states.contains(MaterialState.selected)) {
-                  return Colors.white;
-                }
-                return const Color(0xFF5D1204);
-              }),
+            style: SegmentedButton.styleFrom(
+              selectedBackgroundColor: AppColors.primary,
+              selectedForegroundColor: Colors.white,
+              backgroundColor: Colors.white,
+              side: BorderSide(color: const Color(0xFFB58D3D).withOpacity(0.4)),
             ),
           ),
         ),
@@ -782,6 +779,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildUdayamMethodSelector() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -791,7 +789,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                AstroTranslationService.translate(context, "ஜாமக்கோள் உதயம் கணக்கிடும் முறை"),
+                l10n.udayamMethodTitle,
                 style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)),
               ),
             ),
@@ -804,11 +802,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             segments: [
               ButtonSegment(
                 value: 0,
-                label: Text(AstroTranslationService.translate(context, "12 மணிநேர முறை")),
+                label: Text(l10n.hours12Method),
               ),
               ButtonSegment(
                 value: 1,
-                label: Text(AstroTranslationService.translate(context, "சூரிய உதய முறை")),
+                label: Text(l10n.sunriseMethod),
               ),
             ],
             selected: {_udayamMethod},
@@ -831,6 +829,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildMaandiMethodSelector() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -840,7 +839,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                AstroTranslationService.translate(context, "மாந்தி உதயம் கணக்கிடும் முறை"),
+                l10n.maandiMethodTitle,
                 style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)),
               ),
             ),
@@ -862,7 +861,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             DropdownMenuItem(
               value: 4,
               child: Text(
-                AstroTranslationService.translate(context, "சூரியன் பாகை + நிலையான பாகை கூட்டும் முறை"),
+                l10n.sunDegPlusFixedDeg,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -881,6 +880,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildLagnaAshtakavargaSelector() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -903,7 +903,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  AstroTranslationService.translate(context, "லக்ன அஷ்டகவர்க்கம் (Lagna's Own Ashtakavarga)"),
+                  l10n.lagnaAshtakavargaTitle,
                   style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF5D1204)),
                 ),
               ),
@@ -923,8 +923,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 8),
           Text(
             _includeLagnaAshtakavarga
-                ? AstroTranslationService.translate(context, "இயக்கப்பட்டுள்ளது: லக்னத்தின் சுய அஷ்டவர்க்கம் (49 பரல்கள்) தனி சக்கரமாகவும் அட்டவணையிலும் பார்க்க இயலும். சர்வ அஷ்டவர்க்கம் 7 கிரகங்களின் நிலையான 337 பரல்களாகக் கணக்கிடப்படும்.")
-                : AstroTranslationService.translate(context, "இயக்கப்படவில்லை: 7 கிரகங்களின் நிலையான அஷ்டவர்க்கம் (337 பரல்கள்) மட்டும் கணக்கிடப்படும்."),
+                ? l10n.lagnaAshtakavargaEnabled
+                : l10n.lagnaAshtakavargaDisabled,
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade700,

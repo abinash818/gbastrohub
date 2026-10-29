@@ -2451,6 +2451,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Planetary Avasthas'**
   String get grahaAvasthasTitle;
+
+  /// No description provided for @chartStyleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart Style'**
+  String get chartStyleTitle;
+
+  /// No description provided for @southIndian.
+  ///
+  /// In en, this message translates to:
+  /// **'South Indian'**
+  String get southIndian;
+
+  /// No description provided for @northIndian.
+  ///
+  /// In en, this message translates to:
+  /// **'North Indian'**
+  String get northIndian;
+
+  /// No description provided for @chartStyleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'* Selected chart style will be applied across all horoscope screens immediately.'**
+  String get chartStyleHint;
+
+  /// No description provided for @nodeCalculationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Node Calculation (Rahu/Ketu)'**
+  String get nodeCalculationTitle;
+
+  /// No description provided for @meanNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Mean Node'**
+  String get meanNode;
+
+  /// No description provided for @trueNode.
+  ///
+  /// In en, this message translates to:
+  /// **'True Node'**
+  String get trueNode;
+
+  /// No description provided for @meanNodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'* Traditional panchangams use \'Mean Node\' calculation.'**
+  String get meanNodeHint;
+
+  /// No description provided for @dasaYearLengthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dasa Year Length'**
+  String get dasaYearLengthTitle;
+
+  /// No description provided for @days360.
+  ///
+  /// In en, this message translates to:
+  /// **'360 Days'**
+  String get days360;
+
+  /// No description provided for @days365.
+  ///
+  /// In en, this message translates to:
+  /// **'365.25 Days'**
+  String get days365;
+
+  /// No description provided for @dasaYearLengthHint.
+  ///
+  /// In en, this message translates to:
+  /// **'* 365.25 is Modern method (Default). 360 is Traditional.'**
+  String get dasaYearLengthHint;
+
+  /// No description provided for @ayanamsaModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ayanamsa Mode'**
+  String get ayanamsaModeTitle;
+
+  /// No description provided for @customAyanamsa.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Ayanamsa'**
+  String get customAyanamsa;
+
+  /// No description provided for @bhavaMethodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bhava Chalit Method'**
+  String get bhavaMethodTitle;
+
+  /// No description provided for @placidusKp.
+  ///
+  /// In en, this message translates to:
+  /// **'Placidus / KP'**
+  String get placidusKp;
+
+  /// No description provided for @sripati.
+  ///
+  /// In en, this message translates to:
+  /// **'Sripati'**
+  String get sripati;
+
+  /// No description provided for @udayamMethodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Jamakkol Udayam Calculation Method'**
+  String get udayamMethodTitle;
+
+  /// No description provided for @hours12Method.
+  ///
+  /// In en, this message translates to:
+  /// **'12 HR Method'**
+  String get hours12Method;
+
+  /// No description provided for @sunriseMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise Method'**
+  String get sunriseMethod;
+
+  /// No description provided for @maandiMethodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Maanthi Udayam Calculation Method'**
+  String get maandiMethodTitle;
+
+  /// No description provided for @sunDegPlusFixedDeg.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun Degree + Fixed Degree Method'**
+  String get sunDegPlusFixedDeg;
+
+  /// No description provided for @lagnaAshtakavargaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lagna\'s Own Ashtakavarga'**
+  String get lagnaAshtakavargaTitle;
+
+  /// No description provided for @lagnaAshtakavargaEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled: Lagna\'s own ashtakavarga (49 bindus) can be viewed as separate chart and table. Sarvashtakavarga is calculated as standard 337 bindus for 7 planets.'**
+  String get lagnaAshtakavargaEnabled;
+
+  /// No description provided for @lagnaAshtakavargaDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled: Only standard ashtakavarga (337 bindus) for 7 planets is calculated.'**
+  String get lagnaAshtakavargaDisabled;
 }
 
 class _AppLocalizationsDelegate

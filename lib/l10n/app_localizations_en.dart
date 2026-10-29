@@ -1197,4 +1197,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get grahaAvasthasTitle => 'Planetary Avasthas';
+
+  @override
+  String get chartStyleTitle => 'Chart Style';
+
+  @override
+  String get southIndian => 'South Indian';
+
+  @override
+  String get northIndian => 'North Indian';
+
+  @override
+  String get chartStyleHint =>
+      '* Selected chart style will be applied across all horoscope screens immediately.';
+
+  @override
+  String get nodeCalculationTitle => 'Node Calculation (Rahu/Ketu)';
+
+  @override
+  String get meanNode => 'Mean Node';
+
+  @override
+  String get trueNode => 'True Node';
+
+  @override
+  String get meanNodeHint =>
+      '* Traditional panchangams use \'Mean Node\' calculation.';
+
+  @override
+  String get dasaYearLengthTitle => 'Dasa Year Length';
+
+  @override
+  String get days360 => '360 Days';
+
+  @override
+  String get days365 => '365.25 Days';
+
+  @override
+  String get dasaYearLengthHint =>
+      '* 365.25 is Modern method (Default). 360 is Traditional.';
+
+  @override
+  String get ayanamsaModeTitle => 'Ayanamsa Mode';
+
+  @override
+  String get customAyanamsa => 'Custom Ayanamsa';
+
+  @override
+  String get bhavaMethodTitle => 'Bhava Chalit Method';
+
+  @override
+  String get placidusKp => 'Placidus / KP';
+
+  @override
+  String get sripati => 'Sripati';
+
+  @override
+  String get udayamMethodTitle => 'Jamakkol Udayam Calculation Method';
+
+  @override
+  String get hours12Method => '12 HR Method';
+
+  @override
+  String get sunriseMethod => 'Sunrise Method';
+
+  @override
+  String get maandiMethodTitle => 'Maanthi Udayam Calculation Method';
+
+  @override
+  String get sunDegPlusFixedDeg => 'Sun Degree + Fixed Degree Method';
+
+  @override
+  String get lagnaAshtakavargaTitle => 'Lagna\'s Own Ashtakavarga';
+
+  @override
+  String get lagnaAshtakavargaEnabled =>
+      'Enabled: Lagna\'s own ashtakavarga (49 bindus) can be viewed as separate chart and table. Sarvashtakavarga is calculated as standard 337 bindus for 7 planets.';
+
+  @override
+  String get lagnaAshtakavargaDisabled =>
+      'Disabled: Only standard ashtakavarga (337 bindus) for 7 planets is calculated.';
 }

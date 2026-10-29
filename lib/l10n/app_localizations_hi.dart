@@ -1197,4 +1197,84 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get grahaAvasthasTitle => 'ग्रह अवस्थाएं';
+
+  @override
+  String get chartStyleTitle => 'कुंडली शैली (Chart Style)';
+
+  @override
+  String get southIndian => 'दक्षिण भारतीय पद्धति';
+
+  @override
+  String get northIndian => 'उत्तर भारतीय पद्धति';
+
+  @override
+  String get chartStyleHint =>
+      '* चुनी गई कुंडली शैली सभी पृष्ठों पर तुरंत लागू होगी।';
+
+  @override
+  String get nodeCalculationTitle => 'राहु/केतु गणना (Node Calculation)';
+
+  @override
+  String get meanNode => 'औसत (Mean Node)';
+
+  @override
+  String get trueNode => 'सत्य (True Node)';
+
+  @override
+  String get meanNodeHint =>
+      '* पारंपरिक पंचांग \'औसत\' (Mean Node) गणना का उपयोग करते हैं।';
+
+  @override
+  String get dasaYearLengthTitle => 'दशा वर्ष अवधि (Dasa Year Length)';
+
+  @override
+  String get days360 => '360 दिन';
+
+  @override
+  String get days365 => '365.25 दिन';
+
+  @override
+  String get dasaYearLengthHint =>
+      '* 365.25 आधुनिक विधि है (डिफ़ॉल्ट)। 360 पारंपरिक विधि है।';
+
+  @override
+  String get ayanamsaModeTitle => 'अयनांश विधि (Ayanamsa Mode)';
+
+  @override
+  String get customAyanamsa => 'कस्टम अयनांश (Custom Ayanamsa)';
+
+  @override
+  String get bhavaMethodTitle => 'भाव चलित विधि (Bhava Chalit Method)';
+
+  @override
+  String get placidusKp => 'प्लासिडस / KP';
+
+  @override
+  String get sripati => 'श्रीपति (Sripati)';
+
+  @override
+  String get udayamMethodTitle => 'जामक्कोल उदय गणना विधि';
+
+  @override
+  String get hours12Method => '12 घंटे की विधि';
+
+  @override
+  String get sunriseMethod => 'सूर्योदय विधि';
+
+  @override
+  String get maandiMethodTitle => 'मांदी उदय गणना विधि';
+
+  @override
+  String get sunDegPlusFixedDeg => 'सूर्य अंश + स्थिर अंश योग विधि';
+
+  @override
+  String get lagnaAshtakavargaTitle => 'लग्न का स्वयं का अष्टकवर्ग';
+
+  @override
+  String get lagnaAshtakavargaEnabled =>
+      'सक्रिय: लग्न का स्वयं का अष्टकवर्ग (49 बिंदु) अलग चक्र और तालिका के रूप में देखा जा सकता है। सर्व अष्टकवर्ग 7 ग्रहों के मानक 337 बिंदुओं के रूप में गणना की जाती है।';
+
+  @override
+  String get lagnaAshtakavargaDisabled =>
+      'निष्क्रिय: केवल 7 ग्रहों के मानक अष्टकवर्ग (337 बिंदु) की गणना की जाएगी।';
 }

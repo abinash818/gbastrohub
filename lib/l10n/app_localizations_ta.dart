@@ -1201,4 +1201,85 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get grahaAvasthasTitle => 'கிரக அவஸ்தைகள்';
+
+  @override
+  String get chartStyleTitle => 'ஜாதகக் கட்ட நடைமுறை (Chart Style)';
+
+  @override
+  String get southIndian => 'தென்னிந்திய முறை';
+
+  @override
+  String get northIndian => 'வடஇந்திய முறை';
+
+  @override
+  String get chartStyleHint =>
+      '* தேர்ந்தெடுக்கப்படும் கட்ட நடைமுறை அனைத்து ஜாதகப் பக்கங்களிலும் உடனே பயன்பாட்டிற்கு வரும்.';
+
+  @override
+  String get nodeCalculationTitle => 'ராகு/கேது (Node Calculation)';
+
+  @override
+  String get meanNode => 'சராசரி (Mean Node)';
+
+  @override
+  String get trueNode => 'உண்மை (True Node)';
+
+  @override
+  String get meanNodeHint =>
+      '* பாரம்பரிய பஞ்சாங்கங்கள் \'சராசரி\' (Mean Node) முறையை பயன்படுத்துகின்றன.';
+
+  @override
+  String get dasaYearLengthTitle => 'திசை வருட அளவு (Dasa Year Length)';
+
+  @override
+  String get days360 => '360 நாட்கள்';
+
+  @override
+  String get days365 => '365.25 நாட்கள்';
+
+  @override
+  String get dasaYearLengthHint =>
+      '* 365.25 என்பது நவீன முறை (Default). 360 என்பது பாரம்பரிய முறை.';
+
+  @override
+  String get ayanamsaModeTitle => 'அயனாம்சம் (Ayanamsa Mode)';
+
+  @override
+  String get customAyanamsa => 'பயனர் விருப்பம் (Custom Ayanamsa)';
+
+  @override
+  String get bhavaMethodTitle => 'பாவகக் கணித முறை (Bhava Chalit Method)';
+
+  @override
+  String get placidusKp => 'பிளசிடஸ் / KP (Placidus)';
+
+  @override
+  String get sripati => 'ஸ்ரீபதி (Sripati)';
+
+  @override
+  String get udayamMethodTitle => 'ஜாமக்கோள் உதயம் கணக்கிடும் முறை';
+
+  @override
+  String get hours12Method => '12 மணிநேர முறை';
+
+  @override
+  String get sunriseMethod => 'சூரிய உதய முறை';
+
+  @override
+  String get maandiMethodTitle => 'மாந்தி உதயம் கணக்கிடும் முறை';
+
+  @override
+  String get sunDegPlusFixedDeg => 'சூரியன் பாகை + நிலையான பாகை கூட்டும் முறை';
+
+  @override
+  String get lagnaAshtakavargaTitle =>
+      'லக்ன அஷ்டகவர்க்கம் (Lagna\'s Own Ashtakavarga)';
+
+  @override
+  String get lagnaAshtakavargaEnabled =>
+      'இயக்கப்பட்டுள்ளது: லக்னத்தின் சுய அஷ்டவர்க்கம் (49 பரல்கள்) தனி சக்கரமாகவும் அட்டவணையிலும் பார்க்க இயலும். சர்வ அஷ்டவர்க்கம் 7 கிரகங்களின் நிலையான 337 பரல்களாகக் கணக்கிடப்படும்.';
+
+  @override
+  String get lagnaAshtakavargaDisabled =>
+      'இயக்கப்படவில்லை: 7 கிரகங்களின் நிலையான அஷ்டவர்க்கம் (337 பரல்கள்) மட்டும் கணக்கிடப்படும்.';
 }

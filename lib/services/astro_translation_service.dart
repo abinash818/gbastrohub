@@ -933,7 +933,18 @@ class AstroTranslationService {
     if (languageCode == 'en' || languageCode == 'hi') {
       var sortedKeys = tMap.keys.toList()..sort((a, b) => b.length.compareTo(a.length));
       for (var ta in sortedKeys) {
-        translated = translated.replaceAll(ta, tMap[ta]!);
+        if (!translated.contains(ta)) continue;
+
+        // Multi-word phrases, phrases with delimiters, or long terms (>= 5 chars) can be replaced directly
+        if (ta.contains(' ') || ta.contains('/') || ta.contains('-') || ta.contains('(') || ta.length >= 5) {
+          translated = translated.replaceAll(ta, tMap[ta]!);
+        } else {
+          // Short tokens (< 5 chars, like கட, வரு, மா, நா, லக், நிலை) MUST NOT corrupt internal letters of other words.
+          // Only replace when bounded by start/end, whitespace, or punctuation.
+          final escaped = RegExp.escape(ta);
+          final pattern = RegExp(r'(?<=^|[\s,.:;()[\]/\-])' + escaped + r'(?=[\s,.:;()[\]/\-]|$)');
+          translated = translated.replaceAll(pattern, tMap[ta]!);
+        }
       }
     }
 

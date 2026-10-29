@@ -1070,4 +1070,131 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get friday => 'Friday';
+
+  @override
+  String get navDashboard => 'Dashboard';
+
+  @override
+  String get navDashboardSub => 'Home & Overview';
+
+  @override
+  String get navHoroscope => 'Horoscope';
+
+  @override
+  String get navHoroscopeSub => 'Horoscope Chart';
+
+  @override
+  String get navMarriageMatching => 'Marriage Matching';
+
+  @override
+  String get navMarriageMatchingSub => 'Porutham & Compatibility';
+
+  @override
+  String get navPanchangam => 'Panchangam';
+
+  @override
+  String get navPanchangamSub => 'Daily Panchangam';
+
+  @override
+  String get navNumerology => 'Numerology';
+
+  @override
+  String get navNumerologySub => 'Name & Birth Number';
+
+  @override
+  String get navJamakkol => 'Jamakkol Prasannam';
+
+  @override
+  String get navJamakkolSub => 'Instant Question Chart';
+
+  @override
+  String get navTraditionalVaasthu => 'Traditional Vaasthu';
+
+  @override
+  String get navTraditionalVaasthuSub => 'Mane Adi Saasthiram (Kuzhikanakku)';
+
+  @override
+  String get navGpVaasthu => 'GP Vaasthu';
+
+  @override
+  String get navGpVaasthuSub => 'GP Vaasthu Calculations';
+
+  @override
+  String get navAstroTools => 'Astro Tools';
+
+  @override
+  String get navAstroToolsSub => 'Nazhigai, Pancha Pakshi';
+
+  @override
+  String get navSavedHoroscopes => 'Saved Horoscopes';
+
+  @override
+  String get navSavedHoroscopesSub => 'View Saved Profiles';
+
+  @override
+  String get navSettings => 'Settings';
+
+  @override
+  String get navSettingsSub => 'Settings & Ayanamsa';
+
+  @override
+  String get navLogout => 'Logout';
+
+  @override
+  String get appSubtitle => 'Astrology Software';
+
+  @override
+  String get astrologerLogoTitle => 'Astrologer Center Logo / Photo';
+
+  @override
+  String get astrologerLogoSub => '(Appears on left side of PDF - Max 100 KB)';
+
+  @override
+  String get uploadLogo => 'Upload Logo';
+
+  @override
+  String get changeLogo => 'Change Logo';
+
+  @override
+  String get removeLogo => 'Remove';
+
+  @override
+  String get yourName => 'Your Name';
+
+  @override
+  String get address => 'Address';
+
+  @override
+  String get defaultLocation => 'Default Location';
+
+  @override
+  String get astrologerDetails => 'Astrologer Details';
+
+  @override
+  String get appSettings => 'App Settings';
+
+  @override
+  String get calculationSettings => 'Calculation Settings';
+
+  @override
+  String get change => 'Change';
+
+  @override
+  String get subscription => 'Subscription';
+
+  @override
+  String get birthDetails => 'Birth Details';
+
+  @override
+  String get panchangamCardTitle => 'Panchangam';
+
+  @override
+  String get aagamiPlanetsTitle => 'Aagami Planets';
+
+  @override
+  String get aagamiDescription =>
+      'Aagami planets are planets that have no other planets placed in their own star constellation.';
+
+  @override
+  String get grahaAvasthasTitle => 'Planetary Avasthas';
 }

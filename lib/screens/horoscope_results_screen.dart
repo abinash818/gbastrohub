@@ -3002,9 +3002,12 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       ),
       const SizedBox(height: 4),
       Text(
-        aagamiList.isNotEmpty
-            ? "தன் சொந்த நட்சத்திர சாரத்தில் பிற கிரகங்கள் அமையப் பெறாத கிரகங்கள் ஆகமி கிரகங்கள் ஆகும்."
-            : "அனைத்து கிரகங்களின் நட்சத்திர சாரங்களிலும் பிற கிரகங்கள் அமர்ந்துள்ளன.",
+        AstroTranslationService.translate(
+          context,
+          aagamiList.isNotEmpty
+              ? "தன் சொந்த நட்சத்திர சாரத்தில் பிற கிரகங்கள் அமையப் பெறாத கிரகங்கள் ஆகமி கிரகங்கள் ஆகும்."
+              : "அனைத்து கிரகங்களின் நட்சத்திர சாரங்களிலும் பிற கிரகங்கள் அமர்ந்துள்ளன.",
+        ),
         style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontStyle: FontStyle.italic),
       ),
       if (details.isNotEmpty) ...[
@@ -3025,7 +3028,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                 Expanded(
                   child: Text.rich(
                     TextSpan(
-                      text: "${d['planet_tamil']}: ",
+                      text: "${AstroTranslationService.translate(context, d['planet_tamil'] ?? '', isPlanet: true)}: ",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12.5,
@@ -3033,7 +3036,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                       ),
                       children: [
                         TextSpan(
-                          text: d['status_text'] ?? '',
+                          text: AstroTranslationService.translate(context, d['status_text'] ?? '', isPlanet: true),
                           style: TextStyle(
                             fontWeight: isAagami ? FontWeight.w600 : FontWeight.normal,
                             fontSize: 12,
@@ -3073,14 +3076,14 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
             color: const Color(0xFF1B5E20),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.star_rounded, color: Colors.white, size: 20),
-                SizedBox(width: 8),
+                const Icon(Icons.star_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "கால நட்பு",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                    AstroTranslationService.translate(context, "கால நட்பு"),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                 ),
               ],
@@ -3124,13 +3127,13 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "காலநட்பு வயது & திசை விவரங்கள்:",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20)),
+                      Text(
+                        AstroTranslationService.translate(context, "காலநட்பு வயது & திசை விவரங்கள்:"),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20)),
                       ),
                       const Divider(height: 14, color: Color(0xFF81C784)),
                       if (natpuRules.isEmpty)
-                        const Text("விவரங்கள் இல்லை", style: TextStyle(fontSize: 12.5))
+                        Text(AstroTranslationService.translate(context, "விவரங்கள் இல்லை"), style: const TextStyle(fontSize: 12.5))
                       else
                         ...natpuRules.map((r) => Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2.5),
@@ -3180,14 +3183,14 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
             color: Colors.red.shade900,
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
-                SizedBox(width: 8),
+                const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "காலப்பகை",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                    AstroTranslationService.translate(context, "காலப்பகை"),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                 ),
               ],
@@ -3231,13 +3234,13 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "காலப்பகை வயது & திசை விவரங்கள்:",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFFBF360C)),
+                      Text(
+                        AstroTranslationService.translate(context, "காலப்பகை வயது & திசை விவரங்கள்:"),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFFBF360C)),
                       ),
                       const Divider(height: 14, color: Color(0xFFFFB74D)),
                       if (pagaiRules.isEmpty)
-                        const Text("விவரங்கள் இல்லை", style: TextStyle(fontSize: 12.5))
+                        Text(AstroTranslationService.translate(context, "விவரங்கள் இல்லை"), style: const TextStyle(fontSize: 12.5))
                       else
                         ...pagaiRules.map((r) => Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2.5),
@@ -3269,9 +3272,9 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "காலப்பகை தசா - புத்தி எச்சரிக்கைகள்:",
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.redAccent),
+                        Text(
+                          AstroTranslationService.translate(context, "காலப்பகை தசா - புத்தி எச்சரிக்கைகள்:"),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.redAccent),
                         ),
                         const Divider(height: 14, color: Colors.redAccent),
                         ...warnings.map((w) {
@@ -3330,13 +3333,13 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             decoration: const BoxDecoration(color: Color(0xFF5D1204)),
             child: Row(
-              children: const [
-                Icon(Icons.auto_awesome, color: Colors.amber, size: 20),
-                SizedBox(width: 8),
+              children: [
+                const Icon(Icons.auto_awesome, color: Colors.amber, size: 20),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "கிரக அவஸ்தைகள்",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    AstroTranslationService.translate(context, "கிரக அவஸ்தைகள்"),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                 ),
               ],
@@ -3403,12 +3406,12 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                           Row(
                             children: [
                               Text(
-                                pTamil,
+                                AstroTranslationService.translate(context, pTamil, isPlanet: true),
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5, color: Color(0xFF5D1204)),
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                "• $rasiTamil ($degStr)",
+                                "• ${AstroTranslationService.translate(context, rasiTamil)} ($degStr)",
                                 style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700, fontWeight: FontWeight.w600),
                               ),
                             ],
@@ -3424,7 +3427,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                                   border: Border.all(color: dignityColor.withOpacity(0.5)),
                                 ),
                                 child: Text(
-                                  dignity,
+                                  AstroTranslationService.translate(context, dignity),
                                   style: TextStyle(color: dignityColor, fontSize: 11.5, fontWeight: FontWeight.bold),
                                 ),
                               ),
@@ -3436,9 +3439,9 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(color: Colors.green),
                                   ),
-                                  child: const Text(
-                                    "திக்பலம்",
-                                    style: TextStyle(color: Color(0xFF1B5E20), fontSize: 11.5, fontWeight: FontWeight.bold),
+                                  child: Text(
+                                    AstroTranslationService.translate(context, "திக்பலம்"),
+                                    style: const TextStyle(color: Color(0xFF1B5E20), fontSize: 11.5, fontWeight: FontWeight.bold),
                                   ),
                                 ),
                             ],
@@ -3450,9 +3453,19 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                         spacing: 12,
                         runSpacing: 4,
                         children: [
-                          _buildAvasthaChip("பாலதி", baladi, power: baladiPower),
-                          _buildAvasthaChip("தீப்தாதி", deeptadi),
-                          _buildAvasthaChip("ஜாக்ரதாதி", jagradadi),
+                          _buildAvasthaChip(
+                            AstroTranslationService.translate(context, "பாலதி"),
+                            AstroTranslationService.translate(context, baladi),
+                            power: baladiPower,
+                          ),
+                          _buildAvasthaChip(
+                            AstroTranslationService.translate(context, "தீப்தாதி"),
+                            AstroTranslationService.translate(context, deeptadi),
+                          ),
+                          _buildAvasthaChip(
+                            AstroTranslationService.translate(context, "ஜாக்ரதாதி"),
+                            AstroTranslationService.translate(context, jagradadi),
+                          ),
                         ],
                       ),
                     ],

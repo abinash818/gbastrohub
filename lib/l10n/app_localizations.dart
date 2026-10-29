@@ -2199,6 +2199,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Friday'**
   String get friday;
+
+  /// No description provided for @navDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get navDashboard;
+
+  /// No description provided for @navDashboardSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Home & Overview'**
+  String get navDashboardSub;
+
+  /// No description provided for @navHoroscope.
+  ///
+  /// In en, this message translates to:
+  /// **'Horoscope'**
+  String get navHoroscope;
+
+  /// No description provided for @navHoroscopeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Horoscope Chart'**
+  String get navHoroscopeSub;
+
+  /// No description provided for @navMarriageMatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Marriage Matching'**
+  String get navMarriageMatching;
+
+  /// No description provided for @navMarriageMatchingSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Porutham & Compatibility'**
+  String get navMarriageMatchingSub;
+
+  /// No description provided for @navPanchangam.
+  ///
+  /// In en, this message translates to:
+  /// **'Panchangam'**
+  String get navPanchangam;
+
+  /// No description provided for @navPanchangamSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Panchangam'**
+  String get navPanchangamSub;
+
+  /// No description provided for @navNumerology.
+  ///
+  /// In en, this message translates to:
+  /// **'Numerology'**
+  String get navNumerology;
+
+  /// No description provided for @navNumerologySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Name & Birth Number'**
+  String get navNumerologySub;
+
+  /// No description provided for @navJamakkol.
+  ///
+  /// In en, this message translates to:
+  /// **'Jamakkol Prasannam'**
+  String get navJamakkol;
+
+  /// No description provided for @navJamakkolSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant Question Chart'**
+  String get navJamakkolSub;
+
+  /// No description provided for @navTraditionalVaasthu.
+  ///
+  /// In en, this message translates to:
+  /// **'Traditional Vaasthu'**
+  String get navTraditionalVaasthu;
+
+  /// No description provided for @navTraditionalVaasthuSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Mane Adi Saasthiram (Kuzhikanakku)'**
+  String get navTraditionalVaasthuSub;
+
+  /// No description provided for @navGpVaasthu.
+  ///
+  /// In en, this message translates to:
+  /// **'GP Vaasthu'**
+  String get navGpVaasthu;
+
+  /// No description provided for @navGpVaasthuSub.
+  ///
+  /// In en, this message translates to:
+  /// **'GP Vaasthu Calculations'**
+  String get navGpVaasthuSub;
+
+  /// No description provided for @navAstroTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Astro Tools'**
+  String get navAstroTools;
+
+  /// No description provided for @navAstroToolsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Nazhigai, Pancha Pakshi'**
+  String get navAstroToolsSub;
+
+  /// No description provided for @navSavedHoroscopes.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Horoscopes'**
+  String get navSavedHoroscopes;
+
+  /// No description provided for @navSavedHoroscopesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'View Saved Profiles'**
+  String get navSavedHoroscopesSub;
+
+  /// No description provided for @navSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettings;
+
+  /// No description provided for @navSettingsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings & Ayanamsa'**
+  String get navSettingsSub;
+
+  /// No description provided for @navLogout.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get navLogout;
+
+  /// No description provided for @appSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Astrology Software'**
+  String get appSubtitle;
+
+  /// No description provided for @astrologerLogoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Astrologer Center Logo / Photo'**
+  String get astrologerLogoTitle;
+
+  /// No description provided for @astrologerLogoSub.
+  ///
+  /// In en, this message translates to:
+  /// **'(Appears on left side of PDF - Max 100 KB)'**
+  String get astrologerLogoSub;
+
+  /// No description provided for @uploadLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Logo'**
+  String get uploadLogo;
+
+  /// No description provided for @changeLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Logo'**
+  String get changeLogo;
+
+  /// No description provided for @removeLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeLogo;
+
+  /// No description provided for @yourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Name'**
+  String get yourName;
+
+  /// No description provided for @address.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get address;
+
+  /// No description provided for @defaultLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Location'**
+  String get defaultLocation;
+
+  /// No description provided for @astrologerDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Astrologer Details'**
+  String get astrologerDetails;
+
+  /// No description provided for @appSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'App Settings'**
+  String get appSettings;
+
+  /// No description provided for @calculationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculation Settings'**
+  String get calculationSettings;
+
+  /// No description provided for @change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get change;
+
+  /// No description provided for @subscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get subscription;
+
+  /// No description provided for @birthDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth Details'**
+  String get birthDetails;
+
+  /// No description provided for @panchangamCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Panchangam'**
+  String get panchangamCardTitle;
+
+  /// No description provided for @aagamiPlanetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Aagami Planets'**
+  String get aagamiPlanetsTitle;
+
+  /// No description provided for @aagamiDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Aagami planets are planets that have no other planets placed in their own star constellation.'**
+  String get aagamiDescription;
+
+  /// No description provided for @grahaAvasthasTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Planetary Avasthas'**
+  String get grahaAvasthasTitle;
 }
 
 class _AppLocalizationsDelegate

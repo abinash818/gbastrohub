@@ -10,6 +10,7 @@ import '../services/location_data.dart';
 import '../components/custom_drawer.dart';
 import '../theme/app_colors.dart';
 import '../main.dart' as main_file;
+import 'package:astrology_flutter/l10n/app_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -225,11 +226,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     final bool isWide = MediaQuery.of(context).size.width > 900;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: isWide ? null : AppBar(
-        title: Text(AstroTranslationService.translate(context, 'அமைப்புகள்'), style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: AppColors.primary)),
+        title: Text(l10n.settingsTitle, style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: AppColors.primary)),
         centerTitle: true,
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -259,26 +261,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (isWide) ...[
-                          Text(AstroTranslationService.translate(context, 'அமைப்புகள்'), style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 24, color: AppColors.primary)),
+                          Text(l10n.settingsTitle, style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 24, color: AppColors.primary)),
                           const SizedBox(height: 20),
                         ],
-            _buildSectionTitle(AstroTranslationService.translate(context, "நிலையான இடம் (Default Location)")),
+            _buildSectionTitle(l10n.defaultLocation),
             const SizedBox(height: 12),
             _buildLocationCard(),
             
             const SizedBox(height: 32),
-            _buildSectionTitle(AstroTranslationService.translate(context, "ஜோதிடர் விவரங்கள் (Astrologer Details)")),
+            _buildSectionTitle(l10n.astrologerDetails),
             const SizedBox(height: 12),
             _buildInfoCard(),
             
             const SizedBox(height: 32),
-            _buildSectionTitle(AstroTranslationService.translate(context, "அமைப்புகள் (App Settings)")),
+            _buildSectionTitle(l10n.appSettings),
             const SizedBox(height: 16),
             _buildLanguageSelector(),
             const SizedBox(height: 16),
             _buildFontSizeSelector(),
             const SizedBox(height: 32),
-            _buildSectionTitle(AstroTranslationService.translate(context, "கணக்கீடு அமைப்புகள் (Calculation Settings)")),
+            _buildSectionTitle(l10n.calculationSettings),
             const SizedBox(height: 16),
             _buildChartStyleSelector(),
             const SizedBox(height: 24),
@@ -296,7 +298,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 24),
             _buildLagnaAshtakavargaSelector(),
             const SizedBox(height: 36),
-            _buildSectionTitle(AstroTranslationService.translate(context, "சந்தா (Subscription)")),
+            _buildSectionTitle(l10n.subscription),
             const SizedBox(height: 16),
             _buildSubscriptionCard(),
             const SizedBox(height: 36),
@@ -359,7 +361,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   });
                 }
               },
-              child: Text(AstroTranslationService.translate(context, "மாற்று"), style: TextStyle(color: Color(0xFFB58D3D), fontWeight: FontWeight.bold)),
+              child: Text(AppLocalizations.of(context)!.change, style: const TextStyle(color: Color(0xFFB58D3D), fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -418,11 +420,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          AstroTranslationService.translate(context, "ஜோதிட மைய லோகோ / படம்"),
+          AppLocalizations.of(context)!.astrologerLogoTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFF1E3A8A)),
         ),
         Text(
-          AstroTranslationService.translate(context, "(PDF-ன் இடதுபுறத்தில் தோன்றும் - Max 100 KB)"),
+          AppLocalizations.of(context)!.astrologerLogoSub,
           style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
         ),
         const SizedBox(height: 10),
@@ -432,7 +434,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ElevatedButton.icon(
               onPressed: _pickAndSaveLogo,
               icon: const Icon(Icons.upload_file, size: 15),
-              label: Text(AstroTranslationService.translate(context, _customLogoBytes != null ? "மாற்றுக" : "லோகோ பதிவேற்று")),
+              label: Text(_customLogoBytes != null ? AppLocalizations.of(context)!.changeLogo : AppLocalizations.of(context)!.uploadLogo),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1E3A8A),
                 foregroundColor: Colors.white,
@@ -447,7 +449,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: _removeLogo,
                 icon: const Icon(Icons.delete_outline, size: 15, color: Colors.red),
                 label: Text(
-                  AstroTranslationService.translate(context, "நீக்குக"),
+                  AppLocalizations.of(context)!.removeLogo,
                   style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 style: OutlinedButton.styleFrom(
@@ -483,11 +485,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         children: [
           _buildLogoSection(),
-          _buildTextField(_astroNameController, AstroTranslationService.translate(context, "உங்கள் பெயர் (Name)"), Icons.person_outline),
+          _buildTextField(_astroNameController, AppLocalizations.of(context)!.yourName, Icons.person_outline),
           const SizedBox(height: 16),
-          _buildTextField(_astroPhoneController, AstroTranslationService.translate(context, "மொபைல் எண் (Phone)"), Icons.phone_android_outlined, keyboardType: TextInputType.phone),
+          _buildTextField(_astroPhoneController, AppLocalizations.of(context)!.mobileNumber, Icons.phone_android_outlined, keyboardType: TextInputType.phone),
           const SizedBox(height: 16),
-          _buildTextField(_astroAddressController, AstroTranslationService.translate(context, "முகவரி (Address)"), Icons.location_city_outlined, maxLines: 3),
+          _buildTextField(_astroAddressController, AppLocalizations.of(context)!.address, Icons.location_city_outlined, maxLines: 3),
         ],
       ),
     );

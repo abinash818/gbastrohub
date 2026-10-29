@@ -1073,4 +1073,132 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get friday => 'வெள்ளி';
+
+  @override
+  String get navDashboard => 'முகப்பு';
+
+  @override
+  String get navDashboardSub => 'Dashboard';
+
+  @override
+  String get navHoroscope => 'ஜாதகம்';
+
+  @override
+  String get navHoroscopeSub => 'Horoscope Chart';
+
+  @override
+  String get navMarriageMatching => 'திருமணப் பொருத்தம்';
+
+  @override
+  String get navMarriageMatchingSub => 'Marriage Matching';
+
+  @override
+  String get navPanchangam => 'பஞ்சாங்கம்';
+
+  @override
+  String get navPanchangamSub => 'Daily Panchangam';
+
+  @override
+  String get navNumerology => 'எண் கணிதம்';
+
+  @override
+  String get navNumerologySub => 'Numerology';
+
+  @override
+  String get navJamakkol => 'ஜாமக்கோள் பிரசன்னம்';
+
+  @override
+  String get navJamakkolSub => 'Jamakkol Prasannam';
+
+  @override
+  String get navTraditionalVaasthu => 'பாரம்பரிய வாஸ்து';
+
+  @override
+  String get navTraditionalVaasthuSub => 'மனை அடி சாஸ்திரம் (Kuzhikanakku)';
+
+  @override
+  String get navGpVaasthu => 'GP வாஸ்து';
+
+  @override
+  String get navGpVaasthuSub => 'GP Vaasthu Calculations';
+
+  @override
+  String get navAstroTools => 'ஜோதிடக் கருவிகள்';
+
+  @override
+  String get navAstroToolsSub => 'Astro Tools (நாழிகை, பஞ்ச பட்சி)';
+
+  @override
+  String get navSavedHoroscopes => 'சேமித்த ஜாதகங்கள்';
+
+  @override
+  String get navSavedHoroscopesSub => 'Saved Horoscopes';
+
+  @override
+  String get navSettings => 'அமைப்புகள்';
+
+  @override
+  String get navSettingsSub => 'Settings & Ayanamsa';
+
+  @override
+  String get navLogout => 'வெளியேறு';
+
+  @override
+  String get appSubtitle => 'ஜோதிட மென்பொருள்';
+
+  @override
+  String get astrologerLogoTitle => 'ஜோதிட மைய லோகோ / படம்';
+
+  @override
+  String get astrologerLogoSub =>
+      '(PDF-ன் இடதுபுறத்தில் தோன்றும் - Max 100 KB)';
+
+  @override
+  String get uploadLogo => 'லோகோ பதிவேற்று';
+
+  @override
+  String get changeLogo => 'மாற்றுக';
+
+  @override
+  String get removeLogo => 'நீக்குக';
+
+  @override
+  String get yourName => 'உங்கள் பெயர்';
+
+  @override
+  String get address => 'முகவரி';
+
+  @override
+  String get defaultLocation => 'நிலையான இடம்';
+
+  @override
+  String get astrologerDetails => 'ஜோதிடர் விவரங்கள்';
+
+  @override
+  String get appSettings => 'செயலி அமைப்புகள்';
+
+  @override
+  String get calculationSettings => 'கணக்கீடு அமைப்புகள்';
+
+  @override
+  String get change => 'மாற்று';
+
+  @override
+  String get subscription => 'சந்தா';
+
+  @override
+  String get birthDetails => 'பிறப்பு விவரம்';
+
+  @override
+  String get panchangamCardTitle => 'பஞ்சாங்கம்';
+
+  @override
+  String get aagamiPlanetsTitle => 'ஆகமி கிரகங்கள்';
+
+  @override
+  String get aagamiDescription =>
+      'தன் சொந்த நட்சத்திர சாரத்தில் பிற கிரகங்கள் அமையப் பெறாத கிரகங்கள் ஆகமி கிரகங்கள் ஆகும்.';
+
+  @override
+  String get grahaAvasthasTitle => 'கிரக அவஸ்தைகள்';
 }

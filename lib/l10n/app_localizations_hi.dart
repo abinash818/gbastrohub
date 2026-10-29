@@ -1069,4 +1069,132 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get friday => 'शुक्रवार';
+
+  @override
+  String get navDashboard => 'डैशबोर्ड';
+
+  @override
+  String get navDashboardSub => 'Dashboard';
+
+  @override
+  String get navHoroscope => 'कुंडली';
+
+  @override
+  String get navHoroscopeSub => 'Horoscope Chart';
+
+  @override
+  String get navMarriageMatching => 'विवाह मिलान';
+
+  @override
+  String get navMarriageMatchingSub => 'Marriage Matching';
+
+  @override
+  String get navPanchangam => 'दैनिक पंचांग';
+
+  @override
+  String get navPanchangamSub => 'Daily Panchangam';
+
+  @override
+  String get navNumerology => 'अंकज्योतिष';
+
+  @override
+  String get navNumerologySub => 'Numerology';
+
+  @override
+  String get navJamakkol => 'जामक्कोल प्रश्न';
+
+  @override
+  String get navJamakkolSub => 'Jamakkol Prasannam';
+
+  @override
+  String get navTraditionalVaasthu => 'पारंपरिक वास्तु';
+
+  @override
+  String get navTraditionalVaasthuSub => 'माने आदि शास्त्र (Kuzhikanakku)';
+
+  @override
+  String get navGpVaasthu => 'जीपी वास्तु';
+
+  @override
+  String get navGpVaasthuSub => 'GP Vaasthu Calculations';
+
+  @override
+  String get navAstroTools => 'ज्योतिष उपकरण';
+
+  @override
+  String get navAstroToolsSub => 'Astro Tools (नाड़ी, पंच पक्षी)';
+
+  @override
+  String get navSavedHoroscopes => 'सहेजी गई कुंडलियां';
+
+  @override
+  String get navSavedHoroscopesSub => 'Saved Horoscopes';
+
+  @override
+  String get navSettings => 'सेटिंग्स';
+
+  @override
+  String get navSettingsSub => 'Settings & Ayanamsa';
+
+  @override
+  String get navLogout => 'लॉगआउट';
+
+  @override
+  String get appSubtitle => 'ज्योतिष सॉफ्टवेयर';
+
+  @override
+  String get astrologerLogoTitle => 'ज्योतिष केंद्र लोगो / फोटो';
+
+  @override
+  String get astrologerLogoSub =>
+      '(पीडीएफ के बाईं ओर दिखाई देगा - अधिकतम 100 केबी)';
+
+  @override
+  String get uploadLogo => 'लोगो अपलोड करें';
+
+  @override
+  String get changeLogo => 'लोगो बदलें';
+
+  @override
+  String get removeLogo => 'हटाएं';
+
+  @override
+  String get yourName => 'आपका नाम';
+
+  @override
+  String get address => 'पता';
+
+  @override
+  String get defaultLocation => 'डिफ़ॉल्ट स्थान';
+
+  @override
+  String get astrologerDetails => 'ज्योतिषी विवरण';
+
+  @override
+  String get appSettings => 'ऐप सेटिंग्स';
+
+  @override
+  String get calculationSettings => 'गणना सेटिंग्स';
+
+  @override
+  String get change => 'बदलें';
+
+  @override
+  String get subscription => 'सदस्यता';
+
+  @override
+  String get birthDetails => 'जन्म विवरण';
+
+  @override
+  String get panchangamCardTitle => 'पंचांग';
+
+  @override
+  String get aagamiPlanetsTitle => 'आगामी ग्रह';
+
+  @override
+  String get aagamiDescription =>
+      'आगामी ग्रह वे ग्रह हैं जिनके अपने नक्षत्र में कोई अन्य ग्रह स्थित नहीं है।';
+
+  @override
+  String get grahaAvasthasTitle => 'ग्रह अवस्थाएं';
 }

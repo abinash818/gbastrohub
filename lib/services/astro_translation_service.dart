@@ -619,12 +619,89 @@ class AstroTranslationService {
       tMap["இறங்கு வரிசை"] = "Descending Order";
 
       // Special Lagna Points
+      tMap["சிறப்பு லக்கின புள்ளிகள்"] = "Special Lagna Points";
       tMap["இந்து லக்னம் (Indu Lagna)"] = "Indu Lagna";
       tMap["இந்து லக் (Indu லக்)"] = "Indu Lagna";
       tMap["இந்து லக்னம்"] = "Indu Lagna";
       tMap["இந்து லக்"] = "Indu Lagna";
       tMap["இந்து Asc (Indu Asc)"] = "Indu Lagna";
       tMap["இந்து"] = "Indu";
+      tMap["பார்ச்சூனா புள்ளி (Fortuna)"] = "Fortuna Point";
+      tMap["பார்ச்சூனா புள்ளி"] = "Fortuna Point";
+      tMap["பதா / ஆருட லக்னம் (AL)"] = "Pada / Arudha Lagna (AL)";
+      tMap["பதா / ஆருட லக்னம்"] = "Pada / Arudha Lagna (AL)";
+      tMap["பதா / ஆரூட லக்னம் (AL)"] = "Pada / Arudha Lagna (AL)";
+      tMap["பதா / ஆரூட லக்னம்"] = "Pada / Arudha Lagna (AL)";
+      tMap["பதா / ஆரூட Asc (AL)"] = "Pada / Arudha Lagna (AL)";
+      tMap["பதா / ஆருட Asc (AL)"] = "Pada / Arudha Lagna (AL)";
+      tMap["பதா / ஆரூட"] = "Pada / Arudha";
+      tMap["பதா / ஆருட"] = "Pada / Arudha";
+      tMap["ஆருட லக்னம்"] = "Arudha Lagna";
+      tMap["ஆரூட லக்னம்"] = "Arudha Lagna";
+      tMap["உபபதா லக்னம் (UL)"] = "Upapada Lagna (UL)";
+      tMap["உபபதா லக்னம்"] = "Upapada Lagna (UL)";
+      tMap["உபபதா Asc (UL)"] = "Upapada Lagna (UL)";
+      tMap["உபபதா"] = "Upapada";
+      tMap["ஹோரா லக்னம் (HL)"] = "Hora Lagna (HL)";
+      tMap["ஹோரா லக்னம்"] = "Hora Lagna (HL)";
+      tMap["ஹோரா Asc (HL)"] = "Hora Lagna (HL)";
+      tMap["ஹோரா"] = "Hora";
+      tMap["கடிகா லக்னம் (GL)"] = "Ghatika Lagna (GL)";
+      tMap["கடிகா லக்னம்"] = "Ghatika Lagna (GL)";
+      tMap["கடிகா Asc (GL)"] = "Ghatika Lagna (GL)";
+      tMap["கடிகா"] = "Ghatika";
+
+      // Tabs
+      tMap["ஷட்பலம்"] = "Shadbala";
+      tMap["வழிபாட்டு தலங்கள்"] = "Worship Temples";
+      tMap["வழிபாட்டுத் தலங்கள்"] = "Worship Temples";
+
+      // Shadbala Strengths
+      tMap["மிக பலம் (Very Strong)"] = "Very Strong";
+      tMap["போதுமான பலம் (Strong)"] = "Strong";
+      tMap["பலவீனமானது (Weak)"] = "Weak";
+      tMap["மிக பலம்"] = "Very Strong";
+      tMap["போதுமான பலம்"] = "Strong";
+      tMap["பலவீனமானது"] = "Weak";
+
+      // Worship Temples Screen
+      tMap["ஜாதகருக்குரிய வழிபாட்டு அட்டவணை"] = "Personalized Temple Worship Schedule";
+      tMap["நட்சத்திரம், யோகி, அவயோகி, திதி அதிதேவதை, கரண நாதன், வைநாசிகம் மற்றும் முடக்கு பாவகம் அடிப்படையிலான திருத்தலங்கள்"] = "Temples based on Birth Star, Yogi, Avayogi, Thithi Deity, Karana Lord, Vainasika and Mudakku Bhava";
+      tMap["1. ஜன்ம நட்சத்திரக் கோவில்"] = "1. Birth Star Temple (Janma Nakshatra)";
+      tMap["2. யோகி கோவில் (சுப யோகம்)"] = "2. Yogi Temple (Auspicious Yoga)";
+      tMap["3. அவயோகி பரிகாரக் கோவில் (தோஷ நிவர்த்தி)"] = "3. Avayogi Remedy Temple (Dosha Relief)";
+      tMap["4. திதி அதிதேவதை & கோவில்"] = "4. Thithi Deity & Temple";
+      tMap["5. கரண நாதன் கோவில்"] = "5. Karana Lord Temple";
+      tMap["6. வைநாசிக நட்சத்திரக் கோவில் (88-வது பாதம்)"] = "6. Vainasika Star Temple (88th Pada)";
+      tMap["7. முடக்கு ராசி / பாவகக் கோவில்"] = "7. Mudakku Rasi / House Temple";
+
+      tMap["ஜன்ம நட்சத்திர அதிதேவதை அருள், ஆயுள் பலம் & மன அமைதிக்கு"] = "For blessings of Birth Star deity, longevity & peace of mind";
+      tMap["சுப யோக பலன்கள் முழுமையாகக் கிடைக்க, தன வரவு & தொழில் மேன்மை"] = "To receive full auspicious yoga benefits, wealth inflow & career growth";
+      tMap["அவயோக தோஷம் நீங்க, தடைகள் மற்றும் மன உளைச்சல்கள் விலக"] = "For relief from Avayoga dosha, removal of obstacles & mental distress";
+      tMap["திதி சூன்ய தோஷம் நீங்க, ஆத்ம பலம் மற்றும் காரிய சித்தி"] = "For relief from Thithi Shoonya dosha, inner strength & success in endeavors";
+      tMap["தொழில், உத்தியோகம் & அன்றாடச் செயல்களில் தடைகள் நீங்கி வெற்றி"] = "For success in profession, employment & smooth daily activities";
+      tMap["88-வது பாத வைநாசிக தோஷ நிவர்த்தி, விபத்து & கண்டங்கள் விலக"] = "For relief from 88th pada Vainasika dosha, protection from accidents & dangers";
+      tMap["முடக்கு தோஷம் நிவர்த்தியாகி பாவக காரகங்கள் நற்பலன் தர"] = "For remedy of Mudakku dosha & to activate positive house results";
+
+      tMap["அவயோகி கிரகம்:"] = "Avayogi Planet:";
+      tMap["அவயோகி கிரகம்"] = "Avayogi Planet";
+      tMap["யோகி கிரகம்"] = "Yogi Planet";
+      tMap["துணை யோகி"] = "Upayogi";
+      tMap["முடக்கு ராசி"] = "Mudakku Rasi";
+      tMap["முடக்கு பாவம்"] = "Mudakku Bhava";
+      tMap["வளர்பிறை"] = "Waxing (Shukla)";
+      tMap["தேய்பிறை"] = "Waning (Krishna)";
+      tMap["தெய்வம்:"] = "Deity:";
+      tMap["தெய்வம்"] = "Deity";
+      tMap["மிருகம்:"] = "Animal:";
+      tMap["மிருகம்"] = "Animal";
+      tMap["கதிர்கள்"] = "Rays";
+      tMap["நாதா:"] = "Lord:";
+      tMap["நாதன்:"] = "Lord:";
+      tMap["யோகி:"] = "Yogi:";
+      tMap["-ஆம் பாதம்"] = "Pada";
+      tMap["-ஆம் பாவம்"] = "House";
+      tMap["லக்னத்திலிருந்து"] = "from Lagna";
 
       // Nakshatra Details: Animals (Mirugam)
       tMap["ஆண்குதிரை"] = "Male Horse";
@@ -1333,12 +1410,89 @@ class AstroTranslationService {
       tMap["இறங்கு வரிசை"] = "अवरोही क्रम";
 
       // Special Lagna Points
+      tMap["சிறப்பு லக்கின புள்ளிகள்"] = "विशेष लग्न बिंदु";
       tMap["இந்து லக்னம் (Indu Lagna)"] = "इंदु लग्न";
       tMap["இந்து லக் (Indu லக்)"] = "इंदु लग्न";
       tMap["இந்து லக்னம்"] = "इंदु लग्न";
       tMap["இந்து லக்"] = "इंदु लग्न";
       tMap["இந்து Asc (Indu Asc)"] = "इंदु लग्न";
       tMap["இந்து"] = "इंदु";
+      tMap["பார்ச்சூனா புள்ளி (Fortuna)"] = "फॉर्च्यूना पॉइंट (Fortuna)";
+      tMap["பார்ச்சூனா புள்ளி"] = "फॉर्च्यूना पॉइंट";
+      tMap["பதா / ஆருட லக்னம் (AL)"] = "पदा / आरूढ़ लग्न (AL)";
+      tMap["பதா / ஆருட லக்னம்"] = "पदा / आरूढ़ लग्न (AL)";
+      tMap["பதா / ஆரூட லக்னம் (AL)"] = "पदा / आरूढ़ लग्न (AL)";
+      tMap["பதா / ஆரூட லக்னம்"] = "पदा / आरूढ़ लग्न (AL)";
+      tMap["பதா / ஆரூட Asc (AL)"] = "पदा / आरूढ़ लग्न (AL)";
+      tMap["பதா / ஆருட Asc (AL)"] = "पदा / आरूढ़ लग्न (AL)";
+      tMap["பதா / ஆரூட"] = "पदा / आरूढ़";
+      tMap["பதா / ஆருட"] = "पदा / आरूढ़";
+      tMap["ஆருட லக்னம்"] = "आरूढ़ लग्न";
+      tMap["ஆரூட லக்னம்"] = "आरूढ़ लग्न";
+      tMap["உபபதா லக்னம் (UL)"] = "उपपद लग्न (UL)";
+      tMap["உபபதா லக்னம்"] = "उपपद लग्न (UL)";
+      tMap["உபபதா Asc (UL)"] = "उपपद लग्न (UL)";
+      tMap["உபபதா"] = "उपपद";
+      tMap["ஹோரா லக்னம் (HL)"] = "होरा लग्न (HL)";
+      tMap["ஹோரா லக்னம்"] = "होरा लग्न (HL)";
+      tMap["ஹோரா Asc (HL)"] = "होरा लग्न (HL)";
+      tMap["ஹோரா"] = "होरा";
+      tMap["கடிகா லக்னம் (GL)"] = "घटिका लग्न (GL)";
+      tMap["கடிகா லக்னம்"] = "घटिका लग्न (GL)";
+      tMap["கடிகா Asc (GL)"] = "घटिका लग्न (GL)";
+      tMap["கடிகா"] = "घटिका";
+
+      // Tabs
+      tMap["ஷட்பலம்"] = "षड्बल";
+      tMap["வழிபாட்டு தலங்கள்"] = "पूजा स्थल";
+      tMap["வழிபாட்டுத் தலங்கள்"] = "पूजा स्थल";
+
+      // Shadbala Strengths
+      tMap["மிக பலம் (Very Strong)"] = "अत्यधिक बली (Very Strong)";
+      tMap["போதுமான பலம் (Strong)"] = "पर्याप्त बली (Strong)";
+      tMap["பலவீனமானது (Weak)"] = "निर्बल (Weak)";
+      tMap["மிக பலம்"] = "अत्यधिक बली";
+      tMap["போதுமான பலம்"] = "पर्याप्त बली";
+      tMap["பலவீனமானது"] = "निर्बल";
+
+      // Worship Temples Screen
+      tMap["ஜாதகருக்குரிய வழிபாட்டு அட்டவணை"] = "जातक के लिए विशेष पूजा अनुसूची";
+      tMap["நட்சத்திரம், யோகி, அவயோகி, திதி அதிதேவதை, கரண நாதன், வைநாசிகம் மற்றும் முடக்கு பாவகம் அடிப்படையிலான திருத்தலங்கள்"] = "जन्म नक्षत्र, योगी, अवयोगी, तिथि देवता, करण नाथ, वैनासिक एवं मुडक्कू भाव पर आधारित तीर्थ स्थल";
+      tMap["1. ஜன்ம நட்சத்திரக் கோவில்"] = "1. जन्म नक्षत्र मंदिर (Janma Nakshatra)";
+      tMap["2. யோகி கோவில் (சுப யோகம்)"] = "2. योगी मंदिर (शुभ योग)";
+      tMap["3. அவயோகி பரிகாரக் கோவில் (தோஷ நிவர்த்தி)"] = "3. अवयोगी निवारण मंदिर (दोष शांति)";
+      tMap["4. திதி அதிதேவதை & கோவில்"] = "4. तिथि देवता एवं मंदिर";
+      tMap["5. கரண நாதன் கோவில்"] = "5. करण नाथ मंदिर";
+      tMap["6. வைநாசிக நட்சத்திரக் கோவில் (88-வது பாதம்)"] = "6. वैनासिक नक्षत्र मंदिर (88वां पद)";
+      tMap["7. முடக்கு ராசி / பாவகக் கோவில்"] = "7. मुडक्कू राशि / भाव मंदिर";
+
+      tMap["ஜன்ம நட்சத்திர அதிதேவதை அருள், ஆயுள் பலம் & மன அமைதிக்கு"] = "जन्म नक्षत्र देवता की कृपा, दीर्घायु और मानसिक शांति हेतु";
+      tMap["சுப யோக பலன்கள் முழுமையாகக் கிடைக்க, தன வரவு & தொழில் மேன்மை"] = "शुभ योग के पूर्ण फल, धन आगमन एवं व्यापार में उन्नति हेतु";
+      tMap["அவயோக தோஷம் நீங்க, தடைகள் மற்றும் மன உளைச்சல்கள் விலக"] = "अवयोग दोष निवारण, बाधाएं एवं मानसिक तनाव दूर करने हेतु";
+      tMap["திதி சூன்ய தோஷம் நீங்க, ஆத்ம பலம் மற்றும் காரிய சித்தி"] = "तिथि शून्य दोष निवारण, आत्मबल एवं कार्य सिद्धि हेतु";
+      tMap["தொழில், உத்தியோகம் & அன்றாடச் செயல்களில் தடைகள் நீங்கி வெற்றி"] = "व्यापार, नौकरी और दैनिक कार्यों में बाधा निवारण एवं सफलता हेतु";
+      tMap["88-வது பாத வைநாசிக தோஷ நிவர்த்தி, விபத்து & கண்டங்கள் விலக"] = "88वें पद वैनासिक दोष निवारण, दुर्घटना एवं संकट निवारण हेतु";
+      tMap["முடக்கு தோஷம் நிவர்த்தியாகி பாவக காரகங்கள் நற்பலன் தர"] = "मुडक्कू दोष शांति एवं भाव कारकतत्वों के शुभ फल प्राप्ति हेतु";
+
+      tMap["அவயோகி கிரகம்:"] = "अवयोगी ग्रह:";
+      tMap["அவயோகி கிரகம்"] = "अवयोगी ग्रह";
+      tMap["யோகி கிரகம்"] = "योगी ग्रह";
+      tMap["துணை யோகி"] = "उपयोगी";
+      tMap["முடக்கு ராசி"] = "मुडक्कू राशि";
+      tMap["முடக்கு பாவம்"] = "मुडक्कू भाव";
+      tMap["வளர்பிறை"] = "शुक्ल पक्ष";
+      tMap["தேய்பிறை"] = "कृष्ण पक्ष";
+      tMap["தெய்வம்:"] = "देवता:";
+      tMap["தெய்வம்"] = "देवता";
+      tMap["மிருகம்:"] = "पशु:";
+      tMap["மிருகம்"] = "पशु";
+      tMap["கதிர்கள்"] = "किरणें";
+      tMap["நாதா:"] = "स्वामी:";
+      tMap["நாதன்:"] = "स्वामी:";
+      tMap["யோகி:"] = "योगी:";
+      tMap["-ஆம் பாதம்"] = "पद";
+      tMap["-ஆம் பாவம்"] = "भाव";
+      tMap["லக்னத்திலிருந்து"] = "लग्न से";
 
       // Nakshatra Details: Animals (Mirugam)
       tMap["ஆண்குதிரை"] = "अश्व (नर घोड़ा)";

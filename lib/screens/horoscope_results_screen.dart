@@ -371,9 +371,9 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
       if (!isPrasannam) Tab(text: AppLocalizations.of(context)!.tabDasaBukthi),
       if (!isPrasannam) Tab(text: AppLocalizations.of(context)!.tabAshtakavarga),
       if (!isPrasannam) Tab(text: AppLocalizations.of(context)!.tabDasavarga),
-      if (!isPrasannam) const Tab(text: "ஷட்பலம்"),
+      if (!isPrasannam) Tab(text: AstroTranslationService.translate(context, "ஷட்பலம்")),
       if (!isPrasannam) Tab(text: AppLocalizations.of(context)!.tabPalangal),
-      if (!isPrasannam) const Tab(text: "வழிபாட்டு தலங்கள்"),
+      if (!isPrasannam) Tab(text: AstroTranslationService.translate(context, "வழிபாட்டு தலங்கள்")),
     ];
 
     final tabViewsList = [
@@ -1471,7 +1471,8 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     } else {
       selectedPlanetSign = basics[_selectedBavPlanet.toLowerCase()]?['rasi'];
     }
-    final String selectedPlanetTamilShort = KPService.TAMIL_PLANETS_SHORT[_selectedBavPlanet] ?? _selectedBavPlanet;
+    final String rawShort = KPService.TAMIL_PLANETS_SHORT[_selectedBavPlanet] ?? _selectedBavPlanet;
+    final String selectedPlanetTamilShort = AstroTranslationService.translate(context, rawShort, isPlanet: true);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -1977,7 +1978,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                           style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900),
                         ),
                         Text(
-                          "$reqWord: ${(topPlanet['required_rupas'] as double).toStringAsFixed(1)} $rupaWord | $statusWord: ${topPlanet['status']}",
+                          "$reqWord: ${(topPlanet['required_rupas'] as double).toStringAsFixed(1)} $rupaWord | $statusWord: ${AstroTranslationService.translate(context, topPlanet['status']?.toString() ?? '')}",
                           style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 11.5),
                         ),
                       ],
@@ -2894,10 +2895,11 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
     final indu = widget.results['indu_lagna'] as Map<String, dynamic>?;
     final fortuna = widget.results['fortuna_detailed'] as Map<String, dynamic>?;
     final jLagnas = widget.results['jaimini_lagnas'] as Map<String, dynamic>?;
+    final String raysWord = AstroTranslationService.translate(context, "கதிர்கள்");
 
     return _buildDetailCard("சிறப்பு லக்கின புள்ளிகள்", [
       if (indu != null)
-        _buildDetailRow("இந்து லக்னம் (Indu Lagna)", "${indu['rasi_tamil']} (${indu['formatted']}) - ${indu['total_rays']} கதிர்கள்", isPrimary: true),
+        _buildDetailRow("இந்து லக்னம் (Indu Lagna)", "${indu['rasi_tamil']} (${indu['formatted']}) - ${indu['total_rays']} $raysWord", isPrimary: true),
       if (fortuna != null)
         _buildDetailRow("பார்ச்சூனா புள்ளி (Fortuna)", "${fortuna['rasi_tamil']} (${fortuna['formatted']})"),
       if (jLagnas != null) ...[
@@ -3292,13 +3294,22 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                           final pDasa = AstroTranslationService.translate(context, dTamil, isPlanet: true);
                           final pBhukthi = AstroTranslationService.translate(context, bTamil, isPlanet: true);
                           final langCode = Localizations.localeOf(context).languageCode;
+                          String rawAge = w['age_range']?.toString().replaceAll('வயது', '').trim() ?? '';
+                          String ageStr;
+                          if (langCode == 'en') {
+                            ageStr = "Age $rawAge";
+                          } else if (langCode == 'hi') {
+                            ageStr = "आयु $rawAge";
+                          } else {
+                            ageStr = "$rawAge வயது";
+                          }
                           String warnMsg;
                           if (langCode == 'en') {
-                            warnMsg = "$pDasa Dasa - $pBhukthi Bhukthi (${w['age_range']}): $pBhukthi in $pDasa Dasa is a Kala Pagai (inauspicious) period.${isCur ? ' (Currently Running)' : ''}";
+                            warnMsg = "$pDasa Dasa - $pBhukthi Bhukthi ($ageStr): $pBhukthi in $pDasa Dasa is a Kala Pagai (inauspicious) period.${isCur ? ' (Currently Running)' : ''}";
                           } else if (langCode == 'hi') {
-                            warnMsg = "$pDasa दशा - $pBhukthi भुक्ति (${w['age_range']}): $pDasa दशा में $pBhukthi भुक्ति काल शत्रु योग है।${isCur ? ' (वर्तमान में जारी)' : ''}";
+                            warnMsg = "$pDasa दशा - $pBhukthi भुक्ति ($ageStr): $pDasa दशा में $pBhukthi भुक्ति काल शत्रु योग है।${isCur ? ' (वर्तमान में जारी)' : ''}";
                           } else {
-                            warnMsg = "$dTamil தசை - $bTamil புத்தி (${w['age_range']}): $dTamil தசையில் $bTamil புத்தி காலப்பகை அமைப்பாகும்.${isCur ? ' (தற்போது நடக்கிறது)' : ''}";
+                            warnMsg = "$dTamil தசை - $bTamil புத்தி ($ageStr): $dTamil தசையில் $bTamil புத்தி காலப்பகை அமைப்பாகும்.${isCur ? ' (தற்போது நடக்கிறது)' : ''}";
                           }
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -4858,7 +4869,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "ஜாதகருக்குரிய வழிபாட்டு அட்டவணை",
+                              AstroTranslationService.translate(context, "ஜாதகருக்குரிய வழிபாட்டு அட்டவணை"),
                               style: GoogleFonts.cinzel(
                                 color: const Color(0xFFFFD54F),
                                 fontWeight: FontWeight.w900,
@@ -4867,9 +4878,9 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            const Text(
-                              "நட்சத்திரம், யோகி, அவயோகி, திதி அதிதேவதை, கரண நாதன், வைநாசிகம் மற்றும் முடக்கு பாவகம் அடிப்படையிலான திருத்தலங்கள்",
-                              style: TextStyle(color: Colors.white70, fontSize: 12.5),
+                            Text(
+                              AstroTranslationService.translate(context, "நட்சத்திரம், யோகி, அவயோகி, திதி அதிதேவதை, கரண நாதன், வைநாசிகம் மற்றும் முடக்கு பாவகம் அடிப்படையிலான திருத்தலங்கள்"),
+                              style: const TextStyle(color: Colors.white70, fontSize: 12.5),
                             ),
                           ],
                         ),
@@ -5092,7 +5103,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  title,
+                  AstroTranslationService.translate(context, title),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13.5,
@@ -5111,7 +5122,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
               border: Border.all(color: accentColor.withOpacity(0.25)),
             ),
             child: Text(
-              badgeText,
+              AstroTranslationService.translate(context, badgeText, isPlanet: true),
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 12.5,
@@ -5127,7 +5138,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  templeName,
+                  AstroTranslationService.translate(context, templeName),
                   style: const TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
@@ -5139,7 +5150,7 @@ class _HoroscopeResultsScreenState extends State<HoroscopeResultsScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            "• $benefitText",
+            "• ${AstroTranslationService.translate(context, benefitText)}",
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w600,

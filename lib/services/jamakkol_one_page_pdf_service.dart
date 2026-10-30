@@ -407,50 +407,160 @@ class JamakkolOnePagePdfService {
     final pDegs = outer['planet_degrees'] as Map? ?? {};
     final namingMap = isAltNaming ? JamakkolService.JAMAKKOL_TAMIL_ALT : JamakkolService.JAMAKKOL_TAMIL_SHORT;
 
-    // Outer planets mapped to signs
-    Map<String, List<String>> outerPlanetsBySign = {};
+    final udayaLordPlanet = JamakkolService.SIGN_LORDS[KPService.SIGNS[udayamIdx % 12]] ?? "Sun";
+
+    final Map<String, String> outerShortTa = {
+      'Sun': 'சூரி', 'Moon': 'சந்', 'Mars': 'செவ்', 'Mercury': 'புத',
+      'Jupiter': 'குரு', 'Venus': 'சுக்', 'Saturn': 'சனி', 'Rahu': 'பாம்பு'
+    };
+    final Map<String, String> outerShortHi = {
+      'Sun': 'सू', 'Moon': 'चं', 'Mars': 'मं', 'Mercury': 'बु',
+      'Jupiter': 'गु', 'Venus': 'शु', 'Saturn': 'श', 'Rahu': 'रा'
+    };
+    final Map<String, String> outerShortEn = {
+      'Sun': 'Sun', 'Moon': 'Mon', 'Mars': 'Mar', 'Mercury': 'Mer',
+      'Jupiter': 'Jup', 'Venus': 'Ven', 'Saturn': 'Sat', 'Rahu': 'Rah'
+    };
+
+    // Outer planets mapped to border badges by sign
+    Map<String, List<Map<String, dynamic>>> outerBadgesBySign = {};
     for (var sign in KPService.SIGNS) {
-      outerPlanetsBySign[sign] = [];
+      outerBadgesBySign[sign] = [];
     }
     for (var pName in JamakkolService.JAMAKKOL_PLANETS) {
       if (pDegs.containsKey(pName)) {
         double deg = (pDegs[pName] as num).toDouble();
         int sIdx = (deg / 30.0).floor() % 12;
         String signName = KPService.SIGNS[sIdx];
-        String label = namingMap[pName] ?? pName;
-        int d = (deg % 30.0).floor();
-        int m = (((deg % 30.0) - d) * 60).floor();
-        String dStr = d.toString().padLeft(2, '0');
-        String mStr = m.toString().padLeft(2, '0');
-        outerPlanetsBySign[signName]?.add("$label $dStr:$mStr");
+        double degInSign = deg % 30.0;
+        int d = degInSign.floor();
+        int m = ((degInSign - d) * 60).floor();
+        String pLabel = langCode == 'ta'
+            ? (outerShortTa[pName] ?? pName)
+            : (langCode == 'hi' ? (outerShortHi[pName] ?? pName) : (outerShortEn[pName] ?? pName));
+        String degStr = "${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
+        bool isLord = (pName == udayaLordPlanet);
+        outerBadgesBySign[signName]?.add({
+          'name': pLabel,
+          'deg': degStr,
+          'isUdayaLord': isLord,
+        });
       }
     }
 
-    // Inner Gochara planets mapped to signs
-    Map<String, List<String>> innerPlanetsBySign = {};
+    // Inner circle items mapped by sign (Lagna, Subplanets, Gochara grahas)
+    Map<String, List<Map<String, dynamic>>> innerItemsBySign = {};
     for (var sign in KPService.SIGNS) {
-      innerPlanetsBySign[sign] = [];
+      innerItemsBySign[sign] = [];
     }
-    final gocharaKeys = [
-      {'key': 'lagna', 'short': 'லக்'},
-      {'key': 'sun', 'short': 'சூரி'},
-      {'key': 'moon', 'short': 'சந்'},
-      {'key': 'mars', 'short': 'செவ்'},
-      {'key': 'mercury', 'short': 'புத'},
-      {'key': 'jupiter', 'short': 'குரு'},
-      {'key': 'venus', 'short': 'சுக்'},
-      {'key': 'saturn', 'short': 'சனி'},
-      {'key': 'rahu', 'short': 'இரா'},
-      {'key': 'ketu', 'short': 'கேது'},
-      {'key': 'maanthi', 'short': 'மாந்'},
+
+    // 1. Lagna
+    if (details.containsKey('lagna') && details['lagna'] != null) {
+      double lDeg = (details['lagna']['longitude'] as num?)?.toDouble() ?? 0.0;
+      int sIdx = (lDeg / 30.0).floor() % 12;
+      double degInSign = lDeg % 30.0;
+      int d = degInSign.floor();
+      int m = ((degInSign - d) * 60).floor();
+      String lPrefix = langCode == 'ta' ? 'லக்' : (langCode == 'hi' ? 'लग्न' : 'Asc');
+      innerItemsBySign[KPService.SIGNS[sIdx]]?.add({
+        'type': 'lagna',
+        'label': "$lPrefix ${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}",
+        'deg': degInSign,
+      });
+    }
+
+    // 2. Subplanets
+    if (subPlanets != null) {
+      void addSub(String nameTa, String nameHi, String nameEn, SubPlanetResult sp, String type) {
+        String sign = KPService.SIGNS[sp.rasi - 1];
+        double degInSign = sp.degree;
+        int d = degInSign.floor();
+        int m = ((degInSign - d) * 60).floor();
+        String name = langCode == 'ta' ? nameTa : (langCode == 'hi' ? nameHi : nameEn);
+        innerItemsBySign[sign]?.add({
+          'type': type,
+          'label': "$name ${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}",
+          'deg': degInSign,
+        });
+      }
+      addSub('ரா.கா', 'रा', 'Rah', subPlanets.rahu, 'sub_rahu');
+      addSub('எம', 'यम', 'Yama', subPlanets.yamagandan, 'sub_yama');
+      addSub('மிரு', 'मृ', 'Mri', subPlanets.mrityu, 'sub_mrityu');
+    }
+
+    // 3. Maanthi
+    if (details.containsKey('maanthi') && details['maanthi'] != null) {
+      double mLon = (details['maanthi']['longitude'] as num?)?.toDouble() ?? 0.0;
+      int sIdx = (mLon / 30.0).floor() % 12;
+      double degInSign = mLon % 30.0;
+      int d = degInSign.floor();
+      int m = ((degInSign - d) * 60).floor();
+      String mPrefix = langCode == 'ta' ? 'மாந்' : (langCode == 'hi' ? 'मां' : 'Maa');
+      innerItemsBySign[KPService.SIGNS[sIdx]]?.add({
+        'type': 'gochara',
+        'label': "$mPrefix ${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}",
+        'deg': degInSign,
+      });
+    }
+
+    // 4. Gochara Planets
+    final pInfo = inner['planet_info'] as Map<dynamic, dynamic>? ?? {};
+    double sunLon = (details['sun']?['longitude'] as num?)?.toDouble() ?? 0.0;
+
+    final gocharaPlanetsList = [
+      {'key': 'sun', 'ta': 'சூ', 'hi': 'सू', 'en': 'Sun'},
+      {'key': 'moon', 'ta': 'சந்', 'hi': 'चं', 'en': 'Mon'},
+      {'key': 'mars', 'ta': 'செவ்', 'hi': 'मं', 'en': 'Mar'},
+      {'key': 'mercury', 'ta': 'புத', 'hi': 'बु', 'en': 'Mer'},
+      {'key': 'jupiter', 'ta': 'குரு', 'hi': 'गु', 'en': 'Jup'},
+      {'key': 'venus', 'ta': 'சுக்', 'hi': 'शु', 'en': 'Ven'},
+      {'key': 'saturn', 'ta': 'சனி', 'hi': 'श', 'en': 'Sat'},
+      {'key': 'rahu', 'ta': 'ராகு', 'hi': 'राहु', 'en': 'Rah'},
+      {'key': 'ketu', 'ta': 'கேது', 'hi': 'केतु', 'en': 'Ket'},
     ];
-    for (var p in gocharaKeys) {
-      final key = p['key']!;
-      if (details.containsKey(key) && details[key] != null) {
-        double lon = (details[key]['longitude'] as num?)?.toDouble() ?? 0.0;
+
+    for (var gp in gocharaPlanetsList) {
+      final pKey = gp['key']!;
+      if (details.containsKey(pKey) && details[pKey] != null) {
+        double lon = (details[pKey]['longitude'] as num?)?.toDouble() ?? 0.0;
         int sIdx = (lon / 30.0).floor() % 12;
-        String signName = KPService.SIGNS[sIdx];
-        innerPlanetsBySign[signName]?.add(p['short']!);
+        double degInSign = lon % 30.0;
+        int d = degInSign.floor();
+        int m = ((degInSign - d) * 60).floor();
+
+        String capKey = pKey[0].toUpperCase() + pKey.substring(1);
+        bool isRetro = pInfo[capKey]?['isRetro'] ?? false;
+        bool isCombust = JamakkolService.isPlanetCombust(capKey, lon, sunLon, isRetro);
+
+        String name = langCode == 'ta' ? gp['ta']! : (langCode == 'hi' ? gp['hi']! : gp['en']!);
+        String suffix = "";
+        if (isRetro && pKey != 'rahu' && pKey != 'ketu') {
+          suffix += (langCode == 'en') ? "R" : "வ";
+        }
+        if (isCombust) {
+          if (suffix.isNotEmpty) suffix += ",";
+          suffix += (langCode == 'en') ? "C" : ((langCode == 'hi') ? "अ" : "அ");
+        }
+        if (suffix.isNotEmpty) {
+          name = "$name($suffix)";
+        }
+
+        innerItemsBySign[KPService.SIGNS[sIdx]]?.add({
+          'type': 'gochara',
+          'label': "$name ${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}",
+          'deg': degInSign,
+        });
+      }
+    }
+
+    // Sort inner items by degree (reverse signs: Sagittarius, Capricorn, Aquarius, Pisces)
+    const reverseSigns = {"Sagittarius", "Capricorn", "Aquarius", "Pisces"};
+    for (var sign in KPService.SIGNS) {
+      final list = innerItemsBySign[sign] ?? [];
+      if (reverseSigns.contains(sign)) {
+        list.sort((a, b) => (b['deg'] as double).compareTo(a['deg'] as double));
+      } else {
+        list.sort((a, b) => (a['deg'] as double).compareTo(b['deg'] as double));
       }
     }
 
@@ -577,15 +687,29 @@ class JamakkolOnePagePdfService {
                       children: [
                         pw.Text(
                           "ஜாமக்கோள் பிரசன்னம்".toTamilPdf,
-                          style: pw.TextStyle(font: _headingFont, fontSize: 11.5, color: PdfColors.white),
+                          style: pw.TextStyle(font: _headingFont, fontSize: 12.0, color: PdfColors.white),
                         ),
-                        pw.SizedBox(height: 1),
-                        pw.Text(
-                          "SOFTWARE DEVELOPED BY GBASTRO SUITE / MO. NO - 9787067910 / 7373411173",
-                          style: pw.TextStyle(font: _bodyFont, fontSize: 5.8, color: goldAccent),
+                        pw.Container(
+                          margin: const pw.EdgeInsets.only(top: 2),
+                          padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 1.8),
+                          decoration: pw.BoxDecoration(
+                            color: PdfColor.fromHex('#2D0802'),
+                            borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+                            border: pw.Border.all(color: PdfColor.fromHex('#FFE082'), width: 0.6),
+                          ),
+                          child: pw.Text(
+                            "SOFTWARE DEVELOPED BY GBASTRO SUITE / MO. NO - 9787067910 / 7373411173",
+                            style: pw.TextStyle(
+                              font: _headingFont,
+                              fontSize: 7.0,
+                              color: PdfColor.fromHex('#FFE082'), // Bright Radiant Temple Gold
+                              letterSpacing: 0.4,
+                            ),
+                          ),
                         ),
                       ],
                     ),
+
                   ),
 
                   pw.SizedBox(height: 4),
@@ -665,13 +789,15 @@ class JamakkolOnePagePdfService {
                       // Chart 1: ஜாமக்கோள் பிரசன்னம்
                       pw.Expanded(
                         child: _buildJamakkolChart(
-                          outerPlanetsBySign: outerPlanetsBySign,
-                          innerPlanetsBySign: innerPlanetsBySign,
+                          outerBadgesBySign: outerBadgesBySign,
+                          innerItemsBySign: innerItemsBySign,
                           udayamSign: udayamSign,
                           arudamSign: arudamSign,
                           kavippuSign: kavippuSign,
-                          subPlanets: subPlanets,
-                          currentJamam: outer['current_jamam_planet']?.toString() ?? "-",
+                          uDeg: uDeg,
+                          aDeg: aDeg,
+                          kDeg: kDeg,
+                          langCode: langCode,
                           font: _bodyFont!,
                           headingFont: _headingFont!,
                           primaryColor: primaryColor,
@@ -851,17 +977,83 @@ class JamakkolOnePagePdfService {
     );
   }
 
+  static pw.Widget _buildHorizontalBadge(List<Map<String, dynamic>> items, pw.Font font) {
+    if (items.isEmpty) return pw.SizedBox();
+    return pw.Container(
+      alignment: pw.Alignment.center,
+      child: pw.Row(
+        mainAxisSize: pw.MainAxisSize.min,
+        children: items.map((item) {
+          final isLord = item['isUdayaLord'] as bool;
+          final bgCol = isLord ? PdfColor.fromHex('#1B5E20') : PdfColor.fromHex('#D84315');
+          return pw.Container(
+            margin: const pw.EdgeInsets.symmetric(horizontal: 1.0),
+            padding: const pw.EdgeInsets.symmetric(horizontal: 4.5, vertical: 2.0),
+            decoration: pw.BoxDecoration(
+              color: bgCol,
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3.5)),
+              border: pw.Border.all(color: PdfColors.white, width: 0.8),
+            ),
+            child: pw.Text(
+              "${item['name']} ${item['deg']}".toTamilPdf,
+              style: pw.TextStyle(font: font, fontSize: 7.2, color: PdfColors.white),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  static pw.Widget _buildVerticalBadge(List<Map<String, dynamic>> items, pw.Font font) {
+    if (items.isEmpty) return pw.SizedBox();
+    return pw.Container(
+      alignment: pw.Alignment.center,
+      child: pw.Column(
+        mainAxisSize: pw.MainAxisSize.min,
+        children: items.map((item) {
+          final isLord = item['isUdayaLord'] as bool;
+          final bgCol = isLord ? PdfColor.fromHex('#1B5E20') : PdfColor.fromHex('#D84315');
+          return pw.Container(
+            margin: const pw.EdgeInsets.symmetric(vertical: 1.0),
+            padding: const pw.EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.5),
+            decoration: pw.BoxDecoration(
+              color: bgCol,
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3.5)),
+              border: pw.Border.all(color: PdfColors.white, width: 0.8),
+            ),
+            child: pw.Column(
+              mainAxisSize: pw.MainAxisSize.min,
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
+              children: [
+                pw.Text(
+                  item['name'].toString().toTamilPdf,
+                  style: pw.TextStyle(font: font, fontSize: 7.2, color: PdfColors.white),
+                ),
+                pw.Text(
+                  item['deg'].toString().toTamilPdf,
+                  style: pw.TextStyle(font: font, fontSize: 6.5, color: PdfColors.white),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // HELPER: CHART 1 (JAMAKKOL PRASANNAM)
   // ---------------------------------------------------------------------------
   static pw.Widget _buildJamakkolChart({
-    required Map<String, List<String>> outerPlanetsBySign,
-    required Map<String, List<String>> innerPlanetsBySign,
+    required Map<String, List<Map<String, dynamic>>> outerBadgesBySign,
+    required Map<String, List<Map<String, dynamic>>> innerItemsBySign,
     required String udayamSign,
     required String arudamSign,
     required String kavippuSign,
-    required JamakkolSubPlanets? subPlanets,
-    required String currentJamam,
+    required double uDeg,
+    required double aDeg,
+    required double kDeg,
+    required String langCode,
     required pw.Font font,
     required pw.Font headingFont,
     required PdfColor primaryColor,
@@ -872,27 +1064,11 @@ class JamakkolOnePagePdfService {
     required PdfColor redColor,
   }) {
     pw.Widget cell(String sign) {
-      final outerList = outerPlanetsBySign[sign] ?? [];
-      final innerList = innerPlanetsBySign[sign] ?? [];
+      final items = innerItemsBySign[sign] ?? [];
 
       bool isUdayam = sign == udayamSign;
       bool isArudam = sign == arudamSign;
       bool isKavippu = sign == kavippuSign;
-
-      // Subplanets in this sign
-      List<String> subItems = [];
-      if (subPlanets != null) {
-        int sIdx = KPService.SIGNS.indexOf(sign) + 1;
-        if (subPlanets.rahu.rasi == sIdx) {
-          subItems.add("ரா.கா");
-        }
-        if (subPlanets.yamagandan.rasi == sIdx) {
-          subItems.add("எம");
-        }
-        if (subPlanets.mrityu.rasi == sIdx) {
-          subItems.add("மிரு");
-        }
-      }
 
       PdfColor cellBg = bgIvory;
       if (isUdayam) {
@@ -903,70 +1079,163 @@ class JamakkolOnePagePdfService {
         cellBg = PdfColor.fromHex('#FFEBEE');
       }
 
+      String udayamLabel = "";
+      if (isUdayam) {
+        double degInSign = uDeg % 30.0;
+        int d = degInSign.floor();
+        int m = ((degInSign - d) * 60).floor();
+        String prefix = langCode == 'ta' ? 'உத' : (langCode == 'hi' ? 'उदा' : 'Uda');
+        udayamLabel = "$prefix ${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
+      }
+
+      String arudamLabel = "";
+      if (isArudam) {
+        double degInSign = aDeg % 30.0;
+        int d = degInSign.floor();
+        int m = ((degInSign - d) * 60).floor();
+        String prefix = langCode == 'ta' ? 'ஆரூ' : (langCode == 'hi' ? 'आरू' : 'Aru');
+        arudamLabel = "$prefix ${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
+      }
+
+      String kavippuLabel = "";
+      if (isKavippu) {
+        double degInSign = kDeg % 30.0;
+        int d = degInSign.floor();
+        int m = ((degInSign - d) * 60).floor();
+        String prefix = langCode == 'ta' ? 'கவி' : (langCode == 'hi' ? 'कवि' : 'Kav');
+        kavippuLabel = "$prefix ${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
+      }
+
       return pw.Container(
         decoration: pw.BoxDecoration(
-          border: pw.Border.all(color: borderCol, width: 0.6),
+          border: pw.Border.all(color: borderCol, width: 0.5),
           color: cellBg,
         ),
-        padding: const pw.EdgeInsets.all(2.0),
+        padding: const pw.EdgeInsets.all(1.5),
         child: pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: pw.MainAxisAlignment.start,
           children: [
-            // Top: Badges (No sign name)
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.end,
-              children: [
-                if (isUdayam)
-                  pw.Container(
-                    padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 1.0),
-                    decoration: pw.BoxDecoration(color: greenColor, borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5))),
-                    child: pw.Text("உதயம்".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 6.2, color: PdfColors.white)),
-                  ),
-                if (isArudam)
-                  pw.Container(
-                    margin: const pw.EdgeInsets.only(left: 1),
-                    padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 1.0),
-                    decoration: pw.BoxDecoration(color: blueColor, borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5))),
-                    child: pw.Text("ஆரூ".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 6.2, color: PdfColors.white)),
-                  ),
-                if (isKavippu)
-                  pw.Container(
-                    margin: const pw.EdgeInsets.only(left: 1),
-                    padding: const pw.EdgeInsets.symmetric(horizontal: 2.5, vertical: 1.0),
-                    decoration: pw.BoxDecoration(color: redColor, borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5))),
-                    child: pw.Text("கவி".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 6.2, color: PdfColors.white)),
-                  ),
-                if (!isUdayam && !isArudam && !isKavippu)
-                  pw.SizedBox(height: 8),
-              ],
-            ),
-
-            // Middle: Outer Jamakkol Graha
-            if (outerList.isNotEmpty)
-              pw.Container(
-                alignment: pw.Alignment.centerLeft,
-                child: pw.Text(
-                  outerList.join(", ").toTamilPdf,
-                  style: pw.TextStyle(font: headingFont, fontSize: 7.2, color: blueColor),
+            // Top: Badges for Udayam, Arudam, Kavippu
+            if (isUdayam || isArudam || isKavippu)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 1.0),
+                child: pw.Row(
+                  mainAxisSize: pw.MainAxisSize.min,
+                  children: [
+                    if (isUdayam)
+                      pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(horizontal: 2.0, vertical: 0.8),
+                        decoration: pw.BoxDecoration(
+                          color: greenColor,
+                          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5)),
+                        ),
+                        child: pw.Text(
+                          udayamLabel.toTamilPdf,
+                          style: pw.TextStyle(font: headingFont, fontSize: 5.5, color: PdfColors.white),
+                        ),
+                      ),
+                    if (isArudam)
+                      pw.Container(
+                        margin: const pw.EdgeInsets.only(left: 1),
+                        padding: const pw.EdgeInsets.symmetric(horizontal: 2.0, vertical: 0.8),
+                        decoration: pw.BoxDecoration(
+                          color: blueColor,
+                          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5)),
+                        ),
+                        child: pw.Text(
+                          arudamLabel.toTamilPdf,
+                          style: pw.TextStyle(font: headingFont, fontSize: 5.5, color: PdfColors.white),
+                        ),
+                      ),
+                    if (isKavippu)
+                      pw.Container(
+                        margin: const pw.EdgeInsets.only(left: 1),
+                        padding: const pw.EdgeInsets.symmetric(horizontal: 2.0, vertical: 0.8),
+                        decoration: pw.BoxDecoration(
+                          color: redColor,
+                          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5)),
+                        ),
+                        child: pw.Text(
+                          kavippuLabel.toTamilPdf,
+                          style: pw.TextStyle(font: headingFont, fontSize: 5.5, color: PdfColors.white),
+                        ),
+                      ),
+                  ],
                 ),
               ),
 
-            // Subplanets
-            if (subItems.isNotEmpty)
-              pw.Text(
-                subItems.join(" ").toTamilPdf,
-                style: pw.TextStyle(font: headingFont, fontSize: 6.5, color: PdfColor.fromHex('#6A1B9A')),
-              ),
+            // Inner Items (Subplanets, Lagna, Gochara grahas)
+            ...items.map((item) {
+              final type = item['type'] as String;
+              final label = item['label'] as String;
 
-            // Bottom: Inner Gochara Grahas
-            pw.Container(
-              alignment: pw.Alignment.bottomRight,
-              child: pw.Text(
-                innerList.join(" ").toTamilPdf,
-                style: pw.TextStyle(font: headingFont, fontSize: 7.2, color: primaryColor),
-              ),
-            ),
+              if (type == 'sub_yama') {
+                return pw.Container(
+                  margin: const pw.EdgeInsets.only(bottom: 0.8),
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 1.5, vertical: 0.5),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColor.fromHex('#FFF59D'),
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5)),
+                    border: pw.Border.all(color: PdfColor.fromHex('#FBC02D'), width: 0.4),
+                  ),
+                  child: pw.Text(
+                    label.toTamilPdf,
+                    style: pw.TextStyle(font: headingFont, fontSize: 5.0, color: PdfColor.fromHex('#E65100')),
+                  ),
+                );
+              } else if (type == 'sub_rahu') {
+                return pw.Container(
+                  margin: const pw.EdgeInsets.only(bottom: 0.8),
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 1.5, vertical: 0.5),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColor.fromHex('#EDE7F6'),
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5)),
+                    border: pw.Border.all(color: PdfColor.fromHex('#7B1FA2'), width: 0.4),
+                  ),
+                  child: pw.Text(
+                    label.toTamilPdf,
+                    style: pw.TextStyle(font: headingFont, fontSize: 5.0, color: PdfColor.fromHex('#4A148C')),
+                  ),
+                );
+              } else if (type == 'sub_mrityu') {
+                return pw.Container(
+                  margin: const pw.EdgeInsets.only(bottom: 0.8),
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 1.5, vertical: 0.5),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColor.fromHex('#ECEFF1'),
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5)),
+                    border: pw.Border.all(color: PdfColor.fromHex('#607D8B'), width: 0.4),
+                  ),
+                  child: pw.Text(
+                    label.toTamilPdf,
+                    style: pw.TextStyle(font: headingFont, fontSize: 5.0, color: PdfColor.fromHex('#263238')),
+                  ),
+                );
+              } else if (type == 'lagna') {
+                return pw.Container(
+                  margin: const pw.EdgeInsets.only(bottom: 0.8),
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 1.5, vertical: 0.5),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColor.fromHex('#E8F5E9'),
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(1.5)),
+                    border: pw.Border.all(color: PdfColor.fromHex('#2E7D32'), width: 0.4),
+                  ),
+                  child: pw.Text(
+                    label.toTamilPdf,
+                    style: pw.TextStyle(font: headingFont, fontSize: 5.0, color: PdfColor.fromHex('#1B5E20')),
+                  ),
+                );
+              } else {
+                return pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 0.5),
+                  child: pw.Text(
+                    label.toTamilPdf,
+                    style: pw.TextStyle(font: headingFont, fontSize: 5.2, color: blueColor),
+                  ),
+                );
+              }
+            }),
           ],
         ),
       );
@@ -976,85 +1245,170 @@ class JamakkolOnePagePdfService {
     pw.Widget centerBox() {
       return pw.Container(
         decoration: pw.BoxDecoration(
-          border: pw.Border.all(color: borderCol, width: 0.6),
+          border: pw.Border.all(color: borderCol, width: 0.5),
           color: PdfColors.white,
         ),
-        padding: const pw.EdgeInsets.all(4),
+        padding: const pw.EdgeInsets.all(3),
         child: pw.Column(
           mainAxisAlignment: pw.MainAxisAlignment.center,
           crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
             pw.Text(
               "ஜாமக்கோள்".toTamilPdf,
-              style: pw.TextStyle(font: headingFont, fontSize: 10.5, color: primaryColor),
+              style: pw.TextStyle(font: headingFont, fontSize: 10.0, color: primaryColor),
             ),
             pw.Text(
               "பிரசன்னக் கட்டம்".toTamilPdf,
-              style: pw.TextStyle(font: headingFont, fontSize: 10.5, color: primaryColor),
+              style: pw.TextStyle(font: headingFont, fontSize: 10.0, color: primaryColor),
             ),
-            pw.Container(width: 46, height: 0.6, color: primaryColor, margin: const pw.EdgeInsets.symmetric(vertical: 2.5)),
-            pw.Text("உதயம்: ${KPService.TAMIL_SIGNS[udayamSign]}".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: greenColor)),
-            pw.Text("ஆரூடம்: ${KPService.TAMIL_SIGNS[arudamSign]}".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: blueColor)),
-            pw.Text("கவிப்பு: ${KPService.TAMIL_SIGNS[kavippuSign]}".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.5, color: redColor)),
+            pw.Container(width: 44, height: 0.6, color: primaryColor, margin: const pw.EdgeInsets.symmetric(vertical: 2.0)),
+            pw.Text("உதயம்: ${KPService.TAMIL_SIGNS[udayamSign]}".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.2, color: greenColor)),
+            pw.Text("ஆரூடம்: ${KPService.TAMIL_SIGNS[arudamSign]}".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.2, color: blueColor)),
+            pw.Text("கவிப்பு: ${KPService.TAMIL_SIGNS[kavippuSign]}".toTamilPdf, style: pw.TextStyle(font: headingFont, fontSize: 7.2, color: redColor)),
           ],
         ),
       );
     }
 
-    const double chartH = 205;
+    const double chartH = 205.0;
+    const double outerBadgeH = 18.0;
+    const double outerBadgeW = 30.0;
 
     return pw.Container(
       height: chartH,
-      decoration: pw.BoxDecoration(border: pw.Border.all(color: borderCol, width: 1.0)),
       child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
         children: [
-          // Row 0: Meenam, Mesham, Rishabam, Mithunam
-          pw.Expanded(
+          // 1. Top Outer Badges Row (Pisces, Aries, Taurus, Gemini)
+          pw.Container(
+            height: outerBadgeH,
             child: pw.Row(
               children: [
-                pw.Expanded(child: cell('Pisces')),
-                pw.Expanded(child: cell('Aries')),
-                pw.Expanded(child: cell('Taurus')),
-                pw.Expanded(child: cell('Gemini')),
+                pw.SizedBox(width: outerBadgeW),
+                pw.Expanded(child: _buildHorizontalBadge(outerBadgesBySign['Pisces'] ?? [], headingFont)),
+                pw.Expanded(child: _buildHorizontalBadge(outerBadgesBySign['Aries'] ?? [], headingFont)),
+                pw.Expanded(child: _buildHorizontalBadge(outerBadgesBySign['Taurus'] ?? [], headingFont)),
+                pw.Expanded(child: _buildHorizontalBadge(outerBadgesBySign['Gemini'] ?? [], headingFont)),
+                pw.SizedBox(width: outerBadgeW),
               ],
             ),
           ),
-          // Middle Section (Rows 1 & 2)
+
+          // 2. Middle Section: Left Badges | 4x4 Grid | Right Badges
           pw.Expanded(
-            flex: 2,
             child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
               children: [
-                // Left Column: Kumbam, Makaram
-                pw.Expanded(
+                // Left Column: Row 0 corner, Aquarius, Capricorn, Row 3 corner
+                pw.Container(
+                  width: outerBadgeW,
                   child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                     children: [
-                      pw.Expanded(child: cell('Aquarius')),
-                      pw.Expanded(child: cell('Capricorn')),
+                      pw.Expanded(flex: 1, child: pw.SizedBox()),
+                      pw.Expanded(flex: 1, child: _buildVerticalBadge(outerBadgesBySign['Aquarius'] ?? [], headingFont)),
+                      pw.Expanded(flex: 1, child: _buildVerticalBadge(outerBadgesBySign['Capricorn'] ?? [], headingFont)),
+                      pw.Expanded(flex: 1, child: pw.SizedBox()),
                     ],
                   ),
                 ),
-                // Center Box (2x2)
-                pw.Expanded(flex: 2, child: centerBox()),
-                // Right Column: Kadagam, Simmam
+
+                // Center: 4x4 Rasi Grid
                 pw.Expanded(
+                  child: pw.Container(
+                    decoration: pw.BoxDecoration(border: pw.Border.all(color: borderCol, width: 0.8)),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                      children: [
+                        // Row 0: Pisces, Aries, Taurus, Gemini
+                        pw.Expanded(
+                          flex: 1,
+                          child: pw.Row(
+                            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                            children: [
+                              pw.Expanded(flex: 1, child: cell('Pisces')),
+                              pw.Expanded(flex: 1, child: cell('Aries')),
+                              pw.Expanded(flex: 1, child: cell('Taurus')),
+                              pw.Expanded(flex: 1, child: cell('Gemini')),
+                            ],
+                          ),
+                        ),
+                        // Middle Section (Rows 1 & 2)
+                        pw.Expanded(
+                          flex: 2,
+                          child: pw.Row(
+                            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                            children: [
+                              pw.Expanded(
+                                flex: 1,
+                                child: pw.Column(
+                                  crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                                  children: [
+                                    pw.Expanded(flex: 1, child: cell('Aquarius')),
+                                    pw.Expanded(flex: 1, child: cell('Capricorn')),
+                                  ],
+                                ),
+                              ),
+                              pw.Expanded(flex: 2, child: centerBox()),
+                              pw.Expanded(
+                                flex: 1,
+                                child: pw.Column(
+                                  crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                                  children: [
+                                    pw.Expanded(flex: 1, child: cell('Cancer')),
+                                    pw.Expanded(flex: 1, child: cell('Leo')),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Row 3: Sagittarius, Scorpio, Libra, Virgo
+                        pw.Expanded(
+                          flex: 1,
+                          child: pw.Row(
+                            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                            children: [
+                              pw.Expanded(flex: 1, child: cell('Sagittarius')),
+                              pw.Expanded(flex: 1, child: cell('Scorpio')),
+                              pw.Expanded(flex: 1, child: cell('Libra')),
+                              pw.Expanded(flex: 1, child: cell('Virgo')),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Right Column: Row 0 corner, Cancer, Leo, Row 3 corner
+                pw.Container(
+                  width: outerBadgeW,
                   child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                     children: [
-                      pw.Expanded(child: cell('Cancer')),
-                      pw.Expanded(child: cell('Leo')),
+                      pw.Expanded(flex: 1, child: pw.SizedBox()),
+                      pw.Expanded(flex: 1, child: _buildVerticalBadge(outerBadgesBySign['Cancer'] ?? [], headingFont)),
+                      pw.Expanded(flex: 1, child: _buildVerticalBadge(outerBadgesBySign['Leo'] ?? [], headingFont)),
+                      pw.Expanded(flex: 1, child: pw.SizedBox()),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          // Row 3: Dhanusu, Viruchigam, Thulam, Kanni
-          pw.Expanded(
+
+          // 3. Bottom Outer Badges Row (Sagittarius, Scorpio, Libra, Virgo)
+          pw.Container(
+            height: outerBadgeH,
             child: pw.Row(
               children: [
-                pw.Expanded(child: cell('Sagittarius')),
-                pw.Expanded(child: cell('Scorpio')),
-                pw.Expanded(child: cell('Libra')),
-                pw.Expanded(child: cell('Virgo')),
+                pw.SizedBox(width: outerBadgeW),
+                pw.Expanded(child: _buildHorizontalBadge(outerBadgesBySign['Sagittarius'] ?? [], headingFont)),
+                pw.Expanded(child: _buildHorizontalBadge(outerBadgesBySign['Scorpio'] ?? [], headingFont)),
+                pw.Expanded(child: _buildHorizontalBadge(outerBadgesBySign['Libra'] ?? [], headingFont)),
+                pw.Expanded(child: _buildHorizontalBadge(outerBadgesBySign['Virgo'] ?? [], headingFont)),
+                pw.SizedBox(width: outerBadgeW),
               ],
             ),
           ),
@@ -1180,35 +1534,43 @@ class JamakkolOnePagePdfService {
       height: chartH,
       decoration: pw.BoxDecoration(border: pw.Border.all(color: borderCol, width: 1.0)),
       child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
         children: [
           pw.Expanded(
+            flex: 1,
             child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
               children: [
-                pw.Expanded(child: cell('Pisces')),
-                pw.Expanded(child: cell('Aries')),
-                pw.Expanded(child: cell('Taurus')),
-                pw.Expanded(child: cell('Gemini')),
+                pw.Expanded(flex: 1, child: cell('Pisces')),
+                pw.Expanded(flex: 1, child: cell('Aries')),
+                pw.Expanded(flex: 1, child: cell('Taurus')),
+                pw.Expanded(flex: 1, child: cell('Gemini')),
               ],
             ),
           ),
           pw.Expanded(
             flex: 2,
             child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
               children: [
                 pw.Expanded(
+                  flex: 1,
                   child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                     children: [
-                      pw.Expanded(child: cell('Aquarius')),
-                      pw.Expanded(child: cell('Capricorn')),
+                      pw.Expanded(flex: 1, child: cell('Aquarius')),
+                      pw.Expanded(flex: 1, child: cell('Capricorn')),
                     ],
                   ),
                 ),
                 pw.Expanded(flex: 2, child: centerBox()),
                 pw.Expanded(
+                  flex: 1,
                   child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                     children: [
-                      pw.Expanded(child: cell('Cancer')),
-                      pw.Expanded(child: cell('Leo')),
+                      pw.Expanded(flex: 1, child: cell('Cancer')),
+                      pw.Expanded(flex: 1, child: cell('Leo')),
                     ],
                   ),
                 ),
@@ -1216,12 +1578,14 @@ class JamakkolOnePagePdfService {
             ),
           ),
           pw.Expanded(
+            flex: 1,
             child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
               children: [
-                pw.Expanded(child: cell('Sagittarius')),
-                pw.Expanded(child: cell('Scorpio')),
-                pw.Expanded(child: cell('Libra')),
-                pw.Expanded(child: cell('Virgo')),
+                pw.Expanded(flex: 1, child: cell('Sagittarius')),
+                pw.Expanded(flex: 1, child: cell('Scorpio')),
+                pw.Expanded(flex: 1, child: cell('Libra')),
+                pw.Expanded(flex: 1, child: cell('Virgo')),
               ],
             ),
           ),

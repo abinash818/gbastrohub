@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:astrology_flutter/services/kp_service.dart';
+import 'package:astrology_flutter/astro_engine/astro_engine.dart';
+import 'package:astrology_flutter/services/settings_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -8,41 +10,43 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('Find all 8 Vaasthu dates for 2026', () async {
+  test('Compare sunrise for Namakkal vs Trichy vs Chennai', () async {
     await KPService.init();
+    final engine = AstroEngine();
+    final int ayanamsaMode = await SettingsService.getAyanamsa();
 
-    final targets = [
-      {'name': 'தை', 'date': 12, 'approx': DateTime(2026, 1, 26), 'dhruvaH': 4, 'dhruvaM': 24},
-      {'name': 'மாசி', 'date': 22, 'approx': DateTime(2026, 3, 6), 'dhruvaH': 4, 'dhruvaM': 24},
-      {'name': 'சித்திரை', 'date': 10, 'approx': DateTime(2026, 4, 23), 'dhruvaH': 3, 'dhruvaM': 12},
-      {'name': 'வைகாசி', 'date': 21, 'approx': DateTime(2026, 6, 4), 'dhruvaH': 4, 'dhruvaM': 24},
-      {'name': 'ஆடி', 'date': 11, 'approx': DateTime(2026, 7, 27), 'dhruvaH': 2, 'dhruvaM': 0},
-      {'name': 'ஆவணி', 'date': 6, 'approx': DateTime(2026, 8, 22), 'dhruvaH': 9, 'dhruvaM': 36},
-      {'name': 'ஐப்பசி', 'date': 11, 'approx': DateTime(2026, 10, 28), 'dhruvaH': 2, 'dhruvaM': 0},
-      {'name': 'கார்த்திகை', 'date': 8, 'approx': DateTime(2026, 11, 24), 'dhruvaH': 5, 'dhruvaM': 12},
+    final testDates = [
+      DateTime(2026, 4, 23),
+      DateTime(2026, 6, 4),
+      DateTime(2026, 7, 27),
+      DateTime(2026, 8, 22),
+      DateTime(2026, 10, 28),
+      DateTime(2026, 11, 24),
+      DateTime(2026, 1, 26),
+      DateTime(2026, 3, 6),
     ];
 
-    print('\n=======================================================');
-    print('ALL 8 VAASTHU DAYS FOR NAMAKKAL IN 2026:');
-    print('=======================================================');
+    final cities = {
+      'நாமக்கல்': {'lat': 11.2189, 'lon': 78.1674},
+      'திருச்சி': {'lat': 10.7905, 'lon': 78.7047},
+      'சென்னை': {'lat': 13.0827, 'lon': 80.2707},
+    };
 
-    for (var t in targets) {
-      DateTime approx = t['approx'] as DateTime;
-      DateTime? exactDate;
-      String? sunriseStr;
+    for (var date in testDates) {
+      print('\n--- Date: ${date.toIso8601String().substring(0, 10)} ---');
+      for (var entry in cities.entries) {
+        final lat = entry.value['lat']!;
+        final lon = entry.value['lon']!;
+        final localMidnight = DateTime(date.year, date.month, date.day, 0, 0, 0);
+        final utcMidnight = localMidnight.subtract(Duration(minutes: (5.5 * 60).round()));
 
-      for (int offset = -2; offset <= 2; offset++) {
-        final d = approx.add(Duration(days: offset));
-        final res = await KPService.calculateChart('V', d, 11.2189, 78.1674, 5.5, yearLength: 365.25, siderealModeIndex: 0);
-        final pancha = res['panchangam'];
-        if (pancha['tamil_month'] == t['name'] && pancha['tamil_date'] == t['date']) {
-          exactDate = d;
-          sunriseStr = pancha['sunrise'];
-          break;
-        }
+        double jdMidnight = engine.calculate(utcMidnight, lat, lon, ayanamsaMode: ayanamsaMode).jd;
+        var phen = await engine.calcPhenomena(jdMidnight, lat, lon, 0);
+        double riseJD = phen['rise'] ?? (jdMidnight + 0.25);
+        String s = KPService.formatJDToLocalTime(riseJD, 5.5, includeSeconds: true);
+        print('${entry.key}: Sunrise = $s');
       }
-
-      print('Target: ${t['name']} ${t['date']} -> Found Date: ${exactDate?.toIso8601String().substring(0, 10)}, Sunrise: $sunriseStr');
     }
   });
 }
+

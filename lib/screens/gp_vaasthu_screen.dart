@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/gp_vaasthu_service.dart';
+import '../services/vaasthu_one_page_pdf_service.dart';
+import '../screens/pdf_viewer_screen.dart';
 import '../widgets/thalaivaasal_vaasthu_view.dart';
 import '../widgets/vaasthu_pooja_view.dart';
 
@@ -153,6 +155,45 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
     });
   }
 
+  Future<void> _generateAndOpenPdf() async {
+    if (_result == null) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => const Center(
+        child: CircularProgressIndicator(color: Color(0xFF5D1204)),
+      ),
+    );
+    try {
+      final bytes = await VaasthuOnePagePdfService.generate(
+        result: _result!,
+        region: _selectedRegion,
+        ownerNakshatraIndex: _selectedOwnerNakshatra,
+        ownerRasiIndex: _selectedOwnerRasi,
+        thithiMethod: _selectedThithiMethod,
+        boothamMethod: _selectedBoothamMethod,
+      );
+      if (!mounted) return;
+      Navigator.pop(context); // close loader
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PdfViewerScreen(
+            pdfBytes: bytes,
+            fileName: "மனையடி_பொருத்தங்கள்_${_result!.roundedAyadi}.pdf",
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('PDF உருவாக்குவதில் பிழை: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final double curW1Ft = double.tryParse(_w1FtCtrl.text.trim()) ?? 17.0;
@@ -191,6 +232,15 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
             ],
           ),
           centerTitle: true,
+          actions: [
+            if (_result != null)
+              IconButton(
+                icon: const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFFFE082)),
+                tooltip: '1-பக்க PDF அறிக்கை',
+                onPressed: _generateAndOpenPdf,
+              ),
+          ],
+
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(48),
             child: Container(
@@ -1730,9 +1780,15 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
                     ],
                   ),
                 ),
+                IconButton(
+                  icon: const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFFFE082), size: 24),
+                  tooltip: '1-பக்க PDF அறிக்கை',
+                  onPressed: _generateAndOpenPdf,
+                ),
               ],
             ),
           ),
+
 
           // Table Header
           Container(
@@ -2108,10 +2164,32 @@ class _GpVaasthuScreenState extends State<GpVaasthuScreen> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF5D1204),
+                foregroundColor: const Color(0xFFFFE082),
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: Color(0xFFB58D3D), width: 1.2),
+                ),
+                elevation: 3,
+              ),
+              onPressed: _generateAndOpenPdf,
+              icon: const Icon(Icons.picture_as_pdf_rounded, size: 20, color: Color(0xFFFFE082)),
+              label: const Text(
+                '1-பக்க PDF அறிக்கை (Print / Share)',
+                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
+
 
   Color _getPoruthamStatusBgColor(String status) {
     if (status == 'உ') return const Color(0xFFE8F5E9);

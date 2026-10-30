@@ -13,15 +13,58 @@ class VaasthuPoojaView extends StatefulWidget {
 class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
   int _selectedYear = 2026;
   String _selectedCity = 'நாமக்கல்';
+  double _selectedLat = 11.2189;
+  double _selectedLon = 78.1674;
   int _selectedIndex = 4; // Default to Aippasi 11 (index 4) as in the user's prompt
   late final TextEditingController _yearController;
 
   final Map<int, String> _customSunrises = {};
+  List<VaasthuPoojaItem> _items = [];
 
   @override
   void initState() {
     super.initState();
     _yearController = TextEditingController(text: _selectedYear.toString());
+    _items = VaasthuPoojaService.generateYearTable(
+      year: _selectedYear,
+      cityName: _selectedCity,
+      lat: _selectedLat,
+      lon: _selectedLon,
+      customSunrises: _customSunrises.isNotEmpty ? _customSunrises : null,
+    );
+    _recalculateTable();
+  }
+
+  Future<void> _recalculateTable() async {
+    final list = await VaasthuPoojaService.generateYearTableAsync(
+      year: _selectedYear,
+      cityName: _selectedCity,
+      lat: _selectedLat,
+      lon: _selectedLon,
+      customSunrises: _customSunrises.isNotEmpty ? _customSunrises : null,
+    );
+    if (mounted) {
+      setState(() {
+        _items = list;
+      });
+    }
+  }
+
+  void _onYearChanged(int newYear) {
+    if (newYear != _selectedYear && newYear >= 1900 && newYear <= 2100) {
+      setState(() {
+        _selectedYear = newYear;
+        _yearController.text = _selectedYear.toString();
+        _items = VaasthuPoojaService.generateYearTable(
+          year: _selectedYear,
+          cityName: _selectedCity,
+          lat: _selectedLat,
+          lon: _selectedLon,
+          customSunrises: _customSunrises.isNotEmpty ? _customSunrises : null,
+        );
+      });
+      _recalculateTable();
+    }
   }
 
   @override
@@ -39,20 +82,21 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
       initialDatePickerMode: DatePickerMode.year,
     );
     if (picked != null) {
-      setState(() {
-        _selectedYear = picked.year;
-        _yearController.text = _selectedYear.toString();
-      });
+      _onYearChanged(picked.year);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<VaasthuPoojaItem> items = VaasthuPoojaService.generateYearTable(
-      year: _selectedYear,
-      cityName: _selectedCity,
-      customSunrises: _customSunrises.isNotEmpty ? _customSunrises : null,
-    );
+    final List<VaasthuPoojaItem> items = _items.isNotEmpty
+        ? _items
+        : VaasthuPoojaService.generateYearTable(
+            year: _selectedYear,
+            cityName: _selectedCity,
+            lat: _selectedLat,
+            lon: _selectedLon,
+            customSunrises: _customSunrises.isNotEmpty ? _customSunrises : null,
+          );
 
     final selectedItem = items[_selectedIndex.clamp(0, items.length - 1)];
 
@@ -194,12 +238,7 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
 
                 // Step - button
                 InkWell(
-                  onTap: () {
-                    setState(() {
-                      _selectedYear--;
-                      _yearController.text = _selectedYear.toString();
-                    });
-                  },
+                  onTap: () => _onYearChanged(_selectedYear - 1),
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
                     padding: const EdgeInsets.all(6),
@@ -244,7 +283,7 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
                     onChanged: (val) {
                       final y = int.tryParse(val.trim());
                       if (y != null && y >= 1900 && y <= 2100) {
-                        setState(() => _selectedYear = y);
+                        _onYearChanged(y);
                       }
                     },
                   ),
@@ -253,12 +292,7 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
 
                 // Step + button
                 InkWell(
-                  onTap: () {
-                    setState(() {
-                      _selectedYear++;
-                      _yearController.text = _selectedYear.toString();
-                    });
-                  },
+                  onTap: () => _onYearChanged(_selectedYear + 1),
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
                     padding: const EdgeInsets.all(6),
@@ -304,12 +338,7 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
                   return Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedYear = y;
-                          _yearController.text = y.toString();
-                        });
-                      },
+                      onTap: () => _onYearChanged(y),
                       borderRadius: BorderRadius.circular(14),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
@@ -385,21 +414,46 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
                     border: Border.all(color: const Color(0xFFB58D3D).withValues(alpha: 0.35)),
                   ),
                   child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: VaasthuPoojaService.standardLocations.containsKey(_selectedCity) ? _selectedCity : 'நாமக்கல்',
-                      isExpanded: true,
-                      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF5D1204)),
-                      items: VaasthuPoojaService.standardLocations.keys.map((c) {
-                        return DropdownMenuItem<String>(
-                          value: c,
-                          child: Text(
-                            c,
-                            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
-                          ),
+                    child: Builder(
+                      builder: (context) {
+                        final cityList = List<String>.from(VaasthuPoojaService.standardLocations.keys);
+                        if (!cityList.contains(_selectedCity)) {
+                          cityList.insert(0, _selectedCity);
+                        }
+                        return DropdownButton<String>(
+                          value: _selectedCity,
+                          isExpanded: true,
+                          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF5D1204)),
+                          items: cityList.map((c) {
+                            return DropdownMenuItem<String>(
+                              value: c,
+                              child: Text(
+                                c,
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF5D1204)),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _selectedCity = val;
+                                final coords = VaasthuPoojaService.standardLocations[val];
+                                if (coords != null) {
+                                  _selectedLat = coords['lat']!;
+                                  _selectedLon = coords['lon']!;
+                                }
+                                _items = VaasthuPoojaService.generateYearTable(
+                                  year: _selectedYear,
+                                  cityName: _selectedCity,
+                                  lat: _selectedLat,
+                                  lon: _selectedLon,
+                                  customSunrises: _customSunrises.isNotEmpty ? _customSunrises : null,
+                                );
+                              });
+                              _recalculateTable();
+                            }
+                          },
                         );
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedCity = val);
                       },
                     ),
                   ),
@@ -415,7 +469,21 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
                   if (loc != null && loc['name'] != null) {
                     setState(() {
                       _selectedCity = loc['name'].toString().split(',')[0].trim();
+                      if (loc['lat'] != null) {
+                        _selectedLat = (loc['lat'] as num).toDouble();
+                      }
+                      if (loc['lon'] != null) {
+                        _selectedLon = (loc['lon'] as num).toDouble();
+                      }
+                      _items = VaasthuPoojaService.generateYearTable(
+                        year: _selectedYear,
+                        cityName: _selectedCity,
+                        lat: _selectedLat,
+                        lon: _selectedLon,
+                        customSunrises: _customSunrises.isNotEmpty ? _customSunrises : null,
+                      );
                     });
+                    _recalculateTable();
                   }
                 },
                 borderRadius: BorderRadius.circular(10),
@@ -430,6 +498,7 @@ class _VaasthuPoojaViewState extends State<VaasthuPoojaView> {
               ),
             ],
           ),
+
         ],
       ),
     );

@@ -292,28 +292,31 @@ class GbOnePagePdfService {
     String badhakaLord = badhakaData['lord_tamil']?.toString() ?? badhakaData['lord']?.toString() ?? "-";
     
     // Lowest degree (குறைந்த பாகை கிரகம்) & Highest degree (அதிக பாகை கிரகம்)
-    final List<String> pList7 = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
     String minDegPlanet = "-";
     String maxDegPlanet = "-";
-    double minDeg = 999.0;
-    double maxDeg = -1.0;
 
-    for (var pKey in pList7) {
-      final p = details[pKey.toLowerCase()] ?? details[pKey] ?? {};
-      double? lon = double.tryParse(p['longitude']?.toString() ?? "");
-      if (lon != null) {
-        double degInSign = lon % 30;
-        if (degInSign < minDeg) {
-          minDeg = degInSign;
-          String pName = KPService.TAMIL_PLANETS[pKey] ?? _toLocal(pKey, langCode);
-          minDegPlanet = "$pName (${KPService.formatAbsoluteDegrees(degInSign)})";
-        }
-        if (degInSign > maxDeg) {
-          maxDeg = degInSign;
-          String pName = KPService.TAMIL_PLANETS[pKey] ?? _toLocal(pKey, langCode);
-          maxDegPlanet = "$pName (${KPService.formatAbsoluteDegrees(degInSign)})";
-        }
+    final extData = results['extreme_degrees'] as Map<String, dynamic>?;
+    if (extData != null && extData['lowest'] != null && extData['highest'] != null) {
+      final low = extData['lowest'] as Map<String, dynamic>;
+      final high = extData['highest'] as Map<String, dynamic>;
+      final lowName = low['planet_tamil'] ?? KPService.TAMIL_PLANETS[low['planet']] ?? _toLocal(low['planet'] ?? '', langCode);
+      final highName = high['planet_tamil'] ?? KPService.TAMIL_PLANETS[high['planet']] ?? _toLocal(high['planet'] ?? '', langCode);
+      minDegPlanet = "$lowName (${low['deg_formatted'] ?? ''})";
+      maxDegPlanet = "$highName (${high['deg_formatted'] ?? ''})";
+    } else {
+      Map<String, double> planetLons = {};
+      for (var pKey in ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu']) {
+        final p = details[pKey.toLowerCase()] ?? details[pKey] ?? {};
+        double? lon = double.tryParse(p['longitude']?.toString() ?? "");
+        if (lon != null) planetLons[pKey] = lon;
       }
+      final extCalc = AstroSpecialCalculationsService.calculateExtremeDegreePlanets(planetLons);
+      final low = extCalc['lowest'] as Map<String, dynamic>? ?? {};
+      final high = extCalc['highest'] as Map<String, dynamic>? ?? {};
+      final lowName = low['planet_tamil'] ?? KPService.TAMIL_PLANETS[low['planet']] ?? _toLocal(low['planet'] ?? '', langCode);
+      final highName = high['planet_tamil'] ?? KPService.TAMIL_PLANETS[high['planet']] ?? _toLocal(high['planet'] ?? '', langCode);
+      minDegPlanet = "$lowName (${low['deg_formatted'] ?? ''})";
+      maxDegPlanet = "$highName (${high['deg_formatted'] ?? ''})";
     }
 
     // 1. Planetary Table Rows (11 rows)

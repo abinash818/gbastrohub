@@ -1,3 +1,7 @@
+import '../astro_engine/astro_engine.dart';
+import 'kp_service.dart';
+import 'settings_service.dart';
+
 class VaasthuDayRule {
   final String tamilMonth;
   final int tamilDate;
@@ -206,31 +210,130 @@ class VaasthuPoojaService {
     );
   }
 
-  /// Generates the 8 Vaasthu Pooja Days table for a given Year
-  static List<VaasthuPoojaItem> generateYearTable({
+  /// Computes sunrise string for a given date and coordinates (lat, lon, timezone) using AstroEngine
+  static Future<String> calculateSunrise({
+    required DateTime date,
+    required double lat,
+    required double lon,
+    double timezone = 5.5,
+  }) async {
+    try {
+      await KPService.init();
+      final engine = AstroEngine();
+      final int ayanamsaMode = await SettingsService.getAyanamsa();
+
+      final localMidnight = DateTime(date.year, date.month, date.day, 0, 0, 0);
+      final utcMidnight = localMidnight.subtract(Duration(minutes: (timezone * 60).round()));
+      double jdMidnight = engine.calculate(utcMidnight, lat, lon, ayanamsaMode: ayanamsaMode).jd;
+
+      var phen = await engine.calcPhenomena(jdMidnight, lat, lon, 0);
+      double riseJD = phen['rise'] ?? (jdMidnight + 0.25);
+      return KPService.formatJDToLocalTime(riseJD, timezone, includeSeconds: true);
+    } catch (_) {
+      return '06:00:00 AM';
+    }
+  }
+
+  /// Generates the 8 Vaasthu Pooja Days table dynamically for a given Year and coordinates using AstroEngine
+  static Future<List<VaasthuPoojaItem>> generateYearTableAsync({
     required int year,
     String cityName = 'நாமக்கல்',
+    double? lat,
+    double? lon,
+    double timezone = 5.5,
     Map<int, String>? customSunrises,
-  }) {
-    // Standard baseline sunrise times for Namakkal across the 8 days
-    // When Namakkal (as in user's prompt: ஐப்பசி 11 = 6:08:26 AM)
-    final Map<String, String> namakkalSunrises = {
-      'சித்திரை': '06:02:11 AM',
-      'வைகாசி': '05:53:07 AM',
-      'ஆடி': '06:04:24 AM',
-      'ஆவணி': '06:07:22 AM',
-      'ஐப்பசி': '06:08:26 AM', // Matches user prompt exactly!
-      'கார்த்திகை': '06:17:14 AM',
-      'தை': '06:41:35 AM',
-      'மாசி': '06:29:49 AM',
-    };
+  }) async {
+    final double actualLat = lat ?? standardLocations[cityName]?['lat'] ?? 11.2189;
+    final double actualLon = lon ?? standardLocations[cityName]?['lon'] ?? 78.1674;
+
+    await KPService.init();
+    final engine = AstroEngine();
+    final int ayanamsaMode = await SettingsService.getAyanamsa();
 
     List<VaasthuPoojaItem> list = [];
 
     for (int i = 0; i < vaasthuRules.length; i++) {
       final rule = vaasthuRules[i];
       final targetDate = DateTime(year, rule.defaultMonth, rule.defaultDay);
-      final sunrise = customSunrises?[i] ?? namakkalSunrises[rule.tamilMonth] ?? '06:08:00 AM';
+
+      String sunrise;
+      if (customSunrises != null && customSunrises.containsKey(i)) {
+        sunrise = customSunrises[i]!;
+      } else {
+        try {
+          final localMidnight = DateTime(targetDate.year, targetDate.month, targetDate.day, 0, 0, 0);
+          final utcMidnight = localMidnight.subtract(Duration(minutes: (timezone * 60).round()));
+          double jdMidnight = engine.calculate(utcMidnight, actualLat, actualLon, ayanamsaMode: ayanamsaMode).jd;
+
+          var phen = await engine.calcPhenomena(jdMidnight, actualLat, actualLon, 0);
+          double riseJD = phen['rise'] ?? (jdMidnight + 0.25);
+          sunrise = KPService.formatJDToLocalTime(riseJD, timezone, includeSeconds: true);
+        } catch (_) {
+          sunrise = '06:00:00 AM';
+        }
+      }
+
+      list.add(calculateItem(
+        rule: rule,
+        date: targetDate,
+        sunriseStr: sunrise,
+      ));
+    }
+
+    return list;
+  }
+
+  /// Generates the 8 Vaasthu Pooja Days table for a given Year (synchronous fallback with longitude adjustment)
+  static List<VaasthuPoojaItem> generateYearTable({
+    required int year,
+    String cityName = 'நாமக்கல்',
+    double? lat,
+    double? lon,
+    Map<int, String>? customSunrises,
+  }) {
+    final double actualLon = lon ?? standardLocations[cityName]?['lon'] ?? 78.1674;
+
+    // Standard baseline sunrise times for Namakkal (lon 78.1674, lat 11.2189)
+    final Map<String, String> namakkalSunrises = {
+      'சித்திரை': '06:02:11 AM',
+      'வைகாசி': '05:53:07 AM',
+      'ஆடி': '06:04:24 AM',
+      'ஆவணி': '06:07:22 AM',
+      'ஐப்பசி': '06:08:26 AM', // Matches Namakkal reference
+      'கார்த்திகை': '06:17:14 AM',
+      'தை': '06:41:35 AM',
+      'மாசி': '06:29:49 AM',
+    };
+
+    // Longitude difference adjustment in seconds relative to Namakkal (78.1674):
+    // 1 degree East = 4 minutes earlier (-240 seconds)
+    final double lonDiff = actualLon - 78.1674;
+    final int lonOffsetSec = (lonDiff * 240).round();
+
+    List<VaasthuPoojaItem> list = [];
+
+    for (int i = 0; i < vaasthuRules.length; i++) {
+      final rule = vaasthuRules[i];
+      final targetDate = DateTime(year, rule.defaultMonth, rule.defaultDay);
+
+      String sunrise;
+      if (customSunrises != null && customSunrises.containsKey(i)) {
+        sunrise = customSunrises[i]!;
+      } else {
+        final baseStr = namakkalSunrises[rule.tamilMonth] ?? '06:08:00 AM';
+        if (lonOffsetSec != 0) {
+          final baseDt = parseSunrise(targetDate, baseStr);
+          final adjustedDt = baseDt.subtract(Duration(seconds: lonOffsetSec));
+          int h = adjustedDt.hour % 12;
+          if (h == 0) h = 12;
+          final m = adjustedDt.minute.toString().padLeft(2, '0');
+          final s = adjustedDt.second.toString().padLeft(2, '0');
+          final p = adjustedDt.hour >= 12 ? 'PM' : 'AM';
+          sunrise = "${h.toString().padLeft(2, '0')}:$m:$s $p";
+        } else {
+          sunrise = baseStr;
+        }
+      }
 
       list.add(calculateItem(
         rule: rule,
@@ -242,3 +345,4 @@ class VaasthuPoojaService {
     return list;
   }
 }
+

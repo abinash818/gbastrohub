@@ -476,6 +476,144 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
     );
   }
 
+  Future<void> _exportPdf() async {
+    if (_results == null) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    );
+    try {
+      final bytes = await JamakkolOnePagePdfService.generate(
+        name: (_inputName != null && _inputName!.trim().isNotEmpty)
+            ? _inputName!.trim()
+            : AppLocalizations.of(context)!.tabPrasannam,
+        gender: "-",
+        results: _results!,
+        inputTime: _inputTime ?? _nowTime,
+        place: _inputLocationName ?? _nowLocationName,
+        lat: _inputLat ?? _nowLat,
+        lon: _inputLon ?? _nowLon,
+        isAltNaming: _isAltNaming,
+        l10n: AppLocalizations.of(context)!,
+      );
+      if (!mounted) return;
+      Navigator.pop(context);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PdfViewerScreen(
+            pdfBytes: bytes,
+            fileName: "ஜாமக்கோள்_பிரசன்னம்.pdf",
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error generating PDF: $e')),
+        );
+      }
+    }
+  }
+
+  List<Widget> _buildAppBarActions(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isNarrow = screenWidth < 360;
+
+    Widget pdfBtn = IconButton(
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      constraints: const BoxConstraints(minWidth: 34, minHeight: 40),
+      icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.primary, size: 22),
+      tooltip: 'PDF அறிக்கை',
+      onPressed: _exportPdf,
+    );
+
+    Widget refreshBtn = IconButton(
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      constraints: const BoxConstraints(minWidth: 34, minHeight: 40),
+      icon: const Icon(Icons.refresh_rounded, color: AppColors.primary, size: 22),
+      tooltip: 'புதுப்பி (Refresh)',
+      onPressed: () {
+        setState(() {
+          _nowTime = DateTime.now();
+          if (_showIppothu || _inputTime == null) {
+            _showIppothu = true;
+          }
+        });
+        _calculateJamakkol();
+      },
+    );
+
+    if (isNarrow) {
+      return [
+        pdfBtn,
+        refreshBtn,
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert_rounded, color: AppColors.primary, size: 22),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 34, minHeight: 40),
+          tooltip: 'கூடுதல் விருப்பங்கள் (More)',
+          onSelected: (val) {
+            if (val == 'save') {
+              _showSavePrasannamDialog();
+            } else if (val == 'saved_list') {
+              _openSavedPrasannams();
+            }
+          },
+          itemBuilder: (ctx) => [
+            const PopupMenuItem(
+              value: 'save',
+              child: Row(
+                children: [
+                  Icon(Icons.bookmark_add_outlined, color: AppColors.primary, size: 20),
+                  SizedBox(width: 10),
+                  Text('பிரசன்னத்தை சேமி (Save)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'saved_list',
+              child: Row(
+                children: [
+                  Icon(Icons.folder_open_rounded, color: AppColors.primary, size: 20),
+                  SizedBox(width: 10),
+                  Text('சேமிக்கப்பட்டவை (Saved List)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 4),
+      ];
+    }
+
+    return [
+      IconButton(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        constraints: const BoxConstraints(minWidth: 34, minHeight: 40),
+        icon: const Icon(Icons.bookmark_add_outlined, color: AppColors.primary, size: 22),
+        tooltip: 'பிரசன்னத்தை சேமி (Save)',
+        onPressed: _showSavePrasannamDialog,
+      ),
+      IconButton(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        constraints: const BoxConstraints(minWidth: 34, minHeight: 40),
+        icon: const Icon(Icons.folder_open_rounded, color: AppColors.primary, size: 22),
+        tooltip: 'சேமிக்கப்பட்டவை (Saved List)',
+        onPressed: _openSavedPrasannams,
+      ),
+      refreshBtn,
+      pdfBtn,
+      const SizedBox(width: 4),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -483,25 +621,31 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                AppLocalizations.of(context)!.jamakkolPrasannamTitle, 
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: AppColors.primary, fontSize: 17),
-              ),
-              if (_inputName != null && _inputName!.trim().isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    _inputName!,
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF5D1204), fontSize: 11.5),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+          titleSpacing: 0,
+          centerTitle: false,
+          title: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  AppLocalizations.of(context)!.jamakkolPrasannamTitle, 
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: AppColors.primary, fontSize: 17),
                 ),
-            ],
+                if (_inputName != null && _inputName!.trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      _inputName!,
+                      style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF5D1204), fontSize: 11.5),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ),
           ),
-          centerTitle: true,
           backgroundColor: AppColors.background,
           elevation: 0,
           leading: Builder(
@@ -510,77 +654,7 @@ class _JamakkolScreenState extends State<JamakkolScreen> {
               onPressed: () => Scaffold.of(context).openDrawer(),
             ),
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.bookmark_add_outlined, color: AppColors.primary, size: 22),
-              tooltip: 'பிரசன்னத்தை சேமி (Save)',
-              onPressed: _showSavePrasannamDialog,
-            ),
-            IconButton(
-              icon: const Icon(Icons.folder_open_rounded, color: AppColors.primary, size: 22),
-              tooltip: 'சேமிக்கப்பட்டவை (Saved List)',
-              onPressed: _openSavedPrasannams,
-            ),
-            IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: AppColors.primary, size: 22),
-              tooltip: 'புதுப்பி (Refresh)',
-              onPressed: () {
-                setState(() {
-                  _nowTime = DateTime.now();
-                  if (_showIppothu || _inputTime == null) {
-                    _showIppothu = true;
-                  }
-                });
-                _calculateJamakkol();
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.picture_as_pdf, color: AppColors.primary, size: 22),
-              tooltip: 'PDF',
-              onPressed: () async {
-                if (_results == null) return;
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (c) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-                );
-                try {
-                  final bytes = await JamakkolOnePagePdfService.generate(
-                    name: (_inputName != null && _inputName!.trim().isNotEmpty)
-                        ? _inputName!.trim()
-                        : AppLocalizations.of(context)!.tabPrasannam,
-                    gender: "-",
-                    results: _results!,
-                    inputTime: _inputTime ?? _nowTime,
-                    place: _inputLocationName ?? _nowLocationName,
-                    lat: _inputLat ?? _nowLat,
-                    lon: _inputLon ?? _nowLon,
-                    isAltNaming: _isAltNaming,
-                    l10n: AppLocalizations.of(context)!,
-                  );
-                  if (!mounted) return;
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PdfViewerScreen(
-                        pdfBytes: bytes,
-                        fileName: "ஜாமக்கோள்_பிரசன்னம்.pdf",
-                      ),
-                    ),
-                  );
-                } catch (e) {
-                  if (mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error generating PDF: $e')),
-                    );
-                  }
-                }
-              },
-            ),
-            const SizedBox(width: 8),
-          ],
+          actions: _buildAppBarActions(context),
           bottom: TabBar(
             labelColor: AppColors.primary,
             unselectedLabelColor: Colors.grey,
